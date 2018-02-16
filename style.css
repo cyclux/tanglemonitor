@@ -1,0 +1,5 @@
+canvas#canvas{
+    border:0px solid #000000;
+    margin: 20px auto;
+    display: block;
+}
