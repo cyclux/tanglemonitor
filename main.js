@@ -7,8 +7,8 @@ const c = document.getElementById('canvas');
 const ctx = c.getContext('2d');
 
 const iotajs = new IOTA({
-    'host': 'http://nodes.iota.fm', // http://field.carriota.com:80 => CORS issue
-    'port': 80
+    'host': 'https://nodes.thetangle.org', // http://field.carriota.com:80 => CORS issue , http://nodes.iota.fm:80 => no https
+    'port': 443
 });
 
 const offsetWidth = 200;
