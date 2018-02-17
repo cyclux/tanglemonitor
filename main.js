@@ -34,12 +34,12 @@ const initialTime = Date.now();
 
 let txList = [];
 let confList = [];
-let timestamps = [];
+let milestoneBuffer = "";
+let milestoneTrunkBuffer = "";
 let totalConfRate = 0;
 let totalTransactions = 0;
 let totalTPS = 0;
-let milestones = [];
-let milestonesTrunk = [];
+
 let timer = [];
 
 // Get confirmation status for current transactions
@@ -57,22 +57,30 @@ const GetTxConfStatus = txList_GetTxConfStatus => {
 
             } else {
                 // Fetch chunk from polling pool
-                const transactionHashes = txChunksWrapper.shift();
+                const transactionHashes = txChunksWrapper.shift()
+                    .reduce( (acc, tx) => acc.concat(tx.hash), []);
 
-                if (milestones.indexOf(nodeInfo.latestMilestone) === -1){
-                    // Collect milestones
-                    milestones.push(nodeInfo.latestMilestone);
-                    // Get trunk for milestone
+                if (nodeInfo.latestMilestone !== milestoneBuffer) {
                     iotajs.api.getTransactionsObjects([nodeInfo.latestMilestone], (e, txObjects) => {
                         if(e){
                             console.error('Error getTransactionsObjects: ', e);
                         } else {
                             // Collect trunk milestone in seperate list
                             // -> needed to display miletone timeline labels only once
-                            milestonesTrunk.push(txObjects[0].trunkTransaction);
+                            milestoneTrunkBuffer = txObjects[0].trunkTransaction;
+
+                            const milestoneIndex = txList.findIndex(tx => tx.hash === nodeInfo.latestMilestone);
+                            const milestoneTrunkIndex = txList.findIndex(tx => tx.hash === milestoneTrunkBuffer);
+
+                            if (milestoneIndex !== -1) {
+                                txList[milestoneIndex].milestone = true;
+                                txList[milestoneTrunkIndex].milestone = 'trunk';
+                            }
                         }
                     });
                 }
+
+                milestoneBuffer = nodeInfo.latestMilestone;
 
                 iotajs.api.getInclusionStates( transactionHashes, [nodeInfo.latestMilestone], (e, inclusionStates) => {
                     if (e){
@@ -86,21 +94,18 @@ const GetTxConfStatus = txList_GetTxConfStatus => {
                             getLatestInclusion(txChunksWrapper);
 
                         } else {
+                            // Polling finished
                             // Calculate confirmation rate of all TX
                             totalConfRate = Math.round(confListTemp
                                 .filter(tx => tx === true).length / confListTemp.length * 10000
                             ) / 100;
 
-                            // If milestone TX hash found swap entry to recogninze for later color selection
-                            milestones.map( milestone => {
-                                const milestoneIndex = txList.indexOf(milestone);
-                                confListTemp[milestoneIndex] = 'milestone';
-                            });
-                            // Same for trunk milestone
-                            milestonesTrunk.map( milestone_trunk => {
-                                const milestoneIndexTrunk = txList.indexOf(milestone_trunk);
-                                confListTemp[milestoneIndexTrunk] = 'milestone_trunk';
-                            });
+                            let i = -1;
+                            while ((i = confListTemp.indexOf(true, i + 1)) >= 0) {
+
+                                txList[i].confirmed = true;
+                            }
+
                             // If no polling chunks left, make temp confirmation list to current list
                             confList = confListTemp;
                         }
@@ -144,15 +149,15 @@ const DrawCanvas = (txList_DrawCanvas) => {
 
     // Create array of transaction pixels including respective confirmation status
     let pxls = [];
-    txList_DrawCanvas.map( (_, i) => {
+    txList_DrawCanvas.map( (tx, i) => {
         const lineCount = calcLineCount(i, pxSize, cWidth);
-        const confStatus = confList[i];
 
         pxls.push({
             x: i * pxSize - (lineCount * pxSize * txPerLine),
             y: lineCount * pxSize,
-            conf: confStatus,
-            time: timestamps[i]
+            conf: tx.confirmed,
+            milestone: tx.milestone,
+            time: tx.timestamp
         });
     } );
 
@@ -206,7 +211,7 @@ const DrawCanvas = (txList_DrawCanvas) => {
         if (px.conf === false || px.conf === undefined){
             pxColor = pxColorUnconf;
 
-        } else if (px.conf === 'milestone') {
+        } else if (px.milestone === true) {
 
             ctx.font = `${fontSizeAxis} ${fontFace}`;
             ctx.fillStyle = textColor;
@@ -217,7 +222,7 @@ const DrawCanvas = (txList_DrawCanvas) => {
             const minElapsed = Math.floor( (Math.floor(Date.now() / 1000) - px.time) / 60 );
             ctx.fillText(`${minElapsed} min ago`, margin + cWidth + 5, px.y + offsetHeight);
 
-        } else if (px.conf === 'milestone_trunk') {
+        } else if (px.milestone === 'trunk') {
             pxColor = pxColorMilestone;
         } else {
             pxColor = pxColorConf;
@@ -250,14 +255,13 @@ const Main = () => {
         const hash = newTx['transaction']['hash'];
         const timestamp = newTx['transaction']['receivedAt'];
 
-        txList.push(hash);
-        timestamps.push(timestamp);
-        totalTransactions = txList.length;
+        txList.push({'hash': hash, 'confirmed': false, 'timestamp': timestamp, 'milestone': false});
 
+        // Calculate metrics
+        totalTransactions = txList.length;
         if((totalTransactions - 1) % 100 === 0){
             timer.push(Date.now());
         }
-
         totalTPS = Math.round(totalTransactions / ((Date.now() - initialTime) / 1000) * 100) / 100;
 
         // Adapt canvas height to amount of transactions (pixel height)
