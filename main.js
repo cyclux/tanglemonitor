@@ -33,7 +33,6 @@ const pxColorMilestone = {r:0, g:0, b:255, a:1};
 const initialTime = Date.now();
 
 let txList = [];
-let confList = [];
 let milestoneBuffer = "";
 let milestoneTrunkBuffer = "";
 let totalConfRate = 0;
@@ -95,25 +94,28 @@ const GetTxConfStatus = txList_GetTxConfStatus => {
 
                         } else {
                             // Polling finished
-                            // Calculate confirmation rate of all TX
-                            totalConfRate = Math.round(confListTemp
-                                .filter(tx => tx === true).length / confListTemp.length * 10000
-                            ) / 100;
+                            // Search for TX hash in list and update status if confirmed
+                            transactionHashes.map( (txHash, index) => {
+                                if (confListTemp[index] === true){
+                                    const hashIndex = txList.findIndex(tx => tx.hash === txHash);
+                                    txList[hashIndex].confirmed = true;
+                                }
+                            });
 
-                            let i = -1;
-                            while ((i = confListTemp.indexOf(true, i + 1)) >= 0) {
-
-                                txList[i].confirmed = true;
-                            }
-
-                            // If no polling chunks left, make temp confirmation list to current list
-                            confList = confListTemp;
                         }
                     }
                 });
             }
         });
     }
+
+    // Filter confirmed transactions for status polling
+    txList_GetTxConfStatus = txList_GetTxConfStatus.reduce( (acc, tx) => {
+        if (tx.confirmed !== true){
+            acc.push(tx);
+        }
+        return acc;
+    }, [] );
 
     // Workaround -> Split transaction list into '999 TX chunks' for confirmation status polling,
     // because splice() breaks out of scope and tampers with txList array. Don't know why yet..
@@ -196,9 +198,9 @@ const DrawCanvas = (txList_DrawCanvas) => {
             ctx.textAlign = "right";
 
             // Calc current TPS and display appropriately
-            const confRateRangeList = confList.slice(step * confRateRange, step * confRateRange + confRateRange);
+            const confRateRangeList = txList.slice(step * confRateRange, step * confRateRange + confRateRange);
             const confRate = Math.round(confRateRangeList
-                .filter(tx => tx === true || tx === 'milestone' || tx === 'milestone_trunk')
+                .filter(tx => tx.confirmed === true)
                 .length / confRateRangeList.length * 1000) / 10;
 
             const tps = Math.round(100 / ((timer[step+1] - timer[step]) / 1000) * 10) / 10;
@@ -263,6 +265,11 @@ const Main = () => {
             timer.push(Date.now());
         }
         totalTPS = Math.round(totalTransactions / ((Date.now() - initialTime) / 1000) * 100) / 100;
+
+        // Calculate confirmation rate of all TX
+        totalConfRate = Math.round(txList
+            .filter(tx => tx.confirmed === true).length / txList.length * 10000
+        ) / 100;
 
         // Adapt canvas height to amount of transactions (pixel height)
         if(c.height < timer.length * pxSize * 2 + offsetHeight + 30) {
