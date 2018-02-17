@@ -19,6 +19,13 @@ const margin = 100;
 
 const pxSize = 10;
 const txPerLine = Math.ceil(cWidth / pxSize);
+
+const textColor = "#000000";
+const strokeColor = '#cccccc';
+const fontFace = 'Consolas';
+const fontSizeHeader = '13px';
+const fontSizeAxis = '11px';
+
 const pxColorUnconf = {r:0, g:0, b:0, a:1};
 const pxColorConf = {r:0, g:255, b:0, a:1};
 const pxColorMilestone = {r:0, g:0, b:255, a:1};
@@ -36,7 +43,7 @@ let milestonesTrunk = [];
 let timer = [];
 
 // Get confirmation status for current transactions
-const GetTxConfStatus = TxList_GetTxConfStatus => {
+const GetTxConfStatus = txList_GetTxConfStatus => {
 
     // Store temporary polling chunks
     let confListTemp = [];
@@ -67,12 +74,12 @@ const GetTxConfStatus = TxList_GetTxConfStatus => {
                     });
                 }
 
-                iotajs.api.getInclusionStates( transactionHashes, [nodeInfo.latestMilestone], (e, result) => {
+                iotajs.api.getInclusionStates( transactionHashes, [nodeInfo.latestMilestone], (e, inclusionStates) => {
                     if (e){
                        console.error('Error getInclusionStates: ', e);
 
                     } else {
-                        confListTemp = confListTemp.concat(result);
+                        confListTemp = confListTemp.concat(inclusionStates);
 
                         // If TX chunk left make another call
                         if (txChunksWrapper.length > 0) {
@@ -80,7 +87,9 @@ const GetTxConfStatus = TxList_GetTxConfStatus => {
 
                         } else {
                             // Calculate confirmation rate of all TX
-                            totalConfRate = Math.round(confListTemp.filter(tx => tx === true).length / confListTemp.length * 10000) / 100;
+                            totalConfRate = Math.round(confListTemp
+                                .filter(tx => tx === true).length / confListTemp.length * 10000
+                            ) / 100;
 
                             // If milestone TX hash found swap entry to recogninze for later color selection
                             milestones.map( milestone => {
@@ -102,21 +111,20 @@ const GetTxConfStatus = TxList_GetTxConfStatus => {
     }
 
     // Workaround -> Split transaction list into '999 TX chunks' for confirmation status polling,
-    // because splice() breaks out of scope and tampers with txList array.
-    // Same when +999 TX get passed to getLatestInclusion, which also slits polling into 999 TX chunks.
-    // No idea how splice can tamper with arrays out of scope, maybe iota.lib.js issue?
+    // because splice() breaks out of scope and tampers with txList array. Don't know why yet..
+    // Same when +999 TX get passed to getLatestInclusion, which also splits polling into 999 TX chunks.
 
     // Create 999 chunks of calls and store in wrapper
     let txChunksWrapper = [];
-    while (TxList_GetTxConfStatus.length > 0) {
+    while (txList_GetTxConfStatus.length > 0) {
 
-        if (TxList_GetTxConfStatus.length > 999) {
-            txChunksWrapper.push(TxList_GetTxConfStatus.slice(0, 999));
-            TxList_GetTxConfStatus = TxList_GetTxConfStatus.slice(1000);
+        if (txList_GetTxConfStatus.length > 999) {
+            txChunksWrapper.push(txList_GetTxConfStatus.slice(0, 999));
+            txList_GetTxConfStatus = txList_GetTxConfStatus.slice(1000);
 
         } else {
-            txChunksWrapper.push(TxList_GetTxConfStatus);
-            TxList_GetTxConfStatus = [];
+            txChunksWrapper.push(txList_GetTxConfStatus);
+            txList_GetTxConfStatus = [];
         }
     }
     // Start polling for confirmation status
@@ -133,11 +141,10 @@ const calcLineCount = (i, pxSize, cWidth) => {
 const DrawCanvas = (txList_DrawCanvas) => {
     // Clear screen
     ctx.clearRect(0, 0, cWidth + offsetWidth, c.height);
-    const txAmount = txList_DrawCanvas.length;
+
     // Create array of transaction pixels including respective confirmation status
     let pxls = [];
-    Array.from(Array(txAmount), (_, i) => {
-
+    txList_DrawCanvas.map( (_, i) => {
         const lineCount = calcLineCount(i, pxSize, cWidth);
         const confStatus = confList[i];
 
@@ -147,11 +154,11 @@ const DrawCanvas = (txList_DrawCanvas) => {
             conf: confStatus,
             time: timestamps[i]
         });
-    });
+    } );
 
     // Create header metrics and legend labels
-    ctx.font = "13px Consolas";
-    ctx.fillStyle = "black";
+    ctx.font = `${fontSizeHeader} ${fontFace}`;
+    ctx.fillStyle = textColor;
     ctx.textBaseline = 'hanging';
     ctx.textAlign = "left";
 
@@ -163,11 +170,11 @@ const DrawCanvas = (txList_DrawCanvas) => {
     ctx.fillText('Confirmed', margin + 405, 25);
     ctx.fillText('Milestone', margin + 405, 40);
 
-    ctx.fillStyle = 'rgba(' + 0 + ',' + 0 + ',' + 0 + ',' + 1 + ')';
+    ctx.fillStyle = 'rgba(0,0,0,1)';
     ctx.fillRect(margin + 390, 10, pxSize, pxSize);
-    ctx.fillStyle = 'rgba(' + 0 + ',' + 255 + ',' + 0 + ',' + 1 + ')';
+    ctx.fillStyle = 'rgba(0,255,0,1)';
     ctx.fillRect(margin + 390, 25, pxSize, pxSize);
-    ctx.fillStyle = 'rgba(' + 0 + ',' + 0 + ',' + 255 + ',' + 1 + ')';
+    ctx.fillStyle = 'rgba(0,0,255,1)';
     ctx.fillRect(margin + 390, 40, pxSize, pxSize);
 
     // Draw TX pixels and additional metrics
@@ -178,19 +185,21 @@ const DrawCanvas = (txList_DrawCanvas) => {
 
             const step = pixelIndex / confRateRange;
 
-            ctx.font = "11px Consolas";
-            ctx.fillStyle = "black";
+            ctx.font = `${fontSizeAxis} ${fontFace}`;
+            ctx.fillStyle = textColor;
             ctx.textBaseline = 'hanging';
             ctx.textAlign = "right";
 
             // Calc current TPS and display appropriately
             const confRateRangeList = confList.slice(step * confRateRange, step * confRateRange + confRateRange);
             const confRate = Math.round(confRateRangeList
-                .filter(tx => tx === true || tx === 'milestone' || tx === 'milestone_trunk').length / confRateRangeList.length * 1000) / 10;
+                .filter(tx => tx === true || tx === 'milestone' || tx === 'milestone_trunk')
+                .length / confRateRangeList.length * 1000) / 10;
 
             const tps = Math.round(100 / ((timer[step+1] - timer[step]) / 1000) * 10) / 10;
 
-            ctx.fillText((isNaN(confRate) ? '0' : confRate) + '%' + (isNaN(tps) ? ' [...]' : ' [' + tps.toFixed(1) + ' TPS]'), margin - 5, px.y + offsetHeight + 5);
+            ctx.fillText((isNaN(confRate) ? '0' : confRate) + '%' + (isNaN(tps) ? ' [...]' : ' [' + tps.toFixed(1) + ' TPS]'),
+            margin - 5, px.y + offsetHeight + 5);
         }
         // Adapt TX color to confirmation or milestone status
         let pxColor;
@@ -199,14 +208,14 @@ const DrawCanvas = (txList_DrawCanvas) => {
 
         } else if (px.conf === 'milestone') {
 
-            ctx.font = "11px Consolas";
-            ctx.fillStyle = "black";
+            ctx.font = `${fontSizeAxis} ${fontFace}`;
+            ctx.fillStyle = textColor;
             ctx.textBaseline = 'hanging';
             ctx.textAlign = "left";
 
             pxColor = pxColorMilestone;
             const minElapsed = Math.floor( (Math.floor(Date.now() / 1000) - px.time) / 60 );
-            ctx.fillText(minElapsed + ' min ago', margin + cWidth + 5, px.y + offsetHeight);
+            ctx.fillText(`${minElapsed} min ago`, margin + cWidth + 5, px.y + offsetHeight);
 
         } else if (px.conf === 'milestone_trunk') {
             pxColor = pxColorMilestone;
@@ -216,7 +225,7 @@ const DrawCanvas = (txList_DrawCanvas) => {
         // Display actual TX pixel
         ctx.fillStyle = 'rgba(' + pxColor.r + ',' + pxColor.g + ',' + pxColor.b + ',' + pxColor.a + ')';
         ctx.fillRect(px.x + margin, px.y + offsetHeight, pxSize, pxSize);
-        ctx.strokeStyle = '#cccccc';
+        ctx.strokeStyle = strokeColor;
         ctx.lineWidth = 1;
         ctx.strokeRect(px.x + margin, px.y + offsetHeight, pxSize, pxSize);
 
@@ -231,8 +240,8 @@ const Main = () => {
         connection.send('{"subscriptions":{"transactions":true}}');
     };
 
-    connection.onerror = (error) => {
-        console.log('WebSocket Error ' + error);
+    connection.onerror = (e) => {
+        console.log('WebSocket Error ' + e);
     };
 
     connection.onmessage = (response) => {
