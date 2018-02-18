@@ -5,6 +5,7 @@
 // Set canvas and dimensions
 const c = document.getElementById('canvas');
 const ctx = c.getContext('2d');
+const tooltip = document.getElementById('tooltip');
 
 const iotajs = new IOTA({
     'host': 'https://nodes.thetangle.org', // http://field.carriota.com:80 => CORS issue , http://nodes.iota.fm:80 => no https
@@ -39,7 +40,75 @@ let totalConfRate = 0;
 let totalTransactions = 0;
 let totalTPS = 0;
 
+let mousePos;
+let pixelMap = [];
+
 let timer = [];
+let rateLimiter = 0;
+let txOfMousePosition = {};
+
+// Collect and store mouse position for TX info at mouseover
+const GetMousePos = (c, evt) => {
+    let rect = c.getBoundingClientRect();
+    return {
+        x: evt.clientX - rect.left,
+        y: evt.clientY - rect.top,
+        xReal: evt.clientX,
+        yReal: evt.clientY
+    };
+}
+
+const GetTXofMousePosition = (mousePosition) => {
+    mousePosition.y = mousePosition.y - offsetHeight;
+    mousePosition.x = mousePosition.x - margin;
+    const txAtMouse = pixelMap.reduce( (acc, tx) => {
+
+        if(mousePosition.x >= tx.x && mousePosition.x < tx.x + pxSize &&
+            mousePosition.y >= tx.y && mousePosition.y < tx.y + pxSize
+        ){
+            acc = tx;
+        }
+        return acc;
+    }, 0 );
+    return txAtMouse;
+}
+
+const OpenLink = () => {
+    if(txOfMousePosition.hash){
+        window.open(`https://thetangle.org/transaction/${txOfMousePosition.hash}`);
+    }
+}
+
+/*
+Listen to mousemove and search for TX at position of mousecursor
+Limitation of function calls for performance reasons
+Kind of workaround to not need a dedicated element for each TX pixel
+*/
+c.addEventListener('mousemove', evt => {
+    const now = Date.now();
+    if (now - rateLimiter > 25) {
+        mousePos = GetMousePos(c, evt);
+        txOfMousePosition = GetTXofMousePosition(mousePos);
+
+        if(txOfMousePosition.hash){
+            tooltip.innerHTML = txOfMousePosition.hash;
+            tooltip.style.display = 'block';
+            tooltip.style.top = `${mousePos.yReal+15}px`;
+            tooltip.style.left = `${mousePos.xReal+15}px`;
+            document.body.style.cursor = "pointer";
+
+        } else {
+            tooltip.style.display = 'none';
+            document.body.style.cursor = "auto";
+            txOfMousePosition = {};
+        }
+        rateLimiter = Date.now();
+    }
+}, false);
+
+c.addEventListener('click', () => {
+    OpenLink();
+}, false);
 
 // Get confirmation status for current transactions
 const GetTxConfStatus = txList_GetTxConfStatus => {
@@ -87,22 +156,15 @@ const GetTxConfStatus = txList_GetTxConfStatus => {
 
                     } else {
                         confListTemp = confListTemp.concat(inclusionStates);
-
+                        // Search for TX hash in list and update status if confirmed
+                        transactionHashes.map( (txHash, index) => {
+                            if (confListTemp[index] === true){
+                                const hashIndex = txList.findIndex(tx => tx.hash === txHash);
+                                txList[hashIndex].confirmed = true;
+                            }
+                        });
                         // If TX chunk left make another call
-                        if (txChunksWrapper.length > 0) {
-                            getLatestInclusion(txChunksWrapper);
-
-                        } else {
-                            // Polling finished
-                            // Search for TX hash in list and update status if confirmed
-                            transactionHashes.map( (txHash, index) => {
-                                if (confListTemp[index] === true){
-                                    const hashIndex = txList.findIndex(tx => tx.hash === txHash);
-                                    txList[hashIndex].confirmed = true;
-                                }
-                            });
-
-                        }
+                        if (txChunksWrapper.length > 0) { getLatestInclusion(txChunksWrapper); }
                     }
                 });
             }
@@ -117,9 +179,11 @@ const GetTxConfStatus = txList_GetTxConfStatus => {
         return acc;
     }, [] );
 
-    // Workaround -> Split transaction list into '999 TX chunks' for confirmation status polling,
-    // because splice() breaks out of scope and tampers with txList array. Don't know why yet..
-    // Same when +999 TX get passed to getLatestInclusion, which also splits polling into 999 TX chunks.
+    /*
+    Workaround -> Split transaction list into '999 TX chunks' for confirmation status polling,
+    because splice() breaks out of scope and tampers with txList array. Don't know why yet..
+    Same when +999 TX get passed to getLatestInclusion, which also splits polling into 999 TX chunks.
+    */
 
     // Create 999 chunks of calls and store in wrapper
     let txChunksWrapper = [];
@@ -157,11 +221,15 @@ const DrawCanvas = (txList_DrawCanvas) => {
         pxls.push({
             x: i * pxSize - (lineCount * pxSize * txPerLine),
             y: lineCount * pxSize,
-            conf: tx.confirmed,
+            hash: tx.hash,
+            confirmed: tx.confirmed,
             milestone: tx.milestone,
             time: tx.timestamp
         });
     } );
+
+    // Store current pixelmap in global variable for local TX polling
+    pixelMap = pxls;
 
     // Create header metrics and legend labels
     ctx.font = `${fontSizeHeader} ${fontFace}`;
@@ -210,7 +278,7 @@ const DrawCanvas = (txList_DrawCanvas) => {
         }
         // Adapt TX color to confirmation or milestone status
         let pxColor;
-        if (px.conf === false || px.conf === undefined){
+        if (px.confirmed === false || px.confirmed === undefined){
             pxColor = pxColorUnconf;
 
         } else if (px.milestone === true) {
@@ -240,6 +308,7 @@ const DrawCanvas = (txList_DrawCanvas) => {
 }
 
 const Main = () => {
+
     // Websocket
     const connection = new WebSocket('wss://api.thetangle.org/v1/live', ['soap', 'xmpp']);
 

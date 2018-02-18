@@ -1,5 +1,15 @@
 canvas#canvas{
-    border:0px solid #000000;
+    z-index: 1;
+    border: 1px solid #000000;
     margin: 20px auto;
     display: block;
+}
+div#tooltip{
+    position: absolute;
+    z-index: 2;
+    font-size: 13px;
+    background: #ffffff;
+    border: 1px solid #000000;
+    border-radius: 5px;
+    padding: 3px;
 }
