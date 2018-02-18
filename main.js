@@ -22,7 +22,8 @@ const pxSize = 10;
 const txPerLine = Math.ceil(cWidth / pxSize);
 
 const textColor = "#000000";
-const strokeColor = '#cccccc';
+const strokeColorNorm = '#cccccc';
+const strokeColorSelect = '#ff0000';
 const fontFace = 'Consolas';
 const fontSizeHeader = '13px';
 const fontSizeAxis = '11px';
@@ -34,8 +35,9 @@ const pxColorMilestone = {r:0, g:0, b:255, a:1};
 const initialTime = Date.now();
 
 let txList = [];
-let milestoneBuffer = "";
-let milestoneTrunkBuffer = "";
+let selectedAddress = '';
+let milestoneBuffer = '';
+let milestoneTrunkBuffer = '';
 let totalConfRate = 0;
 let totalTransactions = 0;
 let totalTPS = 0;
@@ -46,6 +48,13 @@ let pixelMap = [];
 let timer = [];
 let rateLimiter = 0;
 let txOfMousePosition = {};
+
+const ChangeAddress = () => {
+    selectedAddress = document.getElementById('address_input').value;
+    document.getElementById('status').innerHTML = `Address changed to ${selectedAddress}`;
+}
+
+document.getElementById('address_button').onclick = function(){ChangeAddress()};
 
 // Collect and store mouse position for TX info at mouseover
 const GetMousePos = (c, evt) => {
@@ -91,7 +100,8 @@ c.addEventListener('mousemove', evt => {
         txOfMousePosition = GetTXofMousePosition(mousePos);
 
         if(txOfMousePosition.hash){
-            tooltip.innerHTML = txOfMousePosition.hash;
+            tooltip.innerHTML = `Address: ${txOfMousePosition.address}<br>TX Hash: ${txOfMousePosition.hash}`;
+            selectedAddress = txOfMousePosition.address;
             tooltip.style.display = 'block';
             tooltip.style.top = `${mousePos.yReal+15}px`;
             tooltip.style.left = `${mousePos.xReal+15}px`;
@@ -101,6 +111,7 @@ c.addEventListener('mousemove', evt => {
             tooltip.style.display = 'none';
             document.body.style.cursor = "auto";
             txOfMousePosition = {};
+            selectedAddress = '';
         }
         rateLimiter = Date.now();
     }
@@ -223,6 +234,7 @@ const DrawCanvas = (txList_DrawCanvas) => {
             y: lineCount * pxSize,
             hash: tx.hash,
             confirmed: tx.confirmed,
+            address: tx.address,
             milestone: tx.milestone,
             time: tx.timestamp
         });
@@ -276,10 +288,14 @@ const DrawCanvas = (txList_DrawCanvas) => {
             ctx.fillText((isNaN(confRate) ? '0' : confRate) + '%' + (isNaN(tps) ? ' [...]' : ' [' + tps.toFixed(1) + ' TPS]'),
             margin - 5, px.y + offsetHeight + 5);
         }
+
         // Adapt TX color to confirmation or milestone status
         let pxColor;
+        let strokeCol;
+
         if (px.confirmed === false || px.confirmed === undefined){
             pxColor = pxColorUnconf;
+            strokeCol = strokeColorNorm;
 
         } else if (px.milestone === true) {
 
@@ -289,18 +305,25 @@ const DrawCanvas = (txList_DrawCanvas) => {
             ctx.textAlign = "left";
 
             pxColor = pxColorMilestone;
+            strokeCol = strokeColorNorm;
             const minElapsed = Math.floor( (Math.floor(Date.now() / 1000) - px.time) / 60 );
             ctx.fillText(`${minElapsed} min ago`, margin + cWidth + 5, px.y + offsetHeight);
 
         } else if (px.milestone === 'trunk') {
             pxColor = pxColorMilestone;
-        } else {
+            strokeCol = strokeColorNorm;
+        } else if (px.confirmed === true) {
             pxColor = pxColorConf;
+            strokeCol = strokeColorNorm;
+        }
+
+        if (px.address === selectedAddress){
+            strokeCol = strokeColorSelect;
         }
         // Display actual TX pixel
         ctx.fillStyle = 'rgba(' + pxColor.r + ',' + pxColor.g + ',' + pxColor.b + ',' + pxColor.a + ')';
         ctx.fillRect(px.x + margin, px.y + offsetHeight, pxSize, pxSize);
-        ctx.strokeStyle = strokeColor;
+        ctx.strokeStyle = strokeCol;
         ctx.lineWidth = 1;
         ctx.strokeRect(px.x + margin, px.y + offsetHeight, pxSize, pxSize);
 
@@ -325,8 +348,9 @@ const Main = () => {
         const newTx = JSON.parse(response.data);
         const hash = newTx['transaction']['hash'];
         const timestamp = newTx['transaction']['receivedAt'];
+        const address = newTx['transaction']['address'];
 
-        txList.push({'hash': hash, 'confirmed': false, 'timestamp': timestamp, 'milestone': false});
+        txList.push({'hash': hash, 'confirmed': false, 'timestamp': timestamp, 'address': address, 'milestone': false});
 
         // Calculate metrics
         totalTransactions = txList.length;

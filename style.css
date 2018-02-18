@@ -4,12 +4,34 @@ canvas#canvas{
     margin: 20px auto;
     display: block;
 }
+
 div#tooltip{
     position: absolute;
+    display: none;
     z-index: 2;
     font-size: 13px;
     background: #ffffff;
     border: 1px solid #000000;
     border-radius: 5px;
     padding: 3px;
+}
+
+div#inputs{
+    display: table;
+    margin: 5px auto;
+}
+
+input#address_input{
+    margin: 5px auto;
+    display: inline-block;
+}
+
+button#address_button{
+    display: inline-block;
+}
+
+div#status{
+    display: table;
+    margin: 5px auto;
+    font-size: 11px;
 }
