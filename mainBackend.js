@@ -254,7 +254,7 @@ const Main = () => {
     window.setInterval( () => {
 
         /* Fetch current tangle TX from remote backend */
-        fetch('http://37.120.183.203/txDB/txHistory.json', {cache: "no-cache"})
+        fetch('https://37.120.183.203/txDB/txHistory.json', {cache: "no-cache"})
         .then((resp) => resp.json())
         .then((txHistory) => {
             txList = txHistory;
