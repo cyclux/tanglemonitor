@@ -14,6 +14,7 @@ div#tooltip{
     border: 1px solid #000000;
     border-radius: 5px;
     padding: 3px;
+    white-space: nowrap;
 }
 
 div#inputs{
@@ -33,5 +34,5 @@ button#address_button{
 div#status{
     display: table;
     margin: 5px auto;
-    font-size: 11px;
+    font-size: 13px;
 }
