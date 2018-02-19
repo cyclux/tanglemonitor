@@ -53,6 +53,12 @@ div#tooltip{
     white-space: nowrap;
 }
 
+div#github_buttons{
+    text-align: right;
+    margin-right: 20px;
+    margin-top: 20px;
+}
+
 div#inputs{
     display: table;
     margin: 5px auto;
