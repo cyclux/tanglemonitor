@@ -1,8 +1,8 @@
 /*eslint no-console: ["error", { allow: ["log", "error"] }] */
-/* global window, document, fetch, console */
+/* global window, document, fetch, console, _ */
 'use strict';
 
-// Set canvas and dimensions
+/* Set canvas and dimensions */
 const c = document.getElementById('canvas');
 const ctx = c.getContext('2d');
 const tooltip = document.getElementById('tooltip');
@@ -32,6 +32,8 @@ let totalConfRate = 0;
 let totalTransactions = 0;
 let totalTPS = 0;
 
+let topList = [];
+
 let mousePos;
 let pixelMap = [];
 
@@ -45,6 +47,94 @@ const ChangeAddress = () => {
 }
 
 document.getElementById('address_button').onclick = function(){ChangeAddress()};
+
+/* Table creation for toplist */
+function createTable(currentList) {
+
+    const mytable = document.getElementById("toplist");
+    mytable.innerHTML = "";
+    const tablehead = document.createElement("thead");
+    const tablebody = document.createElement("tbody");
+    const head_tr = document.createElement("tr");
+
+    for(let j = 0; j < 10; j++) {
+        const current_row = document.createElement("tr");
+
+        for(let i = 0; i < 5; i++) {
+            const mycurrent_cell = document.createElement("td");
+            mycurrent_cell.addEventListener('mouseenter', () => {
+                selectedAddress = mycurrent_cell.getAttribute('tx');
+            }, false);
+
+            mycurrent_cell.addEventListener('click', () => {
+                OpenLink(mycurrent_cell.getAttribute('tx'));
+            }, false);
+            /* Insert table contents */
+            let currenttext;
+
+            switch(i) {
+                case 0:
+                    currenttext = document.createTextNode(currentList[j][0].substring(0,50) + '...');
+                break;
+                case 1:
+                    currenttext = document.createTextNode(currentList[j][2]);
+                break;
+                case 2:
+                    currenttext = document.createTextNode(currentList[j][3]);
+                break;
+                case 3:
+                    currenttext = document.createTextNode(currentList[j][4]);
+                break;
+                case 4:
+                    currenttext = document.createTextNode(currentList[j][5]);
+                break;
+
+                default:
+                    currenttext = document.createTextNode('N/A');
+            }
+
+            mycurrent_cell.appendChild(currenttext);
+            mycurrent_cell.setAttribute('tx', currentList[j][0]);
+            current_row.appendChild(mycurrent_cell);
+        }
+        tablebody.appendChild(current_row);
+    }
+
+    for(let i = 0; i < 5; i++) {
+        const mycurrent_cell = document.createElement("td");
+
+        let currenttext;
+
+        switch(i) {
+            case 0:
+                currenttext = document.createTextNode('Address');
+            break;
+            case 1:
+                currenttext = document.createTextNode('Total');
+            break;
+            case 2:
+                currenttext = document.createTextNode('Confirmed');
+            break;
+            case 3:
+                currenttext = document.createTextNode('Unconfirmed');
+            break;
+            case 4:
+                currenttext = document.createTextNode('TPS');
+            break;
+
+            default:
+                currenttext = document.createTextNode('N/A');
+        }
+
+        mycurrent_cell.appendChild(currenttext);
+        head_tr.appendChild(mycurrent_cell);
+    }
+
+    tablehead.appendChild(head_tr);
+    mytable.appendChild(tablehead);
+    mytable.appendChild(tablebody);
+
+}
 
 /* Collect and store mouse position for TX info at mouseover */
 const GetMousePos = (c, evt) => {
@@ -86,7 +176,10 @@ const GetTXofMousePosition = (mousePosition) => {
     return txAtMouse;
 }
 
-const OpenLink = () => {
+const OpenLink = (tx) => {
+    if(tx){
+        window.open(`https://thetangle.org/address/${tx}`);
+    }
     if(txOfMousePosition.hash){
         window.open(`https://thetangle.org/transaction/${txOfMousePosition.hash}`);
     }
@@ -123,7 +216,7 @@ c.addEventListener('mousemove', evt => {
 }, false);
 
 c.addEventListener('click', () => {
-    OpenLink();
+    OpenLink(false);
 }, false);
 
 /* Get current line position to draw each */
@@ -257,6 +350,9 @@ const Main = () => {
         fetch('https://37.120.183.203/txDB/txHistory.json', {cache: "no-cache"})
         .then((resp) => resp.json())
         .then((txHistory) => {
+
+            document.getElementById('loading').style.display = 'none';
+
             txList = txHistory;
 
             /* Calculate metrics */
@@ -278,6 +374,37 @@ const Main = () => {
             totalConfRate = Math.round(txList
                 .filter(tx => tx.confirmed === true).length / txList.length * 10000
             ) / 100;
+
+            /* Create toplist */
+            const partitioned = _.partition(txList, 'confirmed');
+            const confirmed = partitioned[0];
+            const unconfirmed = partitioned[1];
+
+            // _.groupBy(['one', 'two', 'three'], 'length');  instread of partition?
+            const confirmedCounted = _.countBy(confirmed, 'address');
+            const entries = Object.entries(confirmedCounted);
+            const sorted = entries.sort((b, a) => a[1] - b[1]);
+
+            sorted.map( (tx, index) => {
+                const unconfirmedOnes = unconfirmed.filter( txs => txs.address === tx[0]).length;
+                const confirmedOnes = tx[1];
+                const total = unconfirmedOnes + tx[1];
+                const confirmedOnesRatio = ((confirmedOnes/total) * 100).toFixed(1)
+                const unconfirmedOnesRatio = ((unconfirmedOnes/total) * 100).toFixed(1)
+                const addressTPS = Math.round(total / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
+
+                sorted[index].push(total);
+                sorted[index].push(`${confirmedOnes} [${confirmedOnesRatio}%]`);
+                sorted[index].push(`${unconfirmedOnes} [${unconfirmedOnesRatio}%]`);
+                sorted[index].push(addressTPS);
+
+            });
+
+            topList = sorted;
+
+            if(topList.length > 0) {
+                createTable(topList);
+            }
 
             /* Adapt canvas height to amount of transactions (pixel height) */
             while(c.height < timer.length * pxSize * 2 + offsetHeight + 30) {

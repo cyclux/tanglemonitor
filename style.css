@@ -1,8 +1,44 @@
+body{
+    font-family: Consolas;
+}
 canvas#canvas{
     z-index: 1;
     border: 1px solid #000000;
     margin: 20px auto;
     display: block;
+}
+
+div#loading{
+    font-size: 20px;
+    font-weight: bold;
+    display: table;
+    margin: 0 auto;
+}
+
+table#toplist{
+    width: 700px;
+    border: 0px solid #000000;
+    display: table;
+    margin: 0 auto;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+tbody>tr:nth-child(odd) {
+    background-color: #f2f2f2;
+}
+
+tbody{
+    cursor: pointer;
+}
+
+table, th, td {
+    border: 0px solid black;
+}
+thead {
+    background-color: #ffffff !important;
+    font-size: 15px;
+    font-weight: bold;
 }
 
 div#tooltip{
