@@ -4,7 +4,7 @@ body{
 canvas#canvas{
     z-index: 1;
     border: 1px solid #000000;
-    margin: 20px auto;
+    margin: 0px auto 60px;
     display: block;
 }
 
@@ -61,12 +61,13 @@ div#github_buttons{
 
 div#inputs{
     display: table;
-    margin: 5px auto;
+    margin: 5px auto 0px;
 }
 
 input#address_input{
     margin: 5px auto;
     display: inline-block;
+    padding: 1px 0px 2px 4px;
 }
 
 button#address_button{
