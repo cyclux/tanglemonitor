@@ -347,7 +347,7 @@ const Main = () => {
     window.setInterval( () => {
 
         /* Fetch current tangle TX from remote backend */
-        fetch('https://37.120.183.203/txDB/txHistory.json', {cache: "no-cache"})
+        fetch('https://junglecrowd.org/txDB/txHistory.json', {cache: "no-cache"})
         .then((resp) => resp.json())
         .then((txHistory) => {
 
@@ -401,6 +401,7 @@ const Main = () => {
             });
 
             topList = sorted;
+
 
             if(topList.length > 0) {
                 createTable(topList);
