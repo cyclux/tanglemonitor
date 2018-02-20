@@ -57,7 +57,10 @@ function createTable(currentList) {
     const tablebody = document.createElement("tbody");
     const head_tr = document.createElement("tr");
 
-    for(let j = 0; j < 10; j++) {
+    let topListCount = 0;
+    currentList.length >= 10 ? topListCount = 10 : topListCount = currentList.length;
+
+    for(let j = 0; j < topListCount; j++) {
         const current_row = document.createElement("tr");
 
         for(let i = 0; i < 5; i++) {
@@ -402,7 +405,7 @@ const Main = () => {
 
             topList = sorted;
 
-
+            console.log(topList);
             if(topList.length > 0) {
                 createTable(topList);
             }
