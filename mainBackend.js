@@ -411,7 +411,6 @@ const Main = () => {
 
             topList = sorted;
 
-            console.log(topList);
             if(topList.length > 0) {
                 createTable(topList);
             }
