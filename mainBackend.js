@@ -77,18 +77,21 @@ function createTable(currentList) {
 
             switch(i) {
                 case 0:
-                    currenttext = document.createTextNode(currentList[j][0].substring(0,50) + '...');
+                    currenttext = document.createTextNode(j + 1);
                 break;
                 case 1:
-                    currenttext = document.createTextNode(currentList[j][2]);
+                    currenttext = document.createTextNode(currentList[j][0].substring(0,50) + '...');
                 break;
                 case 2:
-                    currenttext = document.createTextNode(currentList[j][3]);
+                    currenttext = document.createTextNode(currentList[j][2]);
                 break;
                 case 3:
-                    currenttext = document.createTextNode(currentList[j][4]);
+                    currenttext = document.createTextNode(currentList[j][3]);
                 break;
                 case 4:
+                    currenttext = document.createTextNode(currentList[j][4]);
+                break;
+                case 5:
                     currenttext = document.createTextNode(currentList[j][5]);
                 break;
 
@@ -110,18 +113,21 @@ function createTable(currentList) {
 
         switch(i) {
             case 0:
-                currenttext = document.createTextNode('Address');
+                currenttext = document.createTextNode('#');
             break;
             case 1:
-                currenttext = document.createTextNode('Total');
+                currenttext = document.createTextNode('Address');
             break;
             case 2:
-                currenttext = document.createTextNode('Confirmed');
+                currenttext = document.createTextNode('Total');
             break;
             case 3:
-                currenttext = document.createTextNode('Unconfirmed');
+                currenttext = document.createTextNode('Confirmed');
             break;
             case 4:
+                currenttext = document.createTextNode('Unconfirmed');
+            break;
+            case 5:
                 currenttext = document.createTextNode('TPS');
             break;
 
