@@ -63,7 +63,7 @@ function createTable(currentList) {
     for(let j = 0; j < topListCount; j++) {
         const current_row = document.createElement("tr");
 
-        for(let i = 0; i < 5; i++) {
+        for(let i = 0; i < 6; i++) {
             const mycurrent_cell = document.createElement("td");
             mycurrent_cell.addEventListener('mouseenter', () => {
                 selectedAddress = mycurrent_cell.getAttribute('tx');
@@ -106,7 +106,7 @@ function createTable(currentList) {
         tablebody.appendChild(current_row);
     }
 
-    for(let i = 0; i < 5; i++) {
+    for(let i = 0; i < 6; i++) {
         const mycurrent_cell = document.createElement("td");
 
         let currenttext;
@@ -295,7 +295,7 @@ const DrawCanvas = (txList_DrawCanvas) => {
             /* Calc current TPS and display appropriately */
             const confRateRangeList = txList.slice(step * confRateRange, step * confRateRange + confRateRange);
             const confRate = Math.round(confRateRangeList
-                .filter(tx => tx.confirmed === true)
+                .filter(tx => tx.confirmed !== false)
                 .length / confRateRangeList.length * 1000) / 10;
 
             const tps = Math.round(100 / ((timer[step+1] - timer[step]) ) * 10) / 10;
@@ -325,7 +325,7 @@ const DrawCanvas = (txList_DrawCanvas) => {
             pxColor = pxColorMilestone;
             strokeCol = strokeColorNorm;
         }
-        if (px.confirmed === true && px.milestone === false) {
+        if (px.confirmed !== false && px.milestone === false) {
             pxColor = pxColorConf;
             strokeCol = strokeColorNorm;
         }
@@ -333,7 +333,6 @@ const DrawCanvas = (txList_DrawCanvas) => {
             pxColor = pxColorUnconf;
             strokeCol = strokeColorNorm;
         }
-
         if (px.address === selectedAddress){
             strokeCol = strokeColorSelect;
         }
@@ -376,12 +375,13 @@ const Main = () => {
             });
 
             timer = timerTemp;
-
-            totalTPS = Math.round(totalTransactions / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
+            if (totalTransactions > 0){
+                totalTPS = Math.round(totalTransactions / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
+            }
 
             /* Calculate confirmation rate of all TX */
             totalConfRate = Math.round(txList
-                .filter(tx => tx.confirmed === true).length / txList.length * 10000
+                .filter(tx => tx.confirmed !== false).length / txList.length * 10000
             ) / 100;
 
             /* Create toplist */
