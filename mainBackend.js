@@ -29,6 +29,8 @@ const pxColorMilestone = {r:0, g:0, b:255, a:1};
 let txList = [];
 let selectedAddress = '';
 let totalConfRate = 0;
+let totalConfirmations = [];
+let totalConfirmationTime = 0;
 let totalTransactions = 0;
 let totalTPS = 0;
 
@@ -207,7 +209,10 @@ c.addEventListener('mousemove', evt => {
         txOfMousePosition = GetTXofMousePosition(mousePos);
 
         if(txOfMousePosition.hash){
-            tooltip.innerHTML = `Address: ${txOfMousePosition.address}<br>TX Hash: ${txOfMousePosition.hash}`;
+            let txConfirmationTime = _.round(txOfMousePosition.confirmed / 60, 2);
+            txConfirmationTime !== 0 ? txConfirmationTime = txConfirmationTime + ' Minutes' : txConfirmationTime = 'Not confirmed yet';
+
+            tooltip.innerHTML = `Address: ${txOfMousePosition.address}<br>TX Hash: ${txOfMousePosition.hash}<br>Confirmation Time: ${txConfirmationTime}`;
             selectedAddress = txOfMousePosition.address;
             tooltip.style.display = 'block';
             tooltip.style.top = `${mousePos.yReal+15}px`;
@@ -267,17 +272,18 @@ const DrawCanvas = (txList_DrawCanvas) => {
     ctx.fillText('Total TX count    ' + totalTransactions, margin + 10, 10);
     ctx.fillText('Avg. TPS          ' + totalTPS, margin + 10, 25);
     ctx.fillText('Avg. conf. rate   ' + totalConfRate + ' %', margin + 10, 40);
+    ctx.fillText('Avg. conf. time: ' + totalConfirmationTime + ' min', margin + 220, 10);
 
-    ctx.fillText('Unconfirmed', margin + 405, 10);
-    ctx.fillText('Confirmed', margin + 405, 25);
-    ctx.fillText('Milestone', margin + 405, 40);
+    ctx.fillText('Unconfirmed', margin + 435, 10);
+    ctx.fillText('Confirmed', margin + 435, 25);
+    ctx.fillText('Milestone', margin + 435, 40);
 
     ctx.fillStyle = 'rgba(0,0,0,1)';
-    ctx.fillRect(margin + 390, 10, pxSize, pxSize);
+    ctx.fillRect(margin + 420, 10, pxSize, pxSize);
     ctx.fillStyle = 'rgba(0,255,0,1)';
-    ctx.fillRect(margin + 390, 25, pxSize, pxSize);
+    ctx.fillRect(margin + 420, 25, pxSize, pxSize);
     ctx.fillStyle = 'rgba(0,0,255,1)';
-    ctx.fillRect(margin + 390, 40, pxSize, pxSize);
+    ctx.fillRect(margin + 420, 40, pxSize, pxSize);
 
     /*  Draw TX pixels and additional metrics */
     pxls.map( (px, pixelIndex ) => {
@@ -379,10 +385,19 @@ const Main = () => {
                 totalTPS = Math.round(totalTransactions / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
             }
 
+            totalConfirmations = txList
+                .reduce( (acc, tx) => {
+                if(tx.confirmed !== false){
+                acc.push(tx.confirmed);
+                }
+                return acc;
+            }, [] );
+
             /* Calculate confirmation rate of all TX */
-            totalConfRate = Math.round(txList
-                .filter(tx => tx.confirmed !== false).length / txList.length * 10000
-            ) / 100;
+            totalConfRate = Math.round(totalConfirmations.length / txList.length * 10000) / 100;
+            /* Calculate average confirmation time of all confirmed TX */
+            totalConfirmationTime = _.mean(totalConfirmations);
+            totalConfirmationTime = _.round(totalConfirmationTime / 60, 1)
 
             /* Create toplist */
             const partitioned = _.partition(txList, 'confirmed');
