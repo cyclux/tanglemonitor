@@ -30,12 +30,14 @@ tbody>tr:nth-child(odd) {
 
 tbody{
     cursor: pointer;
+    text-align: right;
 }
 
 table, th, td {
     border: 0px solid black;
 }
 thead {
+    text-align: center;
     background-color: #ffffff !important;
     font-size: 15px;
     font-weight: bold;

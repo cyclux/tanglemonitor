@@ -65,7 +65,7 @@ function createTable(currentList) {
     for(let j = 0; j < topListCount; j++) {
         const current_row = document.createElement("tr");
 
-        for(let i = 0; i < 6; i++) {
+        for(let i = 0; i < 7; i++) {
             const mycurrent_cell = document.createElement("td");
             mycurrent_cell.addEventListener('mouseenter', () => {
                 selectedAddress = mycurrent_cell.getAttribute('tx');
@@ -82,7 +82,7 @@ function createTable(currentList) {
                     currenttext = document.createTextNode(j + 1);
                 break;
                 case 1:
-                    currenttext = document.createTextNode(currentList[j][0].substring(0,50) + '...');
+                    currenttext = document.createTextNode(currentList[j][0].substring(0,40) + '...');
                 break;
                 case 2:
                     currenttext = document.createTextNode(currentList[j][2]);
@@ -96,6 +96,9 @@ function createTable(currentList) {
                 case 5:
                     currenttext = document.createTextNode(currentList[j][5]);
                 break;
+                case 6:
+                    currenttext = document.createTextNode(currentList[j][6] + ' min');
+                break;
 
                 default:
                     currenttext = document.createTextNode('N/A');
@@ -108,7 +111,7 @@ function createTable(currentList) {
         tablebody.appendChild(current_row);
     }
 
-    for(let i = 0; i < 6; i++) {
+    for(let i = 0; i < 7; i++) {
         const mycurrent_cell = document.createElement("td");
 
         let currenttext;
@@ -131,6 +134,9 @@ function createTable(currentList) {
             break;
             case 5:
                 currenttext = document.createTextNode('TPS');
+            break;
+            case 6:
+                currenttext = document.createTextNode('~Time');
             break;
 
             default:
@@ -412,6 +418,12 @@ const Main = () => {
             sorted.map( (tx, index) => {
                 const unconfirmedOnes = unconfirmed.filter( txs => txs.address === tx[0]).length;
                 const confirmedOnes = tx[1];
+                const confirmationTime = confirmed.reduce( (acc, txs) => {
+                    if (txs.address === tx[0]){
+                        acc.push(txs.confirmed);
+                    }
+                    return acc;}, []);
+                const confirmationTimeMean = (_.mean(confirmationTime) / 60).toFixed(1);
                 const total = unconfirmedOnes + tx[1];
                 const confirmedOnesRatio = ((confirmedOnes/total) * 100).toFixed(1)
                 const unconfirmedOnesRatio = ((unconfirmedOnes/total) * 100).toFixed(1)
@@ -421,6 +433,7 @@ const Main = () => {
                 sorted[index].push(`${confirmedOnes} [${confirmedOnesRatio}%]`);
                 sorted[index].push(`${unconfirmedOnes} [${unconfirmedOnesRatio}%]`);
                 sorted[index].push(addressTPS);
+                sorted[index].push(confirmationTimeMean);
 
             });
 
