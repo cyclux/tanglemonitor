@@ -1,5 +1,5 @@
 /*eslint no-console: ["error", { allow: ["log", "error"] }] */
-/* global window, document, fetch, console, _ */
+/* global window, pako, document, fetch, console, _ */
 'use strict';
 
 /* Set canvas and dimensions */
@@ -367,8 +367,19 @@ const Main = () => {
     window.setInterval( () => {
 
         /* Fetch current tangle TX from remote backend */
-        fetch('https://junglecrowd.org/txDB/txHistory.json', {cache: "no-cache"})
-        .then((resp) => resp.json())
+        fetch('https://junglecrowd.org/txDB/txHistory.gzip', {cache: 'no-cache'})
+
+        .then( b64encoded => {return window.atob(b64encoded.json())})
+        .then( decompress => {
+            try {
+                return pako.inflate(decompress, { to: 'string' });
+            } catch (err) {
+                console.log(err);
+            }
+        })
+
+        .then( jsonParse => JSON.parse(jsonParse) )
+
         .then((txHistory) => {
 
             document.getElementById('loading').style.display = 'none';
