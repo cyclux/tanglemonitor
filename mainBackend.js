@@ -1,5 +1,5 @@
 /*eslint no-console: ["error", { allow: ["log", "error"] }] */
-/* global window, document, fetch, console, _ */
+/* global window, pako, document, fetch, console, _ */
 'use strict';
 
 /* Set canvas and dimensions */
@@ -60,12 +60,12 @@ function createTable(currentList) {
     const head_tr = document.createElement("tr");
 
     let topListCount = 0;
-    currentList.length >= 10 ? topListCount = 10 : topListCount = currentList.length;
+    currentList.length >= 10 ? topListCount = 20 : topListCount = currentList.length;
 
     for(let j = 0; j < topListCount; j++) {
         const current_row = document.createElement("tr");
 
-        for(let i = 0; i < 7; i++) {
+        for(let i = 0; i < currentList[0].length; i++) {
             const mycurrent_cell = document.createElement("td");
             mycurrent_cell.addEventListener('mouseenter', () => {
                 selectedAddress = mycurrent_cell.getAttribute('tx');
@@ -94,10 +94,16 @@ function createTable(currentList) {
                     currenttext = document.createTextNode(currentList[j][4]);
                 break;
                 case 5:
-                    currenttext = document.createTextNode(currentList[j][5]);
+                    currenttext = document.createTextNode(`${currentList[j][5].toFixed(1)}`);
                 break;
                 case 6:
-                    currenttext = document.createTextNode(currentList[j][6] + ' min');
+                    currenttext = document.createTextNode(currentList[j][6]);
+                break;
+                case 7:
+                    currenttext = document.createTextNode(currentList[j][7].toFixed(1) + ' min');
+                break;
+                case 8:
+                    currenttext = document.createTextNode(`${currentList[j][8] > 0 ? '+' : ''}${currentList[j][8].toFixed(1)}%`);
                 break;
 
                 default:
@@ -111,7 +117,7 @@ function createTable(currentList) {
         tablebody.appendChild(current_row);
     }
 
-    for(let i = 0; i < 7; i++) {
+    for(let i = 0; i < currentList[0].length; i++) {
         const mycurrent_cell = document.createElement("td");
 
         let currenttext;
@@ -133,10 +139,16 @@ function createTable(currentList) {
                 currenttext = document.createTextNode('Unconfirmed');
             break;
             case 5:
-                currenttext = document.createTextNode('TPS');
+                currenttext = document.createTextNode('Conf. Ratio');
             break;
             case 6:
+                currenttext = document.createTextNode('TPS');
+            break;
+            case 7:
                 currenttext = document.createTextNode('~Time');
+            break;
+            case 8:
+                currenttext = document.createTextNode('rel. Time');
             break;
 
             default:
@@ -366,13 +378,13 @@ const Main = () => {
 
     window.setInterval( () => {
 
-        //https://junglecrowd.org/txDB/txHistory.gzip
+        //https://junglecrowd.org/txDB/txHistory.gz.json
+        //http://localhost/IOTA-Confirmation-Visualizer/httpdocs/txDB/txHistory.gz.json
 
         /* Fetch current tangle TX from remote backend */
-        fetch('https://junglecrowd.org/txDB/txHistory.json', {cache: 'no-cache'})
-
-        /*
-        .then( b64encoded => {return window.atob(b64encoded.json())})
+        fetch('https://junglecrowd.org/txDB/txHistory.gz.json', {cache: 'no-cache'})
+        .then( json_test => json_test.json() )
+        .then( b64encoded => {return window.atob(b64encoded.txArrayCompressed)})
         .then( decompress => {
             try {
                 return pako.inflate(decompress, { to: 'string' });
@@ -381,11 +393,7 @@ const Main = () => {
             }
         })
         .then( jsonParse => JSON.parse(jsonParse) )
-        */
-
-        .then( jsonParse => jsonParse.json() )
-
-        .then((txHistory) => {
+        .then( txHistory => {
 
             document.getElementById('loading').style.display = 'none';
 
@@ -434,26 +442,38 @@ const Main = () => {
             sorted.map( (tx, index) => {
                 const unconfirmedOnes = unconfirmed.filter( txs => txs.address === tx[0]).length;
                 const confirmedOnes = tx[1];
-                const confirmationTime = confirmed.reduce( (acc, txs) => {
+                const confirmationTimeCollector = confirmed.reduce( (acc, txs) => {
+
                     if (txs.address === tx[0]){
-                        acc.push(txs.confirmed);
+                        acc[0].push(txs.confirmed);
+                    } else {
+                        acc[1].push(txs.confirmed);
                     }
-                    return acc;}, []);
-                const confirmationTimeMean = (_.mean(confirmationTime) / 60).toFixed(1);
+                    return acc;}, [[], []]);
+                const confirmationTime = confirmationTimeCollector[0];
+                const confirmationTimeOthers = confirmationTimeCollector[1];
+                const confirmationTimeMeanOthers = (_.mean(confirmationTimeOthers) / 60);
+                const confirmationTimeMean = (_.mean(confirmationTime) / 60);
+                const confirmationTimeMeanRatio = (((confirmationTimeMean/confirmationTimeMeanOthers) * 100) - 100);
+
                 const total = unconfirmedOnes + tx[1];
-                const confirmedOnesRatio = ((confirmedOnes/total) * 100).toFixed(1)
-                const unconfirmedOnesRatio = ((unconfirmedOnes/total) * 100).toFixed(1)
+                const confirmedOnesRatio = ((confirmedOnes/total) * 100)
+                const unconfirmedOnesRatio = ((unconfirmedOnes/total) * 100)
+                const confirmRatio = (unconfirmedOnes / confirmedOnes);
                 const addressTPS = Math.round(total / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
 
                 sorted[index].push(total);
-                sorted[index].push(`${confirmedOnes} [${confirmedOnesRatio}%]`);
-                sorted[index].push(`${unconfirmedOnes} [${unconfirmedOnesRatio}%]`);
+                sorted[index].push(`${confirmedOnes} [${confirmedOnesRatio.toFixed(1)}%]`);
+                sorted[index].push(`${unconfirmedOnes} [${unconfirmedOnesRatio.toFixed(1)}%]`);
+                sorted[index].push(confirmRatio);
                 sorted[index].push(addressTPS);
                 sorted[index].push(confirmationTimeMean);
+                sorted[index].push(confirmationTimeMeanRatio);
 
             });
 
             topList = sorted;
+
 
             if(topList.length > 0) {
                 createTable(topList);
