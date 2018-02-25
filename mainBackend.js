@@ -33,6 +33,7 @@ let totalConfirmations = [];
 let totalConfirmationTime = 0;
 let totalTransactions = 0;
 let totalTPS = 0;
+let totalCTPS = 0;
 
 let topList = [];
 let toplistAdditional = 0;
@@ -46,7 +47,7 @@ let rateLimiter = 0;
 let txOfMousePosition = {};
 
 const ChangeAddress = () => {
-    selectedAddress = document.getElementById('address_input').value;
+    selectedAddress = document.getElementById('address_input').value.substring(0,81);
     document.getElementById('status').innerHTML = `Address selection changed`;
 }
 
@@ -64,6 +65,11 @@ function createTable(currentList) {
     topListCount = 0;
     currentList.length >= 20 ? topListCount = 20 : topListCount = currentList.length;
     topListCount = topListCount + toplistAdditional;
+
+    /* Prevent greater topListCount than actual length under any circumstance */
+    if(topListCount >= currentList.length) {
+        topListCount = currentList.length
+    }
 
     for(let j = 0; j < topListCount; j++) {
         const current_row = document.createElement("tr");
@@ -97,13 +103,13 @@ function createTable(currentList) {
                     currenttext = document.createTextNode(currentList[j][4]);
                 break;
                 case 5:
-                    currenttext = document.createTextNode(`${currentList[j][5].toFixed(2)}`);
+                    currenttext = document.createTextNode(`${currentList[j][5] === Infinity ? 'infinite': currentList[j][5].toFixed(2)}`);
                 break;
                 case 6:
-                    currenttext = document.createTextNode(currentList[j][6]);
+                    currenttext = document.createTextNode(currentList[j][6].toFixed(2));
                 break;
                 case 7:
-                    currenttext = document.createTextNode(currentList[j][7]);
+                    currenttext = document.createTextNode(currentList[j][7].toFixed(2));
                 break;
                 case 8:
                     currenttext = document.createTextNode(currentList[j][8].toFixed(1) + ' min');
@@ -154,10 +160,10 @@ function createTable(currentList) {
                 currenttext = document.createTextNode('CTPS');
             break;
             case 8:
-                currenttext = document.createTextNode('~Time');
+                currenttext = document.createTextNode('~C.Time');
             break;
             case 9:
-                currenttext = document.createTextNode('rel. Time');
+                currenttext = document.createTextNode('±Avg.Time');
             break;
 
             default:
@@ -261,9 +267,8 @@ c.addEventListener('click', () => {
 }, false);
 
 document.getElementById('toplist-more').addEventListener('click', () => {
-    if(topList.length >= topListCount + toplistAdditional + 5){
-        toplistAdditional = toplistAdditional + 5;
-    }
+    toplistAdditional = toplistAdditional + 5;
+    createTable(topList);
 }, false);
 
 /* Get current line position to draw each */
@@ -306,22 +311,23 @@ const DrawCanvas = (txList_DrawCanvas) => {
     ctx.fillText('Avg. TPS          ' + totalTPS, margin + 10, 25);
     ctx.fillText('Avg. conf. rate   ' + totalConfRate + ' %', margin + 10, 40);
     ctx.fillText('Avg. conf. time: ' + totalConfirmationTime + ' min', margin + 220, 10);
+    ctx.fillText('Avg. CTPS        ' + totalCTPS, margin + 220, 25);
 
-    ctx.fillText('Unconfirmed', margin + 435, 10);
-    ctx.fillText('Confirmed', margin + 435, 25);
-    ctx.fillText('Milestone', margin + 435, 40);
+    ctx.fillText('Unconfirmed', cWidth, 10);
+    ctx.fillText('Confirmed', cWidth, 25);
+    ctx.fillText('Milestone', cWidth, 40);
 
     ctx.fillStyle = 'rgba(0,0,0,1)';
-    ctx.fillRect(margin + 420, 10, pxSize, pxSize);
+    ctx.fillRect(cWidth - 15, 10, pxSize, pxSize);
     ctx.fillStyle = 'rgba(0,255,0,1)';
-    ctx.fillRect(margin + 420, 25, pxSize, pxSize);
+    ctx.fillRect(cWidth - 15, 25, pxSize, pxSize);
     ctx.fillStyle = 'rgba(0,0,255,1)';
-    ctx.fillRect(margin + 420, 40, pxSize, pxSize);
+    ctx.fillRect(cWidth - 15, 40, pxSize, pxSize);
 
     /*  Draw TX pixels and additional metrics */
     pxls.map( (px, pixelIndex ) => {
         /* Declare amount of TX for calculation of TPS / confirmation rate metrics */
-        const confRateRange = 100;
+        const confRateRange = (txPerLine*2);
         if (pixelIndex % confRateRange == 0){
 
             const step = pixelIndex / confRateRange;
@@ -333,6 +339,7 @@ const DrawCanvas = (txList_DrawCanvas) => {
 
             /* Calc current TPS and display appropriately */
             const confRateRangeList = txList.slice(step * confRateRange, step * confRateRange + confRateRange);
+            //console.log(confRateRangeList.length);
             const confRate = Math.round(confRateRangeList
                 .filter(tx => tx.confirmed !== false)
                 .length / confRateRangeList.length * 1000) / 10;
@@ -420,15 +427,11 @@ const Main = () => {
             /* Do this on every 100 or x amount of TX */
             let timerTemp = [];
             txList.map( (tx, txNumber) => {
-                if(txNumber % 100 === 0){
+                if(txNumber % (txPerLine*2) === 0){
                     timerTemp.push(tx.timestamp);
                 }
             });
-
             timer = timerTemp;
-            if (totalTransactions > 0){
-                totalTPS = Math.round(totalTransactions / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
-            }
 
             totalConfirmations = txList
                 .reduce( (acc, tx) => {
@@ -442,7 +445,12 @@ const Main = () => {
             totalConfRate = Math.round(totalConfirmations.length / txList.length * 10000) / 100;
             /* Calculate average confirmation time of all confirmed TX */
             totalConfirmationTime = _.mean(totalConfirmations);
-            totalConfirmationTime = _.round(totalConfirmationTime / 60, 1)
+            totalConfirmationTime = _.round(totalConfirmationTime / 60, 1);
+
+            if (totalTransactions > 0){
+                totalTPS = Math.round(totalTransactions / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
+                totalCTPS = Math.round(totalConfirmations.length / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
+            }
 
             /* Create toplist */
             const partitioned = _.partition(txList, 'confirmed');
@@ -504,7 +512,7 @@ const Main = () => {
             console.log('Error fetching txHistory', e);
             /* This is where you run code if the server returns any errors */
         });
-    }, 5000);
+    }, 10000);
 }
 /* Init */
 Main();

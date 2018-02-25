@@ -8,7 +8,7 @@ body{
      -khtml-user-select: none;
        -moz-user-select: none;
         -ms-user-select: none;
-            user-select: none;                
+            user-select: none;
 }
 
 canvas#canvas{
@@ -26,7 +26,7 @@ div#loading{
 }
 
 table#toplist{
-    width: 900px;
+    width: 950px;
     border: 0px solid #000000;
     display: table;
     margin: 0 auto;
@@ -87,11 +87,14 @@ div#github_buttons{
 }
 
 div#inputs{
-    display: table;
+    width: 950px;
+    display: block;
+    text-align: center;
     margin: 5px auto 0px;
 }
 
 input#address_input{
+    width: 897px;
     margin: 5px auto;
     display: inline-block;
     padding: 1px 0px 2px 4px;
