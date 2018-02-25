@@ -35,6 +35,8 @@ let totalTransactions = 0;
 let totalTPS = 0;
 
 let topList = [];
+let toplistAdditional = 0;
+let topListCount = 0;
 
 let mousePos;
 let pixelMap = [];
@@ -59,8 +61,9 @@ function createTable(currentList) {
     const tablebody = document.createElement("tbody");
     const head_tr = document.createElement("tr");
 
-    let topListCount = 0;
-    currentList.length >= 10 ? topListCount = 20 : topListCount = currentList.length;
+    topListCount = 0;
+    currentList.length >= 20 ? topListCount = 20 : topListCount = currentList.length;
+    topListCount = topListCount + toplistAdditional;
 
     for(let j = 0; j < topListCount; j++) {
         const current_row = document.createElement("tr");
@@ -94,16 +97,19 @@ function createTable(currentList) {
                     currenttext = document.createTextNode(currentList[j][4]);
                 break;
                 case 5:
-                    currenttext = document.createTextNode(`${currentList[j][5].toFixed(1)}`);
+                    currenttext = document.createTextNode(`${currentList[j][5].toFixed(2)}`);
                 break;
                 case 6:
                     currenttext = document.createTextNode(currentList[j][6]);
                 break;
                 case 7:
-                    currenttext = document.createTextNode(currentList[j][7].toFixed(1) + ' min');
+                    currenttext = document.createTextNode(currentList[j][7]);
                 break;
                 case 8:
-                    currenttext = document.createTextNode(`${currentList[j][8] > 0 ? '+' : ''}${currentList[j][8].toFixed(1)}%`);
+                    currenttext = document.createTextNode(currentList[j][8].toFixed(1) + ' min');
+                break;
+                case 9:
+                    currenttext = document.createTextNode(`${currentList[j][9] > 0 ? '+' : ''}${currentList[j][9].toFixed(1)}%`);
                 break;
 
                 default:
@@ -139,15 +145,18 @@ function createTable(currentList) {
                 currenttext = document.createTextNode('Unconfirmed');
             break;
             case 5:
-                currenttext = document.createTextNode('Conf. Ratio');
+                currenttext = document.createTextNode('C.Ratio');
             break;
             case 6:
                 currenttext = document.createTextNode('TPS');
             break;
             case 7:
-                currenttext = document.createTextNode('~Time');
+                currenttext = document.createTextNode('CTPS');
             break;
             case 8:
+                currenttext = document.createTextNode('~Time');
+            break;
+            case 9:
                 currenttext = document.createTextNode('rel. Time');
             break;
 
@@ -220,7 +229,6 @@ Arbitrary rate limitation of function calls for performance reasons
 Kind of workaround to not need a dedicated element for each TX pixel which floods the DOM
 */
 c.addEventListener('mousemove', evt => {
-
     const now = Date.now();
     if (now - rateLimiter > 25) {
         mousePos = GetMousePos(c, evt);
@@ -247,8 +255,15 @@ c.addEventListener('mousemove', evt => {
     }
 }, false);
 
+/* Additional event listeners */
 c.addEventListener('click', () => {
     OpenLink(false);
+}, false);
+
+document.getElementById('toplist-more').addEventListener('click', () => {
+    if(topList.length >= topListCount + toplistAdditional + 5){
+        toplistAdditional = toplistAdditional + 5;
+    }
 }, false);
 
 /* Get current line position to draw each */
@@ -456,24 +471,25 @@ const Main = () => {
                 const confirmationTimeMean = (_.mean(confirmationTime) / 60);
                 const confirmationTimeMeanRatio = (((confirmationTimeMean/confirmationTimeMeanOthers) * 100) - 100);
 
-                const total = unconfirmedOnes + tx[1];
+                const total = unconfirmedOnes + confirmedOnes;
                 const confirmedOnesRatio = ((confirmedOnes/total) * 100)
                 const unconfirmedOnesRatio = ((unconfirmedOnes/total) * 100)
-                const confirmRatio = (unconfirmedOnes / confirmedOnes);
+                const confirmRatio = (confirmedOnes / unconfirmedOnes);
                 const addressTPS = Math.round(total / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
+                const addressCTPS = Math.round(confirmedOnes / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
 
                 sorted[index].push(total);
                 sorted[index].push(`${confirmedOnes} [${confirmedOnesRatio.toFixed(1)}%]`);
                 sorted[index].push(`${unconfirmedOnes} [${unconfirmedOnesRatio.toFixed(1)}%]`);
                 sorted[index].push(confirmRatio);
                 sorted[index].push(addressTPS);
+                sorted[index].push(addressCTPS);
                 sorted[index].push(confirmationTimeMean);
                 sorted[index].push(confirmationTimeMeanRatio);
 
             });
 
             topList = sorted;
-
 
             if(topList.length > 0) {
                 createTable(topList);
