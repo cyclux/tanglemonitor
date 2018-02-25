@@ -38,6 +38,7 @@ let totalCTPS = 0;
 let topList = [];
 let toplistAdditional = 0;
 let topListCount = 0;
+let toplistSortIndex = [3, 'desc'];
 
 let mousePos;
 let pixelMap = [];
@@ -55,6 +56,12 @@ document.getElementById('address_button').onclick = function(){ChangeAddress()};
 
 /* Table creation for toplist */
 function createTable(currentList) {
+
+    currentList = _.orderBy(currentList, listItem => {
+        return listItem[toplistSortIndex[0]][0];
+    }, [toplistSortIndex[1]] );
+
+    console.log(currentList);
 
     const mytable = document.getElementById("toplist");
     mytable.innerHTML = "";
@@ -91,34 +98,34 @@ function createTable(currentList) {
                     currenttext = j + 1;
                 break;
                 case 1:
-                    currenttext = currentList[j][0].substring(0,35) + '...';
+                    currenttext = currentList[j][1].substring(0,35) + '...';
                 break;
                 case 2:
                     currenttext = currentList[j][2];
                 break;
                 case 3:
-                    currenttext = currentList[j][3];
+                    currenttext = `${currentList[j][3][0]} [${currentList[j][3][1] < 100 ? currentList[j][3][1].toFixed(1) : currentList[j][3][1].toFixed(0)}%]`;
                 break;
                 case 4:
-                    currenttext = currentList[j][4];
+                    currenttext = `${currentList[j][4][0]} [${currentList[j][4][1] < 100 ? currentList[j][4][1].toFixed(1) : currentList[j][4][1].toFixed(0)}%]`;
                 break;
                 case 5:
-                    currenttext = `${currentList[j][5] === Infinity ? 'inf.' : currentList[j][5].toFixed(2)}`;
+                    currenttext = `${currentList[j][5][0] === Infinity ? 'inf.' : currentList[j][5][0].toFixed(2)}`;
                 break;
                 case 6:
-                    currenttext = `${currentList[j][6] === Infinity ? 'inf.' : currentList[j][6] > 0 ? '+' : ''}${currentList[j][6] < Infinity ? currentList[j][6].toFixed(0)+'%' : ''}`;
+                    currenttext = `${currentList[j][6][0] === Infinity ? 'inf.' : currentList[j][6][0] > 0 ? '+' : ''}${currentList[j][6][0] < Infinity ? currentList[j][6][0].toFixed(0)+'%' : ''}`;
                 break;
                 case 7:
-                    currenttext = currentList[j][7].toFixed(2);
+                    currenttext = currentList[j][7][0].toFixed(2);
                 break;
                 case 8:
-                    currenttext = currentList[j][8].toFixed(2);
+                    currenttext = currentList[j][8][0].toFixed(2);
                 break;
                 case 9:
-                    currenttext = currentList[j][9].toFixed(1) + ' min';
+                    currenttext = currentList[j][9][0].toFixed(1) + ' min';
                 break;
                 case 10:
-                    currenttext = `${currentList[j][10] > 0 ? '+' : ''}${currentList[j][10].toFixed(1)}%`;
+                    currenttext = `${currentList[j][10][0] > 0 ? '+' : ''}${currentList[j][10][0].toFixed(1)}%`;
                 break;
 
                 default:
@@ -127,16 +134,16 @@ function createTable(currentList) {
 
             const currenttextNode = document.createTextNode(currenttext);
             current_cell.appendChild(currenttextNode);
-            current_cell.setAttribute('tx', currentList[j][0]);
+            current_cell.setAttribute('tx', currentList[j][1]);
 
             /* Colorize dependent of values */
-            if(currentList[j][6] >= 0 && i == 6){
+            if(currentList[j][6][0] >= 0 && i == 6){
                 current_cell.setAttribute('style', 'color: #008000');
-            } else if (currentList[j][6] < 0 && i == 6) {
+            } else if (currentList[j][6][0] < 0 && i == 6) {
                 current_cell.setAttribute('style', 'color: #ff0000');
-            } else if (currentList[j][10] >= 0 && i == 10) {
+            } else if (currentList[j][10][0] >= 0 && i == 10) {
                 current_cell.setAttribute('style', 'color: #ff0000');
-            } else if (currentList[j][10] < 0 && i == 10) {
+            } else if (currentList[j][10][0] < 0 && i == 10) {
                 current_cell.setAttribute('style', 'color: #008000');
             }
 
@@ -192,6 +199,16 @@ function createTable(currentList) {
         const currenttextNode = document.createTextNode(currenttext);
         current_cell.appendChild(currenttextNode);
         head_tr.appendChild(current_cell);
+
+        /* Add listener for toplist sorting */
+        current_cell.addEventListener('click', () => {
+            if(i === toplistSortIndex[0] && toplistSortIndex[1] === 'desc'){
+                toplistSortIndex = [i, 'asc'];
+            } else {
+                toplistSortIndex = [i, 'desc'];
+            }
+            createTable(topList);
+        }, false);
     }
 
     tablehead.appendChild(head_tr);
@@ -482,10 +499,10 @@ const Main = () => {
 
             // _.groupBy(['one', 'two', 'three'], 'length');  instread of partition?
             const confirmedCounted = _.countBy(confirmed, 'address');
-            const entries = Object.entries(confirmedCounted);
-            const sorted = entries.sort((b, a) => a[1] - b[1]);
+            const initialSorted = Object.entries(confirmedCounted);
+            //const initialSorted = entries.sort((b, a) => a[1] - b[1]);
 
-            sorted.map( (tx, index) => {
+            initialSorted.map( (tx, index) => {
                 const unconfirmedOnes = unconfirmed.filter( txs => txs.address === tx[0]).length;
                 const confirmedOnes = tx[1];
                 const confirmationTimeCollector = confirmed.reduce( (acc, txs) => {
@@ -511,22 +528,24 @@ const Main = () => {
                 const addressTPS = Math.round(total / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
                 const addressCTPS = Math.round(confirmedOnes / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
 
-                sorted[index].push(total);
-                sorted[index].push(`${confirmedOnes} [${confirmedOnesRatio < 100 ? confirmedOnesRatio.toFixed(1) : confirmedOnesRatio.toFixed(0)}%]`);
-                sorted[index].push(`${unconfirmedOnes} [${unconfirmedOnesRatio < 100 ? unconfirmedOnesRatio.toFixed(1) : unconfirmedOnesRatio.toFixed(0)}%]`);
-                sorted[index].push(confirmRatio);
-                sorted[index].push(confirmationMeanRatio);
-                sorted[index].push(addressTPS);
-                sorted[index].push(addressCTPS);
-                sorted[index].push(confirmationTimeMean);
-                sorted[index].push(confirmationTimeMeanRatio);
+                initialSorted[index].unshift([0]);
+                initialSorted[index].pop();
+                initialSorted[index].push([total]);
+                initialSorted[index].push([confirmedOnes, confirmedOnesRatio]);
+                initialSorted[index].push([unconfirmedOnes, unconfirmedOnesRatio]);
+                initialSorted[index].push([confirmRatio]);
+                initialSorted[index].push([confirmationMeanRatio]);
+                initialSorted[index].push([addressTPS]);
+                initialSorted[index].push([addressCTPS]);
+                initialSorted[index].push([confirmationTimeMean]);
+                initialSorted[index].push([confirmationTimeMeanRatio]);
 
             });
 
-            topList = sorted;
+            topList = initialSorted;
 
             if(topList.length > 0) {
-                createTable(topList);
+                createTable(initialSorted);
             }
 
             /* Adapt canvas height to amount of transactions (pixel height) */
