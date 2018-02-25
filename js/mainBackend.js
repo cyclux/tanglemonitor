@@ -75,109 +75,123 @@ function createTable(currentList) {
         const current_row = document.createElement("tr");
 
         for(let i = 0; i < currentList[0].length; i++) {
-            const mycurrent_cell = document.createElement("td");
-            mycurrent_cell.addEventListener('mouseenter', () => {
-                selectedAddress = mycurrent_cell.getAttribute('tx');
+            const current_cell = document.createElement("td");
+            current_cell.addEventListener('mouseenter', () => {
+                selectedAddress = current_cell.getAttribute('tx');
             }, false);
 
-            mycurrent_cell.addEventListener('click', () => {
-                OpenLink(mycurrent_cell.getAttribute('tx'));
+            current_cell.addEventListener('click', () => {
+                OpenLink(current_cell.getAttribute('tx'));
             }, false);
             /* Insert table contents */
             let currenttext;
 
             switch(i) {
                 case 0:
-                    currenttext = document.createTextNode(j + 1);
+                    currenttext = j + 1;
                 break;
                 case 1:
-                    currenttext = document.createTextNode(currentList[j][0].substring(0,35) + '...');
+                    currenttext = currentList[j][0].substring(0,35) + '...';
                 break;
                 case 2:
-                    currenttext = document.createTextNode(currentList[j][2]);
+                    currenttext = currentList[j][2];
                 break;
                 case 3:
-                    currenttext = document.createTextNode(currentList[j][3]);
+                    currenttext = currentList[j][3];
                 break;
                 case 4:
-                    currenttext = document.createTextNode(currentList[j][4]);
+                    currenttext = currentList[j][4];
                 break;
                 case 5:
-                    currenttext = document.createTextNode(`${currentList[j][5] === Infinity ? 'inf.' : currentList[j][5].toFixed(2)}`);
+                    currenttext = `${currentList[j][5] === Infinity ? 'inf.' : currentList[j][5].toFixed(2)}`;
                 break;
                 case 6:
-                    currenttext = document.createTextNode(`${currentList[j][6] === Infinity ? 'inf.' : currentList[j][6] > 0 ? '+' : ''}${currentList[j][6] < Infinity ? currentList[j][6].toFixed(0)+'%' : ''}`);
+                    currenttext = `${currentList[j][6] === Infinity ? 'inf.' : currentList[j][6] > 0 ? '+' : ''}${currentList[j][6] < Infinity ? currentList[j][6].toFixed(0)+'%' : ''}`;
                 break;
                 case 7:
-                    currenttext = document.createTextNode(currentList[j][7].toFixed(2));
+                    currenttext = currentList[j][7].toFixed(2);
                 break;
                 case 8:
-                    currenttext = document.createTextNode(currentList[j][8].toFixed(2));
+                    currenttext = currentList[j][8].toFixed(2);
                 break;
                 case 9:
-                    currenttext = document.createTextNode(currentList[j][9].toFixed(1) + ' min');
+                    currenttext = currentList[j][9].toFixed(1) + ' min';
                 break;
                 case 10:
-                    currenttext = document.createTextNode(`${currentList[j][10] > 0 ? '+' : ''}${currentList[j][10].toFixed(1)}%`);
+                    currenttext = `${currentList[j][10] > 0 ? '+' : ''}${currentList[j][10].toFixed(1)}%`;
                 break;
 
                 default:
-                    currenttext = document.createTextNode('N/A');
+                    currenttext = 'N/A';
             }
 
-            mycurrent_cell.appendChild(currenttext);
-            mycurrent_cell.setAttribute('tx', currentList[j][0]);
-            current_row.appendChild(mycurrent_cell);
+            const currenttextNode = document.createTextNode(currenttext);
+            current_cell.appendChild(currenttextNode);
+            current_cell.setAttribute('tx', currentList[j][0]);
+
+            /* Colorize dependent of values */
+            if(currentList[j][6] >= 0 && i == 6){
+                current_cell.setAttribute('style', 'color: #008000');
+            } else if (currentList[j][6] < 0 && i == 6) {
+                current_cell.setAttribute('style', 'color: #ff0000');
+            } else if (currentList[j][10] >= 0 && i == 10) {
+                current_cell.setAttribute('style', 'color: #ff0000');
+            } else if (currentList[j][10] < 0 && i == 10) {
+                current_cell.setAttribute('style', 'color: #008000');
+            }
+
+            current_row.appendChild(current_cell);
         }
         tablebody.appendChild(current_row);
     }
 
     for(let i = 0; i < currentList[0].length; i++) {
-        const mycurrent_cell = document.createElement("td");
+        const current_cell = document.createElement("td");
 
         let currenttext;
 
         switch(i) {
             case 0:
-                currenttext = document.createTextNode('#');
+                currenttext = '#';
             break;
             case 1:
-                currenttext = document.createTextNode('Address');
+                currenttext = 'Address';
             break;
             case 2:
-                currenttext = document.createTextNode('Total');
+                currenttext = 'Total';
             break;
             case 3:
-                currenttext = document.createTextNode('Confirmed');
+                currenttext = 'Confirmed';
             break;
             case 4:
-                currenttext = document.createTextNode('Unconfirmed');
+                currenttext = 'Unconfirmed';
             break;
             case 5:
-                currenttext = document.createTextNode('C.Ratio');
+                currenttext = 'C.Ratio';
             break;
             case 6:
-                currenttext = document.createTextNode('±Avg.C.Ratio');
+                currenttext = '±Avg.C.Ratio';
             break;
             case 7:
-                currenttext = document.createTextNode('TPS');
+                currenttext = 'TPS';
             break;
             case 8:
-                currenttext = document.createTextNode('CTPS');
+                currenttext = 'CTPS';
             break;
             case 9:
-                currenttext = document.createTextNode('~C.Time');
+                currenttext = '~C.Time';
             break;
             case 10:
-                currenttext = document.createTextNode('±Avg.Time');
+                currenttext = '±Avg.Time';
             break;
 
             default:
-                currenttext = document.createTextNode('N/A');
+                currenttext = 'N/A';
         }
 
-        mycurrent_cell.appendChild(currenttext);
-        head_tr.appendChild(mycurrent_cell);
+        const currenttextNode = document.createTextNode(currenttext);
+        current_cell.appendChild(currenttextNode);
+        head_tr.appendChild(current_cell);
     }
 
     tablehead.appendChild(head_tr);
@@ -316,7 +330,7 @@ const DrawCanvas = (txList_DrawCanvas) => {
     ctx.fillText('Total TX count    ' + totalTransactions, margin + 10, 10);
     ctx.fillText('Avg. TPS          ' + totalTPS, margin + 10, 25);
     ctx.fillText('Avg. conf. rate   ' + totalConfRate + ' %', margin + 10, 40);
-    ctx.fillText('Avg. conf. time: ' + totalConfirmationTime + ' min', margin + 220, 10);
+    ctx.fillText('Avg. conf. time  ' + totalConfirmationTime + ' min', margin + 220, 10);
     ctx.fillText('Avg. CTPS        ' + totalCTPS, margin + 220, 25);
 
     ctx.fillText('Unconfirmed', cWidth, 10);
