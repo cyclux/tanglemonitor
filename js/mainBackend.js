@@ -418,7 +418,7 @@ const Main = () => {
         DrawCanvas(txList);
     }, 100);
 
-    window.setInterval( () => {
+    const Polling = () => {
 
         //https://junglecrowd.org/txDB/txHistory.gz.json
         //http://localhost/IOTA-Confirmation-Visualizer/httpdocs/txDB/txHistory.gz.json
@@ -538,7 +538,10 @@ const Main = () => {
             console.log('Error fetching txHistory', e);
             /* This is where you run code if the server returns any errors */
         });
-    }, 10000);
+        /* Interval for polling and total calculations*/
+        window.setTimeout( () => Polling(), 10000 );
+    }
+    Polling();
 }
 /* Init */
 Main();
