@@ -61,8 +61,6 @@ function createTable(currentList) {
         return listItem[toplistSortIndex[0]][0];
     }, [toplistSortIndex[1]] );
 
-    console.log(currentList);
-
     const mytable = document.getElementById("toplist");
     mytable.innerHTML = "";
     const tablehead = document.createElement("thead");
@@ -376,7 +374,6 @@ const DrawCanvas = (txList_DrawCanvas) => {
 
             /* Calc current TPS and display appropriately */
             const confRateRangeList = txList.slice(step * confRateRange, step * confRateRange + confRateRange);
-            //console.log(confRateRangeList.length);
             const confRate = Math.round(confRateRangeList
                 .filter(tx => tx.confirmed !== false)
                 .length / confRateRangeList.length * 1000) / 10;
@@ -448,7 +445,7 @@ const Main = () => {
             try {
                 return pako.inflate(decompress, { to: 'string' });
             } catch (err) {
-                console.log(err);
+                console.error(err);
             }
         })
         .then( jsonParse => JSON.parse(jsonParse) )
@@ -554,7 +551,7 @@ const Main = () => {
             }
         })
         .catch((e) => {
-            console.log('Error fetching txHistory', e);
+            console.error('Error fetching txHistory', e);
             /* This is where you run code if the server returns any errors */
         });
         /* Interval for polling and total calculations*/
