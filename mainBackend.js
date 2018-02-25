@@ -91,7 +91,7 @@ function createTable(currentList) {
                     currenttext = document.createTextNode(j + 1);
                 break;
                 case 1:
-                    currenttext = document.createTextNode(currentList[j][0].substring(0,40) + '...');
+                    currenttext = document.createTextNode(currentList[j][0].substring(0,35) + '...');
                 break;
                 case 2:
                     currenttext = document.createTextNode(currentList[j][2]);
@@ -103,19 +103,22 @@ function createTable(currentList) {
                     currenttext = document.createTextNode(currentList[j][4]);
                 break;
                 case 5:
-                    currenttext = document.createTextNode(`${currentList[j][5] === Infinity ? 'infinite': currentList[j][5].toFixed(2)}`);
+                    currenttext = document.createTextNode(`${currentList[j][5] === Infinity ? 'inf.' : currentList[j][5].toFixed(2)}`);
                 break;
                 case 6:
-                    currenttext = document.createTextNode(currentList[j][6].toFixed(2));
+                    currenttext = document.createTextNode(`${currentList[j][6] === Infinity ? 'inf.' : currentList[j][6] > 0 ? '+' : ''}${currentList[j][6] < Infinity ? currentList[j][6].toFixed(0)+'%' : ''}`);
                 break;
                 case 7:
                     currenttext = document.createTextNode(currentList[j][7].toFixed(2));
                 break;
                 case 8:
-                    currenttext = document.createTextNode(currentList[j][8].toFixed(1) + ' min');
+                    currenttext = document.createTextNode(currentList[j][8].toFixed(2));
                 break;
                 case 9:
-                    currenttext = document.createTextNode(`${currentList[j][9] > 0 ? '+' : ''}${currentList[j][9].toFixed(1)}%`);
+                    currenttext = document.createTextNode(currentList[j][9].toFixed(1) + ' min');
+                break;
+                case 10:
+                    currenttext = document.createTextNode(`${currentList[j][10] > 0 ? '+' : ''}${currentList[j][10].toFixed(1)}%`);
                 break;
 
                 default:
@@ -154,15 +157,18 @@ function createTable(currentList) {
                 currenttext = document.createTextNode('C.Ratio');
             break;
             case 6:
-                currenttext = document.createTextNode('TPS');
+                currenttext = document.createTextNode('±Avg.C.Ratio');
             break;
             case 7:
-                currenttext = document.createTextNode('CTPS');
+                currenttext = document.createTextNode('TPS');
             break;
             case 8:
-                currenttext = document.createTextNode('~C.Time');
+                currenttext = document.createTextNode('CTPS');
             break;
             case 9:
+                currenttext = document.createTextNode('~C.Time');
+            break;
+            case 10:
                 currenttext = document.createTextNode('±Avg.Time');
             break;
 
@@ -457,6 +463,9 @@ const Main = () => {
             const confirmed = partitioned[0];
             const unconfirmed = partitioned[1];
 
+            const confirmedTotalCount = confirmed.length;
+            const unconfirmedTotalCount = unconfirmed.length;
+
             // _.groupBy(['one', 'two', 'three'], 'length');  instread of partition?
             const confirmedCounted = _.countBy(confirmed, 'address');
             const entries = Object.entries(confirmedCounted);
@@ -475,21 +484,24 @@ const Main = () => {
                     return acc;}, [[], []]);
                 const confirmationTime = confirmationTimeCollector[0];
                 const confirmationTimeOthers = confirmationTimeCollector[1];
-                const confirmationTimeMeanOthers = (_.mean(confirmationTimeOthers) / 60);
-                const confirmationTimeMean = (_.mean(confirmationTime) / 60);
-                const confirmationTimeMeanRatio = (((confirmationTimeMean/confirmationTimeMeanOthers) * 100) - 100);
+                const confirmationTimeMeanOthers = _.mean(confirmationTimeOthers) / 60;
+                const confirmationTimeMean = _.mean(confirmationTime) / 60;
+                const confirmationTimeMeanRatio = ((confirmationTimeMean/confirmationTimeMeanOthers) * 100) - 100;
 
                 const total = unconfirmedOnes + confirmedOnes;
-                const confirmedOnesRatio = ((confirmedOnes/total) * 100)
-                const unconfirmedOnesRatio = ((unconfirmedOnes/total) * 100)
-                const confirmRatio = (confirmedOnes / unconfirmedOnes);
+                const confirmedOnesRatio = (confirmedOnes/total) * 100;
+                const unconfirmedOnesRatio = (unconfirmedOnes/total) * 100;
+                const confirmRatio = confirmedOnes / unconfirmedOnes;
+                const confirmRatioTotal = confirmedTotalCount / unconfirmedTotalCount;
+                const confirmationMeanRatio = ((confirmRatio  / confirmRatioTotal) * 100) - 100;
                 const addressTPS = Math.round(total / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
                 const addressCTPS = Math.round(confirmedOnes / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
 
                 sorted[index].push(total);
-                sorted[index].push(`${confirmedOnes} [${confirmedOnesRatio.toFixed(1)}%]`);
-                sorted[index].push(`${unconfirmedOnes} [${unconfirmedOnesRatio.toFixed(1)}%]`);
+                sorted[index].push(`${confirmedOnes} [${confirmedOnesRatio < 100 ? confirmedOnesRatio.toFixed(1) : confirmedOnesRatio.toFixed(0)}%]`);
+                sorted[index].push(`${unconfirmedOnes} [${unconfirmedOnesRatio < 100 ? unconfirmedOnesRatio.toFixed(1) : unconfirmedOnesRatio.toFixed(0)}%]`);
                 sorted[index].push(confirmRatio);
+                sorted[index].push(confirmationMeanRatio);
                 sorted[index].push(addressTPS);
                 sorted[index].push(addressCTPS);
                 sorted[index].push(confirmationTimeMean);

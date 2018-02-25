@@ -26,7 +26,7 @@ div#loading{
 }
 
 table#toplist{
-    width: 950px;
+    width: 985px;
     border: 0px solid #000000;
     display: table;
     margin: 0 auto;
@@ -63,7 +63,7 @@ thead>tr>td:nth-child(2) {
 }
 
 div#toplist-more{
-    margin: 0 auto;
+    margin: 20px auto;
     display: table;
     cursor: pointer;
 }
