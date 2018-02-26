@@ -302,6 +302,13 @@ c.addEventListener('mousemove', evt => {
     }
 }, false);
 
+c.addEventListener('mouseout', () => {
+    tooltip.style.display = 'none';
+    document.body.style.cursor = "auto";
+    txOfMousePosition = {};
+    selectedAddress = '';
+}, false);
+
 /* Additional event listeners */
 c.addEventListener('click', () => {
     OpenLink(false);
@@ -445,11 +452,12 @@ const Main = () => {
 
     const Polling = () => {
 
-        //https://junglecrowd.org/txDB/txHistory.gz.json
-        //http://localhost/IOTA-Confirmation-Visualizer/httpdocs/txDB/txHistory.gz.json
+        const devState = 'prod';
+        let pollingURL = '';
+        devState === 'prod' ? pollingURL = 'https://junglecrowd.org/txDB/txHistory.gz.json' : pollingURL = 'http://localhost/IOTA-Confirmation-Visualizer/httpdocs/txDB/txHistory.gz.json'
 
         /* Fetch current tangle TX from remote backend */
-        fetch('https://junglecrowd.org/txDB/txHistory.gz.json', {cache: 'no-cache'})
+        fetch(pollingURL, {cache: 'no-cache'})
         .then( json_test => json_test.json() )
         .then( b64encoded => {return window.atob(b64encoded.txArrayCompressed)})
         .then( decompress => {
