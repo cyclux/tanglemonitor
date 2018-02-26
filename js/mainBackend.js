@@ -55,6 +55,13 @@ const ChangeAddress = () => {
 
 document.getElementById('address_button').onclick = function(){ChangeAddress()};
 
+const updateMetrics = (totalTPS, totalCTPS, totalConfRate, totalConfirmationTime) => {
+    document.getElementById('metric_totalTPS').innerHTML = totalTPS;
+    document.getElementById('metric_totalCTPS').innerHTML = totalCTPS;
+    document.getElementById('metric_totalConfRate').innerHTML = totalConfRate;
+    document.getElementById('metric_totalConfirmationTime').innerHTML = totalConfirmationTime;
+}
+
 /* Table creation for toplist */
 function createTable(currentList) {
 
@@ -396,7 +403,7 @@ const DrawCanvas = (txList_DrawCanvas) => {
                 .filter(tx => tx.confirmed !== false)
                 .length / confRateRangeList.length * 1000) / 10;
 
-            const tps = Math.round(100 / ((timer[step+1] - timer[step]) ) * 10) / 10;
+            const tps = Math.round((txPerLine*2) / ((timer[step+1] - timer[step]) ) * 10) / 10;
 
             ctx.fillText((isNaN(confRate) ? '0' : confRate) + '%' + (isNaN(tps) ? ' [...]' : ' [' + tps.toFixed(1) + ' TPS]'),
             margin - 5, px.y + offsetHeight + 5);
@@ -563,6 +570,8 @@ const Main = () => {
             if(topList.length > 0) {
                 createTable(initialSorted);
             }
+
+            //updateMetrics(totalTPS, totalCTPS, totalConfRate, totalConfirmationTime);
 
             /* Adapt canvas height to amount of transactions (pixel height) */
             while(c.height < timer.length * pxSize * 2 + offsetHeight + 30) {
