@@ -10,7 +10,7 @@ const tooltip = document.getElementById('tooltip');
 const offsetWidth = 200;
 const offsetHeight = 60;
 const cWidth = c.width - offsetWidth;
-const margin = 100;
+const margin = 110;
 
 const pxSize = 10;
 const txPerLine = Math.ceil(cWidth / pxSize);
