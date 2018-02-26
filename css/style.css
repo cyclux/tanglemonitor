@@ -25,11 +25,31 @@ div#loading{
     margin: 0 auto;
 }
 
-table#toplist{
+div#toplist_wrapper{
     width: 1000px;
-    border: 0px solid #000000;
     display: table;
     margin: 0 auto;
+}
+
+div#minNumberOfTxWrapper{
+    font-size: 14px;
+    margin: 0 0 0 34px;
+}
+
+input#minNumberOfTxIncluded{
+    width: 50px;
+}
+
+div#toplist-more{
+    margin: 20px auto;
+    text-align: center;
+    display: table;
+    cursor: pointer;
+}
+
+table#toplist{
+    padding: 2px;
+    border: 0px solid #000000;
     border-collapse: collapse;
     font-size: 13px;
 }
@@ -60,12 +80,6 @@ thead {
 }
 thead>tr>td:nth-child(2) {
     text-align: left;
-}
-
-div#toplist-more{
-    margin: 20px auto;
-    display: table;
-    cursor: pointer;
 }
 
 div#tooltip{

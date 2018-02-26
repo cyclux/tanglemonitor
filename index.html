@@ -13,16 +13,23 @@
             <a class="github-button" href="https://github.com/cyclux/IOTA-Confirmation-Visualizer/issues" data-icon="octicon-issue-opened" data-size="large" aria-label="Issue cyclux/IOTA-Confirmation-Visualizer on GitHub">Issue</a>
         </div>
 
-        <table id="toplist">
-        </table>
+        <div id="toplist_wrapper">
+            <div id="minNumberOfTxWrapper">
+                <span>Min. TX amount</span>
+                <input type="text" id="minNumberOfTxIncluded" value="10">
+                <button id="minNumberOfTxIncluded_button" type="button">Set</button>
+            </div>
 
-        <div id="toplist-more" class="noselect">
-            [show more..]
+            <table id="toplist"></table>
+
+            <div id="toplist-more" class="noselect">
+                [show more..]
+            </div>
         </div>
 
         <div id="inputs">
             <input id="address_input" type="text" name="address" value="" placeholder="Enter address to track">
-            <button id="address_button" type="button" name="button">Go</button>
+            <button id="address_button" type="button">Go</button>
         </div>
         <div id="status"></div>
 

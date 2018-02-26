@@ -39,6 +39,7 @@ let topList = [];
 let toplistAdditional = 0;
 let topListCount = 0;
 let toplistSortIndex = [3, 'desc'];
+let toplistMinTX = 10;
 
 let mousePos;
 let pixelMap = [];
@@ -56,6 +57,11 @@ document.getElementById('address_button').onclick = function(){ChangeAddress()};
 
 /* Table creation for toplist */
 function createTable(currentList) {
+
+    /* Set minimum TX amount to be displayed */
+    currentList = _.filter(currentList, n => {
+      return n[2] >= toplistMinTX;
+    });
 
     currentList = _.orderBy(currentList, listItem => {
         return listItem[toplistSortIndex[0]][0];
@@ -306,6 +312,11 @@ document.getElementById('toplist-more').addEventListener('click', () => {
     createTable(topList);
 }, false);
 
+document.getElementById('minNumberOfTxIncluded_button').addEventListener('click', () => {
+    toplistMinTX = parseInt(document.getElementById('minNumberOfTxIncluded').value);
+    createTable(topList);
+}, false);
+
 /* Get current line position to draw each */
 const calcLineCount = (i, pxSize, cWidth) => {
     const lines = Math.floor(i * pxSize / cWidth);
@@ -496,7 +507,7 @@ const Main = () => {
 
             // _.groupBy(['one', 'two', 'three'], 'length');  instread of partition?
             const confirmedCounted = _.countBy(confirmed, 'address');
-            const initialSorted = Object.entries(confirmedCounted);
+            let initialSorted = Object.entries(confirmedCounted);
             //const initialSorted = entries.sort((b, a) => a[1] - b[1]);
 
             initialSorted.map( (tx, index) => {
