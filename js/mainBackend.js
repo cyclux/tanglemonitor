@@ -367,7 +367,7 @@ const UpdateTXStatus = (update, isMilestone, isTempQueue) => {
             if (!isTempQueue){
                 txTempQueue.push(update);
                 //txList.push({'hash': txHash, 'confirmed': confirmationTime, 'timestamp': timestamp, 'address': address, 'value': value, 'milestone': false});
-                txList.push({'hash': txHash, 'confirmed': confirmationTime, 'milestone': false});
+                //txList.push({'hash': txHash, 'confirmed': confirmationTime, 'milestone': false});
             }
 
         }
@@ -606,7 +606,7 @@ const CalcMetrics = () => {
 
 // Init Websocket
 const InitWebSocket = () => {
-    const connection = new WebSocket('ws://localhost:8080', ['soap', 'xmpp']);
+    const connection = new WebSocket('ws://junglecrowd.org:8080', ['soap', 'xmpp']);
     connection.onopen = () => {
         connection.send('Gimme transactions!');
     };
