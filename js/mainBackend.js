@@ -1,5 +1,5 @@
 /*eslint no-console: ["error", { allow: ["log", "error"] }] */
-/* global window, pako, document, fetch, console, _ */
+/* global window, pako, document, WebSocket, fetch, console, _ */
 'use strict';
 
 /* Set canvas and dimensions */
@@ -21,12 +21,14 @@ const strokeColorSelect = '#ff0000';
 const fontFace = 'Consolas';
 const fontSizeHeader = '13px';
 const fontSizeAxis = '11px';
+const maxTransactions = 30000;
 
 const pxColorUnconf = {r:0, g:0, b:0, a:1};
 const pxColorConf = {r:0, g:255, b:0, a:1};
 const pxColorMilestone = {r:0, g:0, b:255, a:1};
 
 let txList = [];
+let txTempQueue = [];
 let selectedAddress = '';
 let totalConfRate = 0;
 let totalConfirmations = [];
@@ -337,10 +339,63 @@ const calcLineCount = (i, pxSize, cWidth) => {
     return lines;
 }
 
+const ProcessTempQueue = () => {
+    if(txTempQueue.length > 0){
+        //console.log(txTempQueue);
+        txTempQueue.map( tempTX => {
+            UpdateTXStatus(tempTX, false, true);
+        });
+    }
+    window.setTimeout( () => ProcessTempQueue(), 2000 );
+}
+
+const UpdateTXStatus = (update, isMilestone, isTempQueue) => {
+    if (!isMilestone) {
+        const txHash = update.hash;
+        const confirmationTime = update.time;
+
+
+        const hashIndex = txList.findIndex(tx => tx.hash === txHash);
+        if(hashIndex !== -1 && txList[hashIndex] !== undefined){
+            txList[hashIndex].confirmed = confirmationTime;
+            //console.log(`Hash: ${txHash} (Index: ${hashIndex}) hashIndex Server: ${indexServer}`);
+            if (isTempQueue){txTempQueue.unshift()}
+            //console.log('hashIndex !== -1:', hashIndex !== -1, 'txList[hashIndex]:', txList[hashIndex]);
+        } else {
+            console.log(`TX not found in local DB - Hash: ${txHash} (Index: ${hashIndex})`);
+            //console.log('hashIndex !== -1:', hashIndex !== -1, 'txList[hashIndex]:', txList[hashIndex]);
+            if (!isTempQueue){
+                txTempQueue.push(update);
+                //txList.push({'hash': txHash, 'confirmed': confirmationTime, 'timestamp': timestamp, 'address': address, 'value': value, 'milestone': false});
+                txList.push({'hash': txHash, 'confirmed': confirmationTime, 'milestone': false});
+            }
+
+        }
+    } else if (isMilestone) {
+        //console.log(update.toString());
+        const txHash = update.hash;
+        const milestoneType = update.milestone;
+
+        const hashIndex = txList.findIndex(tx => tx.hash === txHash);
+        if(txList[hashIndex] !== undefined){
+            txList[hashIndex].milestone = milestoneType;
+        } else {
+            console.log(`Milestone not found in local DB - Hash: ${txHash} (Index: ${hashIndex})`);
+        }
+    } else {
+        console.log('Undefined status of new TX');
+    }
+}
+
 /* Draw canvas iteration */
 const DrawCanvas = (txList_DrawCanvas) => {
     /* Clear screen on each tick */
     ctx.clearRect(0, 0, cWidth + offsetWidth, c.height);
+
+    /* Adapt canvas height to amount of transactions (pixel height) */
+    while(c.height < timer.length * pxSize * 2 + offsetHeight + 30) {
+        c.height = c.height + 50;
+    }
 
     /* Create array of transaction pixels including respective confirmation status */
     let pxls = [];
@@ -447,19 +502,144 @@ const DrawCanvas = (txList_DrawCanvas) => {
         ctx.strokeStyle = strokeCol;
         ctx.lineWidth = 1;
         ctx.strokeRect(px.x + margin, px.y + offsetHeight, pxSize, pxSize);
-
      });
+     window.setTimeout( () => DrawCanvas(txList), 100 );
+}
+
+const CalcMetrics = () => {
+
+    /* Calculate metrics */
+    totalTransactions = txList.length;
+    // Restrict max TX to display
+    if(totalTransactions >= maxTransactions){
+        txList.splice(0,txPerLine);
+    }
+    /* Do this on every 100 or x amount of TX */
+    let timerTemp = [];
+    txList.map( (tx, txNumber) => {
+        if(txNumber % (txPerLine*2) === 0){
+            timerTemp.push(tx.timestamp);
+        }
+    });
+    timer = timerTemp;
+
+    totalConfirmations = txList
+        .reduce( (acc, tx) => {
+        if(tx.confirmed !== false){
+        acc.push(tx.confirmed);
+        }
+        return acc;
+    }, [] );
+
+    /* Calculate confirmation rate of all TX */
+    totalConfRate = Math.round(totalConfirmations.length / txList.length * 10000) / 100;
+    /* Calculate average confirmation time of all confirmed TX */
+    totalConfirmationTime = _.mean(totalConfirmations);
+    totalConfirmationTime = _.round(totalConfirmationTime / 60, 1);
+
+    if (totalTransactions > 0){
+        totalTPS = Math.round(totalTransactions / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
+        totalCTPS = Math.round(totalConfirmations.length / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
+    }
+
+    /* Create toplist */
+    const partitioned = _.partition(txList, 'confirmed');
+    const confirmed = partitioned[0];
+    const unconfirmed = partitioned[1];
+
+    const confirmedTotalCount = confirmed.length;
+    const unconfirmedTotalCount = unconfirmed.length;
+
+    // _.groupBy(['one', 'two', 'three'], 'length');  instread of partition?
+    const confirmedCounted = _.countBy(confirmed, 'address');
+    let initialSorted = Object.entries(confirmedCounted);
+    //const initialSorted = entries.sort((b, a) => a[1] - b[1]);
+
+    initialSorted.map( (tx, index) => {
+        const unconfirmedOnes = unconfirmed.filter( txs => txs.address === tx[0]).length;
+        const confirmedOnes = tx[1];
+        const confirmationTimeCollector = confirmed.reduce( (acc, txs) => {
+
+            if (txs.address === tx[0]){
+                acc[0].push(txs.confirmed);
+            } else {
+                acc[1].push(txs.confirmed);
+            }
+            return acc;}, [[], []]);
+        const confirmationTime = confirmationTimeCollector[0];
+        const confirmationTimeOthers = confirmationTimeCollector[1];
+        const confirmationTimeMeanOthers = _.mean(confirmationTimeOthers) / 60;
+        const confirmationTimeMean = _.mean(confirmationTime) / 60;
+        const confirmationTimeMeanRatio = ((confirmationTimeMean/confirmationTimeMeanOthers) * 100) - 100;
+
+        const total = unconfirmedOnes + confirmedOnes;
+        const confirmedOnesRatio = (confirmedOnes/total) * 100;
+        const unconfirmedOnesRatio = (unconfirmedOnes/total) * 100;
+        const confirmRatio = confirmedOnes / unconfirmedOnes;
+        const confirmRatioTotal = confirmedTotalCount / unconfirmedTotalCount;
+        const confirmationMeanRatio = ((confirmRatio  / confirmRatioTotal) * 100) - 100;
+        const addressTPS = Math.round(total / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
+        const addressCTPS = Math.round(confirmedOnes / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
+
+        initialSorted[index].unshift([0]);
+        initialSorted[index].pop();
+        initialSorted[index].push([total]);
+        initialSorted[index].push([confirmedOnes, confirmedOnesRatio]);
+        initialSorted[index].push([unconfirmedOnes, unconfirmedOnesRatio]);
+        initialSorted[index].push([confirmRatio]);
+        initialSorted[index].push([confirmationMeanRatio]);
+        initialSorted[index].push([addressTPS]);
+        initialSorted[index].push([addressCTPS]);
+        initialSorted[index].push([confirmationTimeMean]);
+        initialSorted[index].push([confirmationTimeMeanRatio]);
+
+    });
+
+    topList = initialSorted;
+
+    if(initialSorted.length > 0) {
+        createTable(initialSorted);
+    }
+    //updateMetrics(totalTPS, totalCTPS, totalConfRate, totalConfirmationTime);
+    window.setTimeout( () => CalcMetrics(), 1500 );
+}
+
+// Init Websocket
+const InitWebSocket = () => {
+    const connection = new WebSocket('ws://localhost:8080', ['soap', 'xmpp']);
+    connection.onopen = () => {
+        connection.send('Gimme transactions!');
+    };
+    connection.onerror = (e) => {
+        console.log('WebSocket Error ' + e);
+        //connection.terminate();
+    };
+    connection.onclose = (e) => {
+        console.log('Websocket disconnected ' + e);
+        InitWebSocket();
+    };
+    connection.onmessage = (response) => {
+        const newInfo = JSON.parse(response.data);
+        if (newInfo.newTX){
+            txList.push(newInfo.newTX);
+        } else if(newInfo.update) {
+            //console.log(newInfo.update);
+            UpdateTXStatus(newInfo.update, false);
+        } else if (newInfo.updateMilestone){
+            UpdateTXStatus(newInfo.updateMilestone, true);
+        } else {
+            console.log('Unrecognized TX from Websocket:', newInfo);
+        }
+    };
 }
 
 const Main = () => {
-    /* Render canvas tick rate */
-    window.setInterval( () => {
-        DrawCanvas(txList);
-    }, 100);
+    /* Render canvas */
+    DrawCanvas(txList);
 
     const Polling = () => {
 
-        const devState = 'prod';
+        const devState = 'dev';
         let pollingURL = '';
         devState === 'prod' ? pollingURL = 'https://junglecrowd.org/txDB/txHistory.gz.json' : pollingURL = 'http://localhost/IOTA-Confirmation-Visualizer/httpdocs/txDB/txHistory.gz.json'
 
@@ -478,114 +658,20 @@ const Main = () => {
         .then( txHistory => {
 
             document.getElementById('loading').style.display = 'none';
-
             txList = txHistory;
-
-            /* Calculate metrics */
-            totalTransactions = txList.length;
-
-            /* Do this on every 100 or x amount of TX */
-            let timerTemp = [];
-            txList.map( (tx, txNumber) => {
-                if(txNumber % (txPerLine*2) === 0){
-                    timerTemp.push(tx.timestamp);
-                }
-            });
-            timer = timerTemp;
-
-            totalConfirmations = txList
-                .reduce( (acc, tx) => {
-                if(tx.confirmed !== false){
-                acc.push(tx.confirmed);
-                }
-                return acc;
-            }, [] );
-
-            /* Calculate confirmation rate of all TX */
-            totalConfRate = Math.round(totalConfirmations.length / txList.length * 10000) / 100;
-            /* Calculate average confirmation time of all confirmed TX */
-            totalConfirmationTime = _.mean(totalConfirmations);
-            totalConfirmationTime = _.round(totalConfirmationTime / 60, 1);
-
-            if (totalTransactions > 0){
-                totalTPS = Math.round(totalTransactions / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
-                totalCTPS = Math.round(totalConfirmations.length / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
-            }
-
-            /* Create toplist */
-            const partitioned = _.partition(txList, 'confirmed');
-            const confirmed = partitioned[0];
-            const unconfirmed = partitioned[1];
-
-            const confirmedTotalCount = confirmed.length;
-            const unconfirmedTotalCount = unconfirmed.length;
-
-            // _.groupBy(['one', 'two', 'three'], 'length');  instread of partition?
-            const confirmedCounted = _.countBy(confirmed, 'address');
-            let initialSorted = Object.entries(confirmedCounted);
-            //const initialSorted = entries.sort((b, a) => a[1] - b[1]);
-
-            initialSorted.map( (tx, index) => {
-                const unconfirmedOnes = unconfirmed.filter( txs => txs.address === tx[0]).length;
-                const confirmedOnes = tx[1];
-                const confirmationTimeCollector = confirmed.reduce( (acc, txs) => {
-
-                    if (txs.address === tx[0]){
-                        acc[0].push(txs.confirmed);
-                    } else {
-                        acc[1].push(txs.confirmed);
-                    }
-                    return acc;}, [[], []]);
-                const confirmationTime = confirmationTimeCollector[0];
-                const confirmationTimeOthers = confirmationTimeCollector[1];
-                const confirmationTimeMeanOthers = _.mean(confirmationTimeOthers) / 60;
-                const confirmationTimeMean = _.mean(confirmationTime) / 60;
-                const confirmationTimeMeanRatio = ((confirmationTimeMean/confirmationTimeMeanOthers) * 100) - 100;
-
-                const total = unconfirmedOnes + confirmedOnes;
-                const confirmedOnesRatio = (confirmedOnes/total) * 100;
-                const unconfirmedOnesRatio = (unconfirmedOnes/total) * 100;
-                const confirmRatio = confirmedOnes / unconfirmedOnes;
-                const confirmRatioTotal = confirmedTotalCount / unconfirmedTotalCount;
-                const confirmationMeanRatio = ((confirmRatio  / confirmRatioTotal) * 100) - 100;
-                const addressTPS = Math.round(total / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
-                const addressCTPS = Math.round(confirmedOnes / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
-
-                initialSorted[index].unshift([0]);
-                initialSorted[index].pop();
-                initialSorted[index].push([total]);
-                initialSorted[index].push([confirmedOnes, confirmedOnesRatio]);
-                initialSorted[index].push([unconfirmedOnes, unconfirmedOnesRatio]);
-                initialSorted[index].push([confirmRatio]);
-                initialSorted[index].push([confirmationMeanRatio]);
-                initialSorted[index].push([addressTPS]);
-                initialSorted[index].push([addressCTPS]);
-                initialSorted[index].push([confirmationTimeMean]);
-                initialSorted[index].push([confirmationTimeMeanRatio]);
-
-            });
-
-            topList = initialSorted;
-
-            if(topList.length > 0) {
-                createTable(initialSorted);
-            }
-
-            //updateMetrics(totalTPS, totalCTPS, totalConfRate, totalConfirmationTime);
-
-            /* Adapt canvas height to amount of transactions (pixel height) */
-            while(c.height < timer.length * pxSize * 2 + offsetHeight + 30) {
-                c.height = c.height + 50;
-            }
+            CalcMetrics();
+            // After polling of history is finished init websocket
+            InitWebSocket();
         })
         .catch((e) => {
             console.error('Error fetching txHistory', e);
             /* This is where you run code if the server returns any errors */
         });
         /* Interval for polling and total calculations*/
-        window.setTimeout( () => Polling(), 10000 );
+        //window.setTimeout( () => Polling(), 10000 );
     }
     Polling();
+    ProcessTempQueue();
 }
 /* Init */
 Main();
