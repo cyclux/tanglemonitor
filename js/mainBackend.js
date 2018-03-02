@@ -639,7 +639,7 @@ const Main = () => {
 
     const Polling = () => {
 
-        const devState = 'dev';
+        const devState = 'prod';
         let pollingURL = '';
         devState === 'prod' ? pollingURL = 'https://junglecrowd.org/txDB/txHistory.gz.json' : pollingURL = 'http://localhost/IOTA-Confirmation-Visualizer/httpdocs/txDB/txHistory.gz.json'
 
