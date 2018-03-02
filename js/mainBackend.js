@@ -29,6 +29,7 @@ const pxColorMilestone = {r:0, g:0, b:255, a:1};
 
 let txList = [];
 let txTempQueue = [];
+let filterForValueTX = false;
 let selectedAddress = '';
 let totalConfRate = 0;
 let totalConfirmations = [];
@@ -57,12 +58,14 @@ const ChangeAddress = () => {
 
 document.getElementById('address_button').onclick = function(){ChangeAddress()};
 
+/* Released next
 const updateMetrics = (totalTPS, totalCTPS, totalConfRate, totalConfirmationTime) => {
     document.getElementById('metric_totalTPS').innerHTML = totalTPS;
     document.getElementById('metric_totalCTPS').innerHTML = totalCTPS;
     document.getElementById('metric_totalConfRate').innerHTML = totalConfRate;
     document.getElementById('metric_totalConfirmationTime').innerHTML = totalConfirmationTime;
 }
+*/
 
 /* Table creation for toplist */
 function createTable(currentList) {
@@ -91,54 +94,120 @@ function createTable(currentList) {
         topListCount = currentList.length
     }
 
-    for(let j = 0; j < topListCount; j++) {
-        const current_row = document.createElement("tr");
+    if (currentList.length > 0){
+
+        for(let j = 0; j < topListCount; j++) {
+            const current_row = document.createElement("tr");
+
+            for(let i = 0; i < currentList[0].length; i++) {
+                const current_cell = document.createElement("td");
+                current_cell.addEventListener('mouseenter', () => {
+                    selectedAddress = current_cell.getAttribute('tx');
+                }, false);
+
+                current_cell.addEventListener('click', () => {
+                    OpenLink(current_cell.getAttribute('tx'));
+                }, false);
+                /* Insert table contents */
+                let currenttext;
+
+                switch(i) {
+                    case 0:
+                        currenttext = j + 1;
+                    break;
+                    case 1:
+                        currenttext = currentList[j][1].substring(0,35) + '...';
+                    break;
+                    case 2:
+                        currenttext = currentList[j][2];
+                    break;
+                    case 3:
+                        currenttext = `${currentList[j][3][0]} [${currentList[j][3][1] < 100 ? currentList[j][3][1].toFixed(1) : currentList[j][3][1].toFixed(0)}%]`;
+                    break;
+                    case 4:
+                        currenttext = `${currentList[j][4][0]} [${currentList[j][4][1] < 100 ? currentList[j][4][1].toFixed(1) : currentList[j][4][1].toFixed(0)}%]`;
+                    break;
+                    case 5:
+                        currenttext = `${currentList[j][5][0] === Infinity ? 'inf.' : currentList[j][5][0].toFixed(2)}`;
+                    break;
+                    case 6:
+                        currenttext = `${currentList[j][6][0] === Infinity ? 'inf.' : currentList[j][6][0] > 0 ? '+' : ''}${currentList[j][6][0] < Infinity ? currentList[j][6][0].toFixed(0)+'%' : ''}`;
+                    break;
+                    case 7:
+                        currenttext = currentList[j][7][0].toFixed(2);
+                    break;
+                    case 8:
+                        currenttext = currentList[j][8][0].toFixed(2);
+                    break;
+                    case 9:
+                        currenttext = currentList[j][9][0].toFixed(1) + ' min';
+                    break;
+                    case 10:
+                        currenttext = `${currentList[j][10][0] > 0 ? '+' : ''}${currentList[j][10][0].toFixed(1)}%`;
+                    break;
+
+                    default:
+                        currenttext = 'N/A';
+                }
+
+                const currenttextNode = document.createTextNode(currenttext);
+                current_cell.appendChild(currenttextNode);
+                current_cell.setAttribute('tx', currentList[j][1]);
+
+                /* Colorize dependent of values */
+                if(currentList[j][6][0] >= 0 && i == 6){
+                    current_cell.setAttribute('style', 'color: #008000');
+                } else if (currentList[j][6][0] < 0 && i == 6) {
+                    current_cell.setAttribute('style', 'color: #ff0000');
+                } else if (currentList[j][10][0] >= 0 && i == 10) {
+                    current_cell.setAttribute('style', 'color: #ff0000');
+                } else if (currentList[j][10][0] < 0 && i == 10) {
+                    current_cell.setAttribute('style', 'color: #008000');
+                }
+
+                current_row.appendChild(current_cell);
+            }
+            tablebody.appendChild(current_row);
+        }
 
         for(let i = 0; i < currentList[0].length; i++) {
             const current_cell = document.createElement("td");
-            current_cell.addEventListener('mouseenter', () => {
-                selectedAddress = current_cell.getAttribute('tx');
-            }, false);
 
-            current_cell.addEventListener('click', () => {
-                OpenLink(current_cell.getAttribute('tx'));
-            }, false);
-            /* Insert table contents */
             let currenttext;
 
             switch(i) {
                 case 0:
-                    currenttext = j + 1;
+                    currenttext = '#';
                 break;
                 case 1:
-                    currenttext = currentList[j][1].substring(0,35) + '...';
+                    currenttext = 'Address';
                 break;
                 case 2:
-                    currenttext = currentList[j][2];
+                    currenttext = 'Total';
                 break;
                 case 3:
-                    currenttext = `${currentList[j][3][0]} [${currentList[j][3][1] < 100 ? currentList[j][3][1].toFixed(1) : currentList[j][3][1].toFixed(0)}%]`;
+                    currenttext = 'Confirmed';
                 break;
                 case 4:
-                    currenttext = `${currentList[j][4][0]} [${currentList[j][4][1] < 100 ? currentList[j][4][1].toFixed(1) : currentList[j][4][1].toFixed(0)}%]`;
+                    currenttext = 'Unconfirmed';
                 break;
                 case 5:
-                    currenttext = `${currentList[j][5][0] === Infinity ? 'inf.' : currentList[j][5][0].toFixed(2)}`;
+                    currenttext = 'C.Ratio';
                 break;
                 case 6:
-                    currenttext = `${currentList[j][6][0] === Infinity ? 'inf.' : currentList[j][6][0] > 0 ? '+' : ''}${currentList[j][6][0] < Infinity ? currentList[j][6][0].toFixed(0)+'%' : ''}`;
+                    currenttext = '±Avg.C.Ratio';
                 break;
                 case 7:
-                    currenttext = currentList[j][7][0].toFixed(2);
+                    currenttext = 'TPS';
                 break;
                 case 8:
-                    currenttext = currentList[j][8][0].toFixed(2);
+                    currenttext = 'CTPS';
                 break;
                 case 9:
-                    currenttext = currentList[j][9][0].toFixed(1) + ' min';
+                    currenttext = '~C.Time';
                 break;
                 case 10:
-                    currenttext = `${currentList[j][10][0] > 0 ? '+' : ''}${currentList[j][10][0].toFixed(1)}%`;
+                    currenttext = '±Avg.Time';
                 break;
 
                 default:
@@ -147,87 +216,23 @@ function createTable(currentList) {
 
             const currenttextNode = document.createTextNode(currenttext);
             current_cell.appendChild(currenttextNode);
-            current_cell.setAttribute('tx', currentList[j][1]);
+            head_tr.appendChild(current_cell);
 
-            /* Colorize dependent of values */
-            if(currentList[j][6][0] >= 0 && i == 6){
-                current_cell.setAttribute('style', 'color: #008000');
-            } else if (currentList[j][6][0] < 0 && i == 6) {
-                current_cell.setAttribute('style', 'color: #ff0000');
-            } else if (currentList[j][10][0] >= 0 && i == 10) {
-                current_cell.setAttribute('style', 'color: #ff0000');
-            } else if (currentList[j][10][0] < 0 && i == 10) {
-                current_cell.setAttribute('style', 'color: #008000');
-            }
-
-            current_row.appendChild(current_cell);
-        }
-        tablebody.appendChild(current_row);
-    }
-
-    for(let i = 0; i < currentList[0].length; i++) {
-        const current_cell = document.createElement("td");
-
-        let currenttext;
-
-        switch(i) {
-            case 0:
-                currenttext = '#';
-            break;
-            case 1:
-                currenttext = 'Address';
-            break;
-            case 2:
-                currenttext = 'Total';
-            break;
-            case 3:
-                currenttext = 'Confirmed';
-            break;
-            case 4:
-                currenttext = 'Unconfirmed';
-            break;
-            case 5:
-                currenttext = 'C.Ratio';
-            break;
-            case 6:
-                currenttext = '±Avg.C.Ratio';
-            break;
-            case 7:
-                currenttext = 'TPS';
-            break;
-            case 8:
-                currenttext = 'CTPS';
-            break;
-            case 9:
-                currenttext = '~C.Time';
-            break;
-            case 10:
-                currenttext = '±Avg.Time';
-            break;
-
-            default:
-                currenttext = 'N/A';
+            /* Add listener for toplist sorting */
+            current_cell.addEventListener('click', () => {
+                if(i === toplistSortIndex[0] && toplistSortIndex[1] === 'desc'){
+                    toplistSortIndex = [i, 'asc'];
+                } else {
+                    toplistSortIndex = [i, 'desc'];
+                }
+                createTable(topList);
+            }, false);
         }
 
-        const currenttextNode = document.createTextNode(currenttext);
-        current_cell.appendChild(currenttextNode);
-        head_tr.appendChild(current_cell);
-
-        /* Add listener for toplist sorting */
-        current_cell.addEventListener('click', () => {
-            if(i === toplistSortIndex[0] && toplistSortIndex[1] === 'desc'){
-                toplistSortIndex = [i, 'asc'];
-            } else {
-                toplistSortIndex = [i, 'desc'];
-            }
-            createTable(topList);
-        }, false);
+        tablehead.appendChild(head_tr);
+        mytable.appendChild(tablehead);
+        mytable.appendChild(tablebody);
     }
-
-    tablehead.appendChild(head_tr);
-    mytable.appendChild(tablehead);
-    mytable.appendChild(tablebody);
-
 }
 
 /* Collect and store mouse position for TX info at mouseover */
@@ -318,6 +323,20 @@ c.addEventListener('mouseout', () => {
     selectedAddress = '';
 }, false);
 
+/* Switch for filtering zero value TX */
+const checkBox = document.getElementById('hideZero');
+document.getElementById('hideZero').addEventListener('click', () => {
+    if (checkBox.checked === true){
+        filterForValueTX = true;
+        txList = FilterZeroValue(txList);
+    } else {
+        filterForValueTX = false;
+        InitialHistoryPoll(false);
+    }
+}, false);
+/* Uncheck on load */
+checkBox.checked = false;
+
 /* Additional event listeners */
 c.addEventListener('click', () => {
     OpenLink(false);
@@ -333,12 +352,13 @@ document.getElementById('minNumberOfTxIncluded_button').addEventListener('click'
     createTable(topList);
 }, false);
 
-/* Get current line position to draw each */
+/* Get current line position */
 const calcLineCount = (i, pxSize, cWidth) => {
     const lines = Math.floor(i * pxSize / cWidth);
     return lines;
 }
 
+/* Temporarily disabled
 const ProcessTempQueue = () => {
     if(txTempQueue.length > 0){
         //console.log(txTempQueue);
@@ -346,9 +366,9 @@ const ProcessTempQueue = () => {
             UpdateTXStatus(tempTX, false, true);
         });
     }
-    // disable temporarily
-    //window.setTimeout( () => ProcessTempQueue(), 2000 );
+    window.setTimeout( () => ProcessTempQueue(), 2000 );
 }
+*/
 
 const UpdateTXStatus = (update, isMilestone, isTempQueue) => {
     if (!isMilestone) {
@@ -364,7 +384,6 @@ const UpdateTXStatus = (update, isMilestone, isTempQueue) => {
                 txTempQueue.push(update);
                 //txList.push({'hash': txHash, 'confirmed': confirmationTime, 'timestamp': timestamp, 'address': address, 'value': value, 'milestone': false});
             }
-
         }
     } else if (isMilestone) {
         //console.log(update.toString());
@@ -502,7 +521,6 @@ const DrawCanvas = (txList_DrawCanvas) => {
 }
 
 const CalcMetrics = () => {
-
     /* Calculate metrics */
     totalTransactions = txList.length;
     // Restrict max TX to display
@@ -599,6 +617,39 @@ const CalcMetrics = () => {
     window.setTimeout( () => CalcMetrics(), 1500 );
 }
 
+/* Fetch recent TX history */
+const InitialHistoryPoll = (firstLoad) => {
+
+    const devState = 'prod';
+    let pollingURL = '';
+    devState === 'prod' ? pollingURL = 'https://junglecrowd.org/txDB/txHistory.gz.json' : pollingURL = 'http://localhost/IOTA-Confirmation-Visualizer/httpdocs/txDB/txHistory.gz.json'
+
+    /* Fetch current tangle TX from remote backend */
+    fetch(pollingURL, {cache: 'no-cache'})
+    .then( json_test => json_test.json() )
+    .then( b64encoded => {return window.atob(b64encoded.txArrayCompressed)})
+    .then( decompress => {
+        try {
+            return pako.inflate(decompress, { to: 'string' });
+        } catch (err) {
+            console.error(err);
+        }
+    })
+    .then( jsonParse => JSON.parse(jsonParse) )
+    .then( txHistory => {
+        document.getElementById('loading').style.display = 'none';
+        /* Filter if switch for only value TX is set */
+        if( filterForValueTX ){ txHistory = FilterZeroValue(txHistory) }
+        txList = txHistory;
+        CalcMetrics();
+        /* After polling of history is finished init websocket (on first load) */
+        if( firstLoad ){InitWebSocket()}
+    })
+    .catch((e) => {
+        console.error('Error fetching txHistory', e);
+    });
+}
+
 // Init Websocket for client
 const InitWebSocket = () => {
     const connection = new WebSocket('wss://junglecrowd.org:4433', ['soap', 'xmpp']);
@@ -616,9 +667,14 @@ const InitWebSocket = () => {
     connection.onmessage = (response) => {
         const newInfo = JSON.parse(response.data);
         if (newInfo.newTX){
-            txList.push(newInfo.newTX);
+
+            if(filterForValueTX && newInfo.newTX.value > 0){
+                txList.push(newInfo.newTX);
+            } else if (!filterForValueTX){
+                txList.push(newInfo.newTX);
+            }
+
         } else if(newInfo.update) {
-            //console.log(newInfo.update);
             UpdateTXStatus(newInfo.update, false);
         } else if (newInfo.updateMilestone){
             UpdateTXStatus(newInfo.updateMilestone, true);
@@ -628,44 +684,19 @@ const InitWebSocket = () => {
     };
 }
 
+const FilterZeroValue = (theList) => {
+    const filteredList = _.filter( theList, filterValue => filterValue.value > 0 );
+    return filteredList;
+}
+
 const Main = () => {
     /* Render canvas */
     DrawCanvas(txList);
 
-    const InitialPoll = () => {
-
-        const devState = 'prod';
-        let pollingURL = '';
-        devState === 'prod' ? pollingURL = 'https://junglecrowd.org/txDB/txHistory.gz.json' : pollingURL = 'http://localhost/IOTA-Confirmation-Visualizer/httpdocs/txDB/txHistory.gz.json'
-
-        /* Fetch current tangle TX from remote backend */
-        fetch(pollingURL, {cache: 'no-cache'})
-        .then( json_test => json_test.json() )
-        .then( b64encoded => {return window.atob(b64encoded.txArrayCompressed)})
-        .then( decompress => {
-            try {
-                return pako.inflate(decompress, { to: 'string' });
-            } catch (err) {
-                console.error(err);
-            }
-        })
-        .then( jsonParse => JSON.parse(jsonParse) )
-        .then( txHistory => {
-
-            document.getElementById('loading').style.display = 'none';
-            txList = txHistory;
-            CalcMetrics();
-            // After polling of history is finished init websocket
-            InitWebSocket();
-        })
-        .catch((e) => {
-            console.error('Error fetching txHistory', e);
-            /* This is where you run code if the server returns any errors */
-        });
-    }
-    InitialPoll();
-    // temporarily disabled
+    InitialHistoryPoll(true);
+    /* temporarily disabled
     ProcessTempQueue();
+    */
 }
 /* Init */
 Main();
