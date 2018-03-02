@@ -654,6 +654,7 @@ const InitialHistoryPoll = (firstLoad) => {
     })
     .catch((e) => {
         console.error('Error fetching txHistory', e);
+        window.setTimeout( () => InitialHistoryPoll(firstLoad), 1000 );
     });
 }
 
