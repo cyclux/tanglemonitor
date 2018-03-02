@@ -83,6 +83,7 @@ thead {
     background-color: #ffffff !important;
     font-size: 15px;
     font-weight: bold;
+    cursor: pointer;
 }
 thead>tr>td:nth-child(2) {
     text-align: left;

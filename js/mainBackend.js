@@ -79,11 +79,17 @@ function createTable(currentList) {
         return listItem[toplistSortIndex[0]][0];
     }, [toplistSortIndex[1]] );
 
-    const mytable = document.getElementById("toplist");
+    const mytable = document.getElementById('toplist');
     mytable.innerHTML = "";
-    const tablehead = document.createElement("thead");
-    const tablebody = document.createElement("tbody");
-    const head_tr = document.createElement("tr");
+    const tablehead = document.createElement('thead');
+    const tablebody = document.createElement('tbody');
+    const head_tr = document.createElement('tr');
+
+    const img = document.createElement('img');
+    img.setAttribute('src', 'css/sort.png');
+    img.setAttribute('height', '10');
+    img.setAttribute('width', '10');
+    img.setAttribute('alt', 'sort');
 
     topListCount = 0;
     currentList.length >= 20 ? topListCount = 20 : topListCount = currentList.length;
@@ -227,6 +233,7 @@ function createTable(currentList) {
                 }
                 createTable(topList);
             }, false);
+            //current_cell.appendChild(img);
         }
 
         tablehead.appendChild(head_tr);
@@ -659,6 +666,7 @@ const InitWebSocket = () => {
     connection.onerror = (e) => {
         console.log('WebSocket Error ' + e);
         //connection.terminate();
+        window.setTimeout( () => InitWebSocket(), 3000 );
     };
     connection.onclose = (e) => {
         console.log('Websocket disconnected ' + e);
