@@ -346,7 +346,8 @@ const ProcessTempQueue = () => {
             UpdateTXStatus(tempTX, false, true);
         });
     }
-    window.setTimeout( () => ProcessTempQueue(), 2000 );
+    // disable temporarily
+    //window.setTimeout( () => ProcessTempQueue(), 2000 );
 }
 
 const UpdateTXStatus = (update, isMilestone, isTempQueue) => {
@@ -354,20 +355,14 @@ const UpdateTXStatus = (update, isMilestone, isTempQueue) => {
         const txHash = update.hash;
         const confirmationTime = update.time;
 
-
         const hashIndex = txList.findIndex(tx => tx.hash === txHash);
         if(hashIndex !== -1 && txList[hashIndex] !== undefined){
             txList[hashIndex].confirmed = confirmationTime;
-            //console.log(`Hash: ${txHash} (Index: ${hashIndex}) hashIndex Server: ${indexServer}`);
             if (isTempQueue){txTempQueue.unshift()}
-            //console.log('hashIndex !== -1:', hashIndex !== -1, 'txList[hashIndex]:', txList[hashIndex]);
         } else {
-            console.log(`TX not found in local DB - Hash: ${txHash} (Index: ${hashIndex})`);
-            //console.log('hashIndex !== -1:', hashIndex !== -1, 'txList[hashIndex]:', txList[hashIndex]);
             if (!isTempQueue){
                 txTempQueue.push(update);
                 //txList.push({'hash': txHash, 'confirmed': confirmationTime, 'timestamp': timestamp, 'address': address, 'value': value, 'milestone': false});
-                //txList.push({'hash': txHash, 'confirmed': confirmationTime, 'milestone': false});
             }
 
         }
@@ -604,7 +599,7 @@ const CalcMetrics = () => {
     window.setTimeout( () => CalcMetrics(), 1500 );
 }
 
-// Init Websocket
+// Init Websocket for client
 const InitWebSocket = () => {
     const connection = new WebSocket('wss://junglecrowd.org:4433', ['soap', 'xmpp']);
     connection.onopen = () => {
@@ -637,7 +632,7 @@ const Main = () => {
     /* Render canvas */
     DrawCanvas(txList);
 
-    const Polling = () => {
+    const InitialPoll = () => {
 
         const devState = 'prod';
         let pollingURL = '';
@@ -667,10 +662,9 @@ const Main = () => {
             console.error('Error fetching txHistory', e);
             /* This is where you run code if the server returns any errors */
         });
-        /* Interval for polling and total calculations*/
-        //window.setTimeout( () => Polling(), 10000 );
     }
-    Polling();
+    InitialPoll();
+    // temporarily disabled
     ProcessTempQueue();
 }
 /* Init */
