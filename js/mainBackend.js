@@ -606,11 +606,7 @@ const CalcMetrics = () => {
 
 // Init Websocket
 const InitWebSocket = () => {
-<<<<<<< HEAD
-    const connection = new WebSocket('wss://junglecrowd.org:8080', ['soap', 'xmpp']);
-=======
-    const connection = new WebSocket('ws://junglecrowd.org:8080', ['soap', 'xmpp']);
->>>>>>> 9372392d081843e320b5bde8093b7676fbea3902
+    const connection = new WebSocket('wss://junglecrowd.org:4433', ['soap', 'xmpp']);
     connection.onopen = () => {
         connection.send('Gimme transactions!');
     };
