@@ -23,6 +23,8 @@ const fontSizeHeader = '13px';
 const fontSizeAxis = '11px';
 const maxTransactions = 30000;
 
+const coordinator = 'KPWCHICGJZXKE9GSUDXZYUAPLHAKAHYHDXN';
+
 const pxColorUnconf = {r:0, g:0, b:0, a:1};
 const pxColorConf = {r:0, g:255, b:0, a:1};
 const pxColorMilestone = {r:0, g:0, b:255, a:1};
@@ -122,7 +124,7 @@ function createTable(currentList) {
                         currenttext = `${j + 1}`;
                     break;
                     case 1:
-                        currenttext = `${currentList[j][1].substring(0,35)}...`;
+                        currenttext = `${currentList[j][1].substring(0,35) === coordinator ? 'COORDINATOR' : currentList[j][1].substring(0,35)+'...'}`;
                     break;
                     case 2:
                         currenttext = `${currentList[j][2]}`;
