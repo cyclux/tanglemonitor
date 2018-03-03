@@ -94,12 +94,14 @@ function createTable(currentList) {
     img.setAttribute('alt', 'sort');
 
     topListCount = 0;
-    currentList.length >= 20 ? topListCount = 20 : topListCount = currentList.length;
+    currentList.length >= 15 ? topListCount = 15 : topListCount = currentList.length;
     topListCount = topListCount + toplistAdditional;
 
     /* Prevent greater topListCount than actual length under any circumstance */
     if(topListCount >= currentList.length) {
         topListCount = currentList.length
+    } else if (topListCount < 0){
+        topListCount = 0;
     }
 
     if (currentList.length > 0){
@@ -351,11 +353,23 @@ c.addEventListener('click', () => {
     OpenLink(false);
 }, false);
 
+/* Toplist menu triggers */
 document.getElementById('toplist-more').addEventListener('click', () => {
     toplistAdditional = toplistAdditional + 5;
     createTable(topList);
 }, false);
 
+document.getElementById('toplist-all').addEventListener('click', () => {
+    toplistAdditional = 10000;
+    createTable(topList);
+}, false);
+
+document.getElementById('toplist-reset').addEventListener('click', () => {
+    toplistAdditional = 0;
+    createTable(topList);
+}, false);
+
+/* Set minimum TX to display in toplist */
 document.getElementById('minNumberOfTxIncluded_button').addEventListener('click', () => {
     toplistMinTX = parseInt(document.getElementById('minNumberOfTxIncluded').value);
     createTable(topList);

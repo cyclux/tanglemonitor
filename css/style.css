@@ -46,11 +46,14 @@ div#hideZeroValue{
     float: right;
 }
 
-div#toplist-more{
-    margin: 20px auto;
-    text-align: center;
-    display: table;
+.toplist{
+    display: inline-block;
     cursor: pointer;
+}
+
+div#toplist-menu{
+    margin: 10px auto;
+    display: inherit;
 }
 
 table#toplist{
