@@ -103,10 +103,10 @@ function createTable(currentList) {
     if (currentList.length > 0){
 
         for(let j = 0; j < topListCount; j++) {
-            const current_row = document.createElement("tr");
+            const current_row = document.createElement('tr');
 
             for(let i = 0; i < currentList[0].length; i++) {
-                const current_cell = document.createElement("td");
+                const current_cell = document.createElement('td');
                 current_cell.addEventListener('mouseenter', () => {
                     selectedAddress = current_cell.getAttribute('tx');
                 }, false);
@@ -119,13 +119,13 @@ function createTable(currentList) {
 
                 switch(i) {
                     case 0:
-                        currenttext = j + 1;
+                        currenttext = `${j + 1}`;
                     break;
                     case 1:
-                        currenttext = currentList[j][1].substring(0,35) + '...';
+                        currenttext = `${currentList[j][1].substring(0,35)}...`;
                     break;
                     case 2:
-                        currenttext = currentList[j][2];
+                        currenttext = `${currentList[j][2]}`;
                     break;
                     case 3:
                         currenttext = `${currentList[j][3][0]} [${currentList[j][3][1] < 100 ? currentList[j][3][1].toFixed(1) : currentList[j][3][1].toFixed(0)}%]`;
@@ -140,13 +140,13 @@ function createTable(currentList) {
                         currenttext = `${currentList[j][6][0] === Infinity ? 'inf.' : currentList[j][6][0] > 0 ? '+' : ''}${currentList[j][6][0] < Infinity ? currentList[j][6][0].toFixed(0)+'%' : ''}`;
                     break;
                     case 7:
-                        currenttext = currentList[j][7][0].toFixed(2);
+                        currenttext = `${currentList[j][7][0].toFixed(2)}`;
                     break;
                     case 8:
-                        currenttext = currentList[j][8][0].toFixed(2);
+                        currenttext = `${currentList[j][8][0].toFixed(2)}`;
                     break;
                     case 9:
-                        currenttext = currentList[j][9][0].toFixed(1) + ' min';
+                        currenttext = `${currentList[j][9][0].toFixed(1)} min`;
                     break;
                     case 10:
                         currenttext = `${currentList[j][10][0] > 0 ? '+' : ''}${currentList[j][10][0].toFixed(1)}%`;
@@ -177,7 +177,7 @@ function createTable(currentList) {
         }
 
         for(let i = 0; i < currentList[0].length; i++) {
-            const current_cell = document.createElement("td");
+            const current_cell = document.createElement('td');
 
             let currenttext;
 
@@ -304,18 +304,18 @@ c.addEventListener('mousemove', evt => {
 
         if(txOfMousePosition.hash){
             let txConfirmationTime = _.round(txOfMousePosition.confirmed / 60, 2);
-            txConfirmationTime !== 0 ? txConfirmationTime = txConfirmationTime + ' Minutes' : txConfirmationTime = 'Not confirmed yet';
+            txConfirmationTime !== 0 ? txConfirmationTime = `${txConfirmationTime} Minutes` : txConfirmationTime = 'Not confirmed yet';
 
             tooltip.innerHTML = `Address: ${txOfMousePosition.address}<br>TX Hash: ${txOfMousePosition.hash}<br>Confirmation Time: ${txConfirmationTime}`;
             selectedAddress = txOfMousePosition.address;
             tooltip.style.display = 'block';
             tooltip.style.top = `${mousePos.yReal+15}px`;
             tooltip.style.left = `${mousePos.xReal+15}px`;
-            document.body.style.cursor = "pointer";
+            document.body.style.cursor = 'pointer';
 
         } else {
             tooltip.style.display = 'none';
-            document.body.style.cursor = "auto";
+            document.body.style.cursor = 'auto';
             txOfMousePosition = {};
             selectedAddress = '';
         }
@@ -325,7 +325,7 @@ c.addEventListener('mousemove', evt => {
 
 c.addEventListener('mouseout', () => {
     tooltip.style.display = 'none';
-    document.body.style.cursor = "auto";
+    document.body.style.cursor = 'auto';
     txOfMousePosition = {};
     selectedAddress = '';
 }, false);
@@ -389,6 +389,7 @@ const UpdateTXStatus = (update, isMilestone, isTempQueue) => {
         } else {
             if (!isTempQueue){
                 txTempQueue.push(update);
+                console.log(`TX not found in local DB - Hash: ${txHash} (Index: ${hashIndex})`);
                 //txList.push({'hash': txHash, 'confirmed': confirmationTime, 'timestamp': timestamp, 'address': address, 'value': value, 'milestone': false});
             }
         }
@@ -410,6 +411,7 @@ const UpdateTXStatus = (update, isMilestone, isTempQueue) => {
 
 /* Draw canvas iteration */
 const DrawCanvas = (txList_DrawCanvas) => {
+
     /* Clear screen on each tick */
     ctx.clearRect(0, 0, cWidth + offsetWidth, c.height);
 
@@ -422,7 +424,6 @@ const DrawCanvas = (txList_DrawCanvas) => {
     let pxls = [];
     txList_DrawCanvas.map( (tx, i) => {
         const lineCount = calcLineCount(i, pxSize, cWidth);
-
         pxls.push({
             x: i * pxSize - (lineCount * pxSize * txPerLine),
             y: lineCount * pxSize,
@@ -462,6 +463,7 @@ const DrawCanvas = (txList_DrawCanvas) => {
 
     /*  Draw TX pixels and additional metrics */
     pxls.map( (px, pixelIndex ) => {
+
         /* Declare amount of TX for calculation of TPS / confirmation rate metrics */
         const confRateRange = (txPerLine*2);
         if (pixelIndex % confRateRange == 0){
@@ -499,7 +501,7 @@ const DrawCanvas = (txList_DrawCanvas) => {
             pxColor = pxColorMilestone;
             strokeCol = strokeColorNorm;
             const minElapsed = Math.floor( (Math.floor(Date.now() / 1000) - px.time) / 60 );
-            ctx.fillText(`${minElapsed} min ago`, margin + cWidth + 5, px.y + offsetHeight);
+            ctx.fillText(`${minElapsed} min ago`, (margin + cWidth + 5), (px.y + offsetHeight) );
         }
 
         if (px.milestone === 'trunk') {
@@ -519,10 +521,10 @@ const DrawCanvas = (txList_DrawCanvas) => {
         }
         /* Display actual TX pixel */
         ctx.fillStyle = 'rgba(' + pxColor.r + ',' + pxColor.g + ',' + pxColor.b + ',' + pxColor.a + ')';
-        ctx.fillRect(px.x + margin, px.y + offsetHeight, pxSize, pxSize);
+        ctx.fillRect( (px.x + margin) , (px.y + offsetHeight), pxSize, pxSize);
         ctx.strokeStyle = strokeCol;
         ctx.lineWidth = 1;
-        ctx.strokeRect(px.x + margin, px.y + offsetHeight, pxSize, pxSize);
+        ctx.strokeRect( (px.x + margin), (px.y + offsetHeight), pxSize, pxSize);
      });
      window.setTimeout( () => DrawCanvas(txList), 100 );
 }
@@ -553,6 +555,7 @@ const CalcMetrics = () => {
 
     /* Calculate confirmation rate of all TX */
     totalConfRate = Math.round(totalConfirmations.length / txList.length * 10000) / 100;
+
     /* Calculate average confirmation time of all confirmed TX */
     totalConfirmationTime = _.mean(totalConfirmations);
     totalConfirmationTime = _.round(totalConfirmationTime / 60, 1);
@@ -612,7 +615,6 @@ const CalcMetrics = () => {
         initialSorted[index].push([addressCTPS]);
         initialSorted[index].push([confirmationTimeMean]);
         initialSorted[index].push([confirmationTimeMeanRatio]);
-
     });
 
     topList = initialSorted;
@@ -645,10 +647,12 @@ const InitialHistoryPoll = (firstLoad) => {
     .then( jsonParse => JSON.parse(jsonParse) )
     .then( txHistory => {
         document.getElementById('loading').style.display = 'none';
+
         /* Filter if switch for only value TX is set */
         if( filterForValueTX ){ txHistory = FilterZeroValue(txHistory) }
         txList = txHistory;
         CalcMetrics();
+
         /* After polling of history is finished init websocket (on first load) */
         if( firstLoad ){InitWebSocket()}
     })
@@ -665,12 +669,12 @@ const InitWebSocket = () => {
         connection.send('Gimme transactions!');
     };
     connection.onerror = (e) => {
-        console.log('WebSocket Error ' + e);
+        console.log(`WebSocket Error: ${e}`);
         //connection.terminate();
         window.setTimeout( () => InitWebSocket(), 3000 );
     };
-    connection.onclose = (e) => {
-        console.log('Websocket disconnected ' + e);
+    connection.onclose = () => {
+        console.log('Websocket disconnected. Reconnecting..');
         InitWebSocket();
     };
     connection.onmessage = (response) => {
@@ -688,7 +692,7 @@ const InitWebSocket = () => {
         } else if (newInfo.updateMilestone){
             UpdateTXStatus(newInfo.updateMilestone, true);
         } else {
-            console.log('Unrecognized TX from Websocket:', newInfo);
+            console.log(`Unrecognized message from Websocket: ${newInfo}`);
         }
     };
 }
