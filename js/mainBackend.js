@@ -87,12 +87,6 @@ function createTable(currentList) {
     const tablebody = document.createElement('tbody');
     const head_tr = document.createElement('tr');
 
-    const img = document.createElement('img');
-    img.setAttribute('src', 'css/sort.png');
-    img.setAttribute('height', '10');
-    img.setAttribute('width', '10');
-    img.setAttribute('alt', 'sort');
-
     topListCount = 0;
     currentList.length >= 15 ? topListCount = 15 : topListCount = currentList.length;
     topListCount = topListCount + toplistAdditional;
@@ -182,6 +176,9 @@ function createTable(currentList) {
 
         for(let i = 0; i < currentList[0].length; i++) {
             const current_cell = document.createElement('td');
+            const img = document.createElement('img');
+            img.setAttribute('src', 'css/sort.png');
+            img.classList.add('table_head_sortpic');
 
             let currenttext;
 
@@ -226,6 +223,7 @@ function createTable(currentList) {
 
             const currenttextNode = document.createTextNode(currenttext);
             current_cell.appendChild(currenttextNode);
+            if(i > 0){current_cell.appendChild(img)}
             head_tr.appendChild(current_cell);
 
             /* Add listener for toplist sorting */
@@ -237,7 +235,6 @@ function createTable(currentList) {
                 }
                 createTable(topList);
             }, false);
-            //current_cell.appendChild(img);
         }
 
         tablehead.appendChild(head_tr);
@@ -639,7 +636,7 @@ const CalcMetrics = () => {
         createTable(initialSorted);
     }
     //updateMetrics(totalTPS, totalCTPS, totalConfRate, totalConfirmationTime);
-    window.setTimeout( () => CalcMetrics(), 1500 );
+    window.setTimeout( () => CalcMetrics(), 150000 );
 }
 
 /* Fetch recent TX history */

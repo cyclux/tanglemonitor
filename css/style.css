@@ -26,7 +26,7 @@ div#loading{
 }
 
 div#toplist_wrapper{
-    width: 1000px;
+    width: 1150px;
     display: table;
     margin: 0 auto;
 }
@@ -42,7 +42,7 @@ input#minNumberOfTxIncluded{
 }
 
 div#hideZeroValue{
-    margin: 0 47px 15px 0;
+    margin: 0 50px 15px 0;
     float: right;
 }
 
@@ -61,6 +61,12 @@ table#toplist{
     border: 0px solid #000000;
     border-collapse: collapse;
     font-size: 13px;
+}
+
+.table_head_sortpic{
+    width: 17px;
+    height: 17px;
+    vertical-align: bottom;
 }
 
 tbody>tr:nth-child(odd) {
