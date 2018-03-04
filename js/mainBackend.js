@@ -22,7 +22,7 @@ const strokeColorSelect = '#ff0000';
 const fontFace = 'Consolas';
 const fontSizeHeader = '13px';
 const fontSizeAxis = '11px';
-const maxTransactions = 30000;
+let maxTransactions = 15000;
 
 const coordinator = 'KPWCHICGJZXKE9GSUDXZYUAPLHAKAHYHDXN';
 
@@ -31,7 +31,6 @@ const pxColorConf = {r:0, g:255, b:0, a:1};
 const pxColorMilestone = {r:0, g:0, b:255, a:1};
 
 let txList = [];
-let txTempQueue = [];
 let filterForValueTX = false;
 let selectedAddress = '';
 let totalConfRate = 0;
@@ -379,47 +378,18 @@ const calcLineCount = (i, pxSize, cWidth) => {
     return lines;
 }
 
-/* Temporarily disabled
-const ProcessTempQueue = () => {
-    if(txTempQueue.length > 0){
-        //console.log(txTempQueue);
-        txTempQueue.map( tempTX => {
-            UpdateTXStatus(tempTX, false, true);
-        });
-    }
-    window.setTimeout( () => ProcessTempQueue(), 2000 );
-}
-*/
+/* Update conf and milestone status on local DB */
+const UpdateTXStatus = (update, isMilestone) => {
 
-const UpdateTXStatus = (update, isMilestone, isTempQueue) => {
-    if (!isMilestone) {
-        const txHash = update.hash;
-        const confirmationTime = update.time;
+    const txHash = update.hash;
+    let milestoneType, confirmationTime;
+    if(isMilestone){milestoneType = update.milestone;} else {confirmationTime = update.time;}
 
-        const hashIndex = txList.findIndex(tx => tx.hash === txHash);
-        if(hashIndex !== -1 && txList[hashIndex] !== undefined){
-            txList[hashIndex].confirmed = confirmationTime;
-            if (isTempQueue){txTempQueue.unshift()}
-        } else {
-            if (!isTempQueue){
-                txTempQueue.push(update);
-                console.log(`TX not found in local DB - Hash: ${txHash} (Index: ${hashIndex})`);
-                //txList.push({'hash': txHash, 'confirmed': confirmationTime, 'timestamp': timestamp, 'address': address, 'value': value, 'milestone': false});
-            }
-        }
-    } else if (isMilestone) {
-        //console.log(update.toString());
-        const txHash = update.hash;
-        const milestoneType = update.milestone;
-
-        const hashIndex = txList.findIndex(tx => tx.hash === txHash);
-        if(txList[hashIndex] !== undefined){
-            txList[hashIndex].milestone = milestoneType;
-        } else {
-            console.log(`Milestone not found in local DB - Hash: ${txHash} (Index: ${hashIndex})`);
-        }
+    const hashIndex = txList.findIndex(tx => tx.hash === txHash);
+    if(hashIndex !== -1 && txList[hashIndex] !== undefined){
+        isMilestone ? txList[hashIndex].milestone = milestoneType : txList[hashIndex].confirmed = confirmationTime;
     } else {
-        console.log('Undefined status of new TX');
+        console.log(`${isMilestone ? 'Milestone' : 'TX'} not found in local DB - Hash: ${txHash}`);
     }
 }
 
@@ -636,6 +606,11 @@ const CalcMetrics = () => {
     if(initialSorted.length > 0) {
         createTable(initialSorted);
     }
+
+    /* Adapt maxTransactions to TPS */
+    if (totalTPS > 15){
+        maxTransactions = 30000;
+    }
     //updateMetrics(totalTPS, totalCTPS, totalConfRate, totalConfirmationTime);
     window.setTimeout( () => CalcMetrics(), 1500 );
 }
@@ -663,6 +638,10 @@ const InitialHistoryPoll = (firstLoad) => {
 
         /* Filter if switch for only value TX is set */
         if( filterForValueTX ){ txHistory = FilterZeroValue(txHistory) }
+
+        const amountOfTxtoReduce = txHistory.length - maxTransactions;
+        txHistory.splice(0, amountOfTxtoReduce);
+
         txList = txHistory;
         CalcMetrics();
 
@@ -721,11 +700,8 @@ const FilterZeroValue = (theList) => {
 const Main = () => {
     /* Render canvas */
     DrawCanvas(txList);
-
+    /* Fetch history initialy */
     InitialHistoryPoll(true);
-    /* temporarily disabled
-    ProcessTempQueue();
-    */
 }
 /* Init */
 Main();
