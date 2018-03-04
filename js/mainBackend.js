@@ -636,7 +636,7 @@ const CalcMetrics = () => {
         createTable(initialSorted);
     }
     //updateMetrics(totalTPS, totalCTPS, totalConfRate, totalConfirmationTime);
-    window.setTimeout( () => CalcMetrics(), 150000 );
+    window.setTimeout( () => CalcMetrics(), 1500 );
 }
 
 /* Fetch recent TX history */
