@@ -2,6 +2,7 @@
 /* global window, pako, document, WebSocket, fetch, console, _ */
 'use strict';
 
+const devState = 'prod';
 /* Set canvas and dimensions */
 const c = document.getElementById('canvas');
 const ctx = c.getContext('2d');
@@ -642,7 +643,6 @@ const CalcMetrics = () => {
 /* Fetch recent TX history */
 const InitialHistoryPoll = (firstLoad) => {
 
-    const devState = 'prod';
     let pollingURL = '';
     devState === 'prod' ? pollingURL = 'https://junglecrowd.org/txDB/txHistory.gz.json' : pollingURL = 'http://localhost/IOTA-Confirmation-Visualizer/httpdocs/txDB/txHistory.gz.json'
 
@@ -677,18 +677,21 @@ const InitialHistoryPoll = (firstLoad) => {
 
 // Init Websocket for client
 const InitWebSocket = () => {
-    const connection = new WebSocket('wss://junglecrowd.org:4433', ['soap', 'xmpp']);
+
+    let wsURL = '';
+    devState === 'prod' ? wsURL = 'wss://junglecrowd.org:4433' : wsURL = 'ws://localhost:4433'
+
+    const connection = new WebSocket(wsURL, ['soap', 'xmpp']);
     connection.onopen = () => {
         connection.send('Gimme transactions!');
     };
-    connection.onerror = (e) => {
-        console.log(`WebSocket Error: ${e}`);
-        //connection.terminate();
-        window.setTimeout( () => InitWebSocket(), 3000 );
+    connection.onerror = () => {
+        console.log(`WebSocket Connection Error.`);
     };
     connection.onclose = () => {
-        console.log('Websocket disconnected. Reconnecting..');
-        InitWebSocket();
+        console.log(`Websocket disconnected. Reconnecting..`);
+        window.setTimeout( () => InitWebSocket(), 3000 );
+        connection.terminate();
     };
     connection.onmessage = (response) => {
         const newInfo = JSON.parse(response.data);
