@@ -1,4 +1,4 @@
-# IOTA-Confirmation-Visualizer
+# Tanglemonitor
 Visualisation and detailed live metrics of the IOTA confirmation process.
 
-https://cyclux.github.io/IOTA-Confirmation-Visualizer/
+https://tanglemonitor.com
