@@ -43,7 +43,7 @@ let totalCTPS = 0;
 let topList = [];
 let toplistAdditional = 0;
 let topListCount = 0;
-let toplistSortIndex = [3, 'desc'];
+let toplistSortIndex = [2, 'desc'];
 let toplistMinTX = 10;
 
 let mousePos;
@@ -522,6 +522,80 @@ const DrawCanvas = (txList_DrawCanvas) => {
      window.setTimeout( () => DrawCanvas(txList), 100 );
 }
 
+const CalcToplist = () => {
+        /* Create toplist */
+        const txListConfStatus = _.groupBy(txList, 'confirmed');
+        const confirmed_new = _.countBy(txListConfStatus.true, 'address');
+        const unconfirmed_new = _.countBy(txListConfStatus.false, 'address');
+
+        const confirmedTotalCount = txListConfStatus.true.length;
+        const unconfirmedTotalCount = txListConfStatus.false.length;
+
+        const customizer = (objValue, srcValue) => {
+            objValue = _.defaultTo(objValue, 0);
+            return [objValue, srcValue];
+        }
+
+        let confList = _.assignInWith(confirmed_new, unconfirmed_new, customizer);
+        confList = Object.entries(confList);
+
+        confList = confList.reduce( (acc, curr) => {
+            if (!Array.isArray(curr[1])){
+                acc.push([curr[0], [curr[1], 0]]);
+            } else {
+                acc.push(curr);
+            }
+            return acc;
+        }, []);
+
+
+        confList.map( (tx, index) => {
+            const unconfirmedOnes = tx[1][1];
+            const confirmedOnes = tx[1][0];
+            const confirmationTimeCollector = txListConfStatus.true.reduce( (acc, txs) => {
+
+                if (txs.address === tx[0]){
+                    acc[0].push(txs.ctime - txs.timestamp);
+                } else {
+                    acc[1].push(txs.ctime - txs.timestamp);
+                }
+                return acc;}, [[], []]);
+
+            const confirmationTime = confirmationTimeCollector[0];
+            const confirmationTimeOthers = confirmationTimeCollector[1];
+            const confirmationTimeMeanOthers = _.mean(confirmationTimeOthers) / 60;
+            const confirmationTimeMean = _.mean(confirmationTime) / 60;
+            const confirmationTimeMeanRatio = ((confirmationTimeMean/confirmationTimeMeanOthers) * 100) - 100;
+
+            const total = unconfirmedOnes + confirmedOnes;
+            const confirmedOnesRatio = (confirmedOnes/total) * 100;
+            const unconfirmedOnesRatio = (unconfirmedOnes/total) * 100;
+            const confirmRatio = confirmedOnes / unconfirmedOnes;
+            const confirmRatioTotal = confirmedTotalCount / unconfirmedTotalCount;
+            const confirmationMeanRatio = ((confirmRatio  / confirmRatioTotal) * 100) - 100;
+            const addressTPS = Math.round(total / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
+            const addressCTPS = Math.round(confirmedOnes / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
+
+            confList[index].unshift([0]);
+            confList[index].pop();
+            confList[index].push([total]);
+            confList[index].push([confirmedOnes, confirmedOnesRatio]);
+            confList[index].push([unconfirmedOnes, unconfirmedOnesRatio]);
+            confList[index].push([confirmRatio]);
+            confList[index].push([confirmationMeanRatio]);
+            confList[index].push([addressTPS]);
+            confList[index].push([addressCTPS]);
+            confList[index].push([confirmationTimeMean]);
+            confList[index].push([confirmationTimeMeanRatio]);
+        });
+
+        topList = confList;
+        if(confList.length > 0) {
+            createTable(confList);
+        }
+        window.setTimeout( () => CalcToplist(), 5000 );
+}
+
 const CalcMetrics = () => {
     /* Calculate metrics */
     totalTransactions = txList.length;
@@ -557,63 +631,6 @@ const CalcMetrics = () => {
         totalCTPS = Math.round(totalConfirmations.length / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
     }
 
-    /* Create toplist */
-    const partitioned = _.partition(txList, 'confirmed');
-    const confirmed = partitioned[0];
-    const unconfirmed = partitioned[1];
-
-    const confirmedTotalCount = confirmed.length;
-    const unconfirmedTotalCount = unconfirmed.length;
-
-    // _.groupBy(['one', 'two', 'three'], 'length');  instread of partition?
-    const confirmedCounted = _.countBy(confirmed, 'address');
-    let initialSorted = Object.entries(confirmedCounted);
-
-    initialSorted.map( (tx, index) => {
-        const unconfirmedOnes = unconfirmed.filter( txs => txs.address === tx[0]).length;
-        const confirmedOnes = tx[1];
-        const confirmationTimeCollector = confirmed.reduce( (acc, txs) => {
-
-            if (txs.address === tx[0]){
-                acc[0].push(txs.ctime - txs.timestamp);
-            } else {
-                acc[1].push(txs.ctime - txs.timestamp);
-            }
-            return acc;}, [[], []]);
-        const confirmationTime = confirmationTimeCollector[0];
-        const confirmationTimeOthers = confirmationTimeCollector[1];
-        const confirmationTimeMeanOthers = _.mean(confirmationTimeOthers) / 60;
-        const confirmationTimeMean = _.mean(confirmationTime) / 60;
-        const confirmationTimeMeanRatio = ((confirmationTimeMean/confirmationTimeMeanOthers) * 100) - 100;
-
-        const total = unconfirmedOnes + confirmedOnes;
-        const confirmedOnesRatio = (confirmedOnes/total) * 100;
-        const unconfirmedOnesRatio = (unconfirmedOnes/total) * 100;
-        const confirmRatio = confirmedOnes / unconfirmedOnes;
-        const confirmRatioTotal = confirmedTotalCount / unconfirmedTotalCount;
-        const confirmationMeanRatio = ((confirmRatio  / confirmRatioTotal) * 100) - 100;
-        const addressTPS = Math.round(total / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
-        const addressCTPS = Math.round(confirmedOnes / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
-
-        initialSorted[index].unshift([0]);
-        initialSorted[index].pop();
-        initialSorted[index].push([total]);
-        initialSorted[index].push([confirmedOnes, confirmedOnesRatio]);
-        initialSorted[index].push([unconfirmedOnes, unconfirmedOnesRatio]);
-        initialSorted[index].push([confirmRatio]);
-        initialSorted[index].push([confirmationMeanRatio]);
-        initialSorted[index].push([addressTPS]);
-        initialSorted[index].push([addressCTPS]);
-        initialSorted[index].push([confirmationTimeMean]);
-        initialSorted[index].push([confirmationTimeMeanRatio]);
-    });
-
-    topList = initialSorted;
-
-    if(initialSorted.length > 0) {
-        createTable(initialSorted);
-    }
-
     /* Adapt maxTransactions to TPS */
     if (totalTPS > 15){
         maxTransactions = 30000;
@@ -639,6 +656,7 @@ const InitialHistoryPoll = (firstLoad) => {
 
         txList = _.reverse(response.txHistory);
         CalcMetrics();
+        CalcToplist();
 
         /* After polling of history is finished init websocket (on first load) */
         if( firstLoad ){InitWebSocket()}
