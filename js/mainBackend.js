@@ -22,6 +22,7 @@ const strokeColorSelect = '#ff0000';
 const fontFace = 'Consolas';
 const fontSizeHeader = '13px';
 const fontSizeAxis = '11px';
+const txAmountToPoll = 15000;
 let maxTransactions = 15000;
 
 const coordinator = 'KPWCHICGJZXKE9GSUDXZYUAPLHAKAHYHDXN';
@@ -601,7 +602,8 @@ const CalcMetrics = () => {
     totalTransactions = txList.length;
     // Restrict max TX to display
     if(totalTransactions >= maxTransactions){
-        txList.splice(0,txPerLine);
+        const multiplicator = Math.floor(totalTransactions / maxTransactions);
+        txList.splice(0,txPerLine * multiplicator);
     }
     /* Do this on every 100 or x amount of TX */
     let timerTemp = [];
@@ -634,6 +636,8 @@ const CalcMetrics = () => {
     /* Adapt maxTransactions to TPS */
     if (totalTPS > 15){
         maxTransactions = 30000;
+    } else {
+        maxTransactions = 15000;
     }
     //updateMetrics(totalTPS, totalCTPS, totalConfRate, totalConfirmationTime);
     window.setTimeout( () => CalcMetrics(), 1500 );
@@ -643,7 +647,7 @@ const CalcMetrics = () => {
 const InitialHistoryPoll = (firstLoad) => {
 
     let pollingURL = '';
-    devState === 'prod' ? pollingURL = 'https://junglecrowd.org:4433/api/v1/getRecentTransactions?amount=15000' : pollingURL = 'http://localhost:8081/api/v1/getRecentTransactions?amount=15000';
+    devState === 'prod' ? pollingURL = 'https://junglecrowd.org:4433/api/v1/getRecentTransactions?amount=15000' : pollingURL = `http://localhost:8081/api/v1/getRecentTransactions?amount=${txAmountToPoll}`;
 
     /* Fetch current tangle TX from remote backend */
     fetch(pollingURL, {cache: 'no-cache'})
