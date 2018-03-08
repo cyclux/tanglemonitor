@@ -469,7 +469,7 @@ const DrawCanvas = (txList_DrawCanvas) => {
             const confRateRangeList = txList.slice(step * confRateRange, step * confRateRange + confRateRange);
             const confRate = Math.round(confRateRangeList
                 .filter(tx => tx.confirmed !== false)
-                .length / confRateRangeList.length * 1000) / 10;
+                .length / confRateRangeList.length * 100);
 
             const tps = Math.round((txPerLine*2) / ((timer[step+1] - timer[step]) ) * 10) / 10;
 
