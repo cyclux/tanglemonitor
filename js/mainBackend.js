@@ -1,5 +1,5 @@
 /*eslint no-console: ["error", { allow: ["log", "error"] }] */
-/* global window, pako, document, WebSocket, fetch, console, _ */
+/* global window, document, WebSocket, fetch, console, _ */
 'use strict';
 
 const devState = 'prod';
@@ -120,7 +120,7 @@ function createTable(currentList) {
                         currenttext = `${j + 1}`;
                     break;
                     case 1:
-                        currenttext = `${currentList[j][1].substring(0,35) === coordinator ? 'COORDINATOR' : currentList[j][1].substring(0,35)+'...'}`;
+                        currenttext = `${currentList[j][1].substring(0,35) === coordinator ? '[COO]' + coordinator.substring(0,30) : currentList[j][1].substring(0,35)}...`;
                     break;
                     case 2:
                         currenttext = `${currentList[j][2]}`;
@@ -304,8 +304,9 @@ c.addEventListener('mousemove', evt => {
         txOfMousePosition = GetTXofMousePosition(mousePos);
 
         if(txOfMousePosition.hash){
-            let txConfirmationTime = _.round(txOfMousePosition.confirmed / 60, 2);
-            txConfirmationTime !== 0 ? txConfirmationTime = `${txConfirmationTime} Minutes` : txConfirmationTime = 'Not confirmed yet';
+
+            let txConfirmationTime = _.round( (txOfMousePosition.ctime - txOfMousePosition.time) / 60, 2);
+            txOfMousePosition.confirmed ? txConfirmationTime = `${txConfirmationTime} Minutes` : txConfirmationTime = 'Not confirmed yet';
 
             tooltip.innerHTML = `Address: ${txOfMousePosition.address}<br>TX Hash: ${txOfMousePosition.hash}<br>Confirmation Time: ${txConfirmationTime}`;
             selectedAddress = txOfMousePosition.address;
@@ -382,12 +383,16 @@ const calcLineCount = (i, pxSize, cWidth) => {
 const UpdateTXStatus = (update, isMilestone) => {
 
     const txHash = update.hash;
-    let milestoneType, confirmationTime;
-    if(isMilestone){milestoneType = update.milestone;} else {confirmationTime = update.time;}
+    const milestoneType = update.milestone;
+    const confirmationTime = update.ctime;
 
     const hashIndex = txList.findIndex(tx => tx.hash === txHash);
     if(hashIndex !== -1 && txList[hashIndex] !== undefined){
-        isMilestone ? txList[hashIndex].milestone = milestoneType : txList[hashIndex].confirmed = confirmationTime;
+        if(isMilestone){
+            txList[hashIndex].milestone = milestoneType;
+        }
+        txList[hashIndex].ctime = confirmationTime;
+        txList[hashIndex].confirmed = true;
     } else {
         console.log(`${isMilestone ? 'Milestone' : 'TX'} not found in local DB - Hash: ${txHash}`);
     }
@@ -415,7 +420,8 @@ const DrawCanvas = (txList_DrawCanvas) => {
             confirmed: tx.confirmed,
             address: tx.address,
             milestone: tx.milestone,
-            time: tx.timestamp
+            time: tx.timestamp,
+            ctime: tx.ctime
         });
     } );
 
@@ -475,7 +481,17 @@ const DrawCanvas = (txList_DrawCanvas) => {
         let pxColor;
         let strokeCol;
 
-        if (px.milestone === true) {
+        if (px.confirmed === false || px.confirmed === undefined){
+            pxColor = pxColorUnconf;
+            strokeCol = strokeColorNorm;
+        }
+
+        if (px.confirmed === true && px.milestone === 'f') {
+            pxColor = pxColorConf;
+            strokeCol = strokeColorNorm;
+        }
+
+        if (px.milestone === 'm') {
 
             ctx.font = `${fontSizeAxis} ${fontFace}`;
             ctx.fillStyle = textColor;
@@ -488,18 +504,11 @@ const DrawCanvas = (txList_DrawCanvas) => {
             ctx.fillText(`${minElapsed} min ago`, (margin + cWidth + 5), (px.y + offsetHeight) );
         }
 
-        if (px.milestone === 'trunk') {
+        if (px.milestone === 't') {
             pxColor = pxColorMilestone;
             strokeCol = strokeColorNorm;
         }
-        if (px.confirmed !== false && px.milestone === false) {
-            pxColor = pxColorConf;
-            strokeCol = strokeColorNorm;
-        }
-        if (px.confirmed === false || px.confirmed === undefined){
-            pxColor = pxColorUnconf;
-            strokeCol = strokeColorNorm;
-        }
+
         if (px.address === selectedAddress){
             strokeCol = strokeColorSelect;
         }
@@ -532,14 +541,13 @@ const CalcMetrics = () => {
     totalConfirmations = txList
         .reduce( (acc, tx) => {
         if(tx.confirmed !== false){
-        acc.push(tx.confirmed);
+        acc.push(tx.ctime - tx.timestamp);
         }
         return acc;
     }, [] );
 
     /* Calculate confirmation rate of all TX */
     totalConfRate = Math.round(totalConfirmations.length / txList.length * 10000) / 100;
-
     /* Calculate average confirmation time of all confirmed TX */
     totalConfirmationTime = _.mean(totalConfirmations);
     totalConfirmationTime = _.round(totalConfirmationTime / 60, 1);
@@ -560,7 +568,6 @@ const CalcMetrics = () => {
     // _.groupBy(['one', 'two', 'three'], 'length');  instread of partition?
     const confirmedCounted = _.countBy(confirmed, 'address');
     let initialSorted = Object.entries(confirmedCounted);
-    //const initialSorted = entries.sort((b, a) => a[1] - b[1]);
 
     initialSorted.map( (tx, index) => {
         const unconfirmedOnes = unconfirmed.filter( txs => txs.address === tx[0]).length;
@@ -568,9 +575,9 @@ const CalcMetrics = () => {
         const confirmationTimeCollector = confirmed.reduce( (acc, txs) => {
 
             if (txs.address === tx[0]){
-                acc[0].push(txs.confirmed);
+                acc[0].push(txs.ctime - txs.timestamp);
             } else {
-                acc[1].push(txs.confirmed);
+                acc[1].push(txs.ctime - txs.timestamp);
             }
             return acc;}, [[], []]);
         const confirmationTime = confirmationTimeCollector[0];
@@ -619,30 +626,18 @@ const CalcMetrics = () => {
 const InitialHistoryPoll = (firstLoad) => {
 
     let pollingURL = '';
-    devState === 'prod' ? pollingURL = 'https://junglecrowd.org/txDB/txHistory.gz.json' : pollingURL = 'http://localhost/IOTA-Confirmation-Visualizer/httpdocs/txDB/txHistory.gz.json'
+    devState === 'prod' ? pollingURL = 'https://junglecrowd.org:4433/api/v1/getRecentTransactions?amount=15000' : pollingURL = 'http://localhost:8081/api/v1/getRecentTransactions?amount=15000';
 
     /* Fetch current tangle TX from remote backend */
     fetch(pollingURL, {cache: 'no-cache'})
     .then( json_test => json_test.json() )
-    .then( b64encoded => {return window.atob(b64encoded.txArrayCompressed)})
-    .then( decompress => {
-        try {
-            return pako.inflate(decompress, { to: 'string' });
-        } catch (err) {
-            console.error(err);
-        }
-    })
-    .then( jsonParse => JSON.parse(jsonParse) )
-    .then( txHistory => {
+    .then( response => {
         document.getElementById('loading').style.display = 'none';
 
         /* Filter if switch for only value TX is set */
-        if( filterForValueTX ){ txHistory = FilterZeroValue(txHistory) }
+        if( filterForValueTX ){ response.txHistory = FilterZeroValue(response.txHistory) }
 
-        const amountOfTxtoReduce = txHistory.length - maxTransactions;
-        txHistory.splice(0, amountOfTxtoReduce);
-
-        txList = txHistory;
+        txList = _.reverse(response.txHistory);
         CalcMetrics();
 
         /* After polling of history is finished init websocket (on first load) */
@@ -650,7 +645,7 @@ const InitialHistoryPoll = (firstLoad) => {
     })
     .catch((e) => {
         console.error('Error fetching txHistory', e);
-        window.setTimeout( () => InitialHistoryPoll(firstLoad), 1000 );
+        window.setTimeout( () => InitialHistoryPoll(firstLoad), 2500 );
     });
 }
 
@@ -658,7 +653,7 @@ const InitialHistoryPoll = (firstLoad) => {
 const InitWebSocket = () => {
 
     let wsURL = '';
-    devState === 'prod' ? wsURL = 'wss://junglecrowd.org:4433' : wsURL = 'ws://localhost:4433'
+    devState === 'prod' ? wsURL = 'wss://junglecrowd.org:4433' : wsURL = 'ws://localhost:8080'
 
     const connection = new WebSocket(wsURL, ['soap', 'xmpp']);
     connection.onopen = () => {
