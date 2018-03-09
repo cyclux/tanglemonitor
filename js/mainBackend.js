@@ -594,7 +594,7 @@ const CalcToplist = () => {
         if(confList.length > 0) {
             createTable(confList);
         }
-        window.setTimeout( () => CalcToplist(), 5000 );
+        window.setTimeout( () => CalcToplist(), 15000 );
 }
 
 const CalcMetrics = () => {
