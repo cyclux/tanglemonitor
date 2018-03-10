@@ -29,6 +29,7 @@ const coordinator = 'KPWCHICGJZXKE9GSUDXZYUAPLHAKAHYHDXN';
 
 const pxColorUnconf = {r:0, g:0, b:0, a:1};
 const pxColorConf = {r:0, g:255, b:0, a:1};
+const pxColorReattach = {r:255, g:255, b:0, a:1};
 const pxColorMilestone = {r:0, g:0, b:255, a:1};
 
 let txList = [];
@@ -381,7 +382,7 @@ const calcLineCount = (i, pxSize, cWidth) => {
 }
 
 /* Update conf and milestone status on local DB */
-const UpdateTXStatus = (update, isMilestone) => {
+const UpdateTXStatus = (update, updateType) => {
 
     const txHash = update.hash;
     const milestoneType = update.milestone;
@@ -389,13 +390,20 @@ const UpdateTXStatus = (update, isMilestone) => {
 
     const hashIndex = txList.findIndex(tx => tx.hash === txHash);
     if(hashIndex !== -1 && txList[hashIndex] !== undefined){
-        if(isMilestone){
+        if(updateType === 'txConfirmed' || updateType === 'Milestone'){
+            txList[hashIndex].ctime = confirmationTime;
+            txList[hashIndex].confirmed = true;
+        }
+        if(updateType === 'Milestone'){
             txList[hashIndex].milestone = milestoneType;
         }
-        txList[hashIndex].ctime = confirmationTime;
-        txList[hashIndex].confirmed = true;
+        if(updateType === 'Reattach'){
+            txList[hashIndex].confirmed = true;
+            txList[hashIndex].reattached = true;
+        }
+
     } else {
-        console.log(`${isMilestone ? 'Milestone' : 'TX'} not found in local DB - Hash: ${txHash}`);
+        console.log(`${updateType === 'Milestone' ? 'Milestone' : 'TX'} not found in local DB - Hash: ${txHash} | updateType: ${updateType}`);
     }
 }
 
@@ -418,11 +426,13 @@ const DrawCanvas = (txList_DrawCanvas) => {
             x: i * pxSize - (lineCount * pxSize * txPerLine),
             y: lineCount * pxSize,
             hash: tx.hash,
-            confirmed: tx.confirmed,
+            bundle: tx.bundle,
             address: tx.address,
-            milestone: tx.milestone,
+            confirmed: tx.confirmed,
+            reattached: tx.reattached,
             time: tx.timestamp,
-            ctime: tx.ctime
+            ctime: tx.ctime,
+            milestone: tx.milestone
         });
     } );
 
@@ -441,16 +451,19 @@ const DrawCanvas = (txList_DrawCanvas) => {
     ctx.fillText('Avg. conf. time  ' + totalConfirmationTime + ' min', margin + 220, 10);
     ctx.fillText('Avg. CTPS        ' + totalCTPS, margin + 220, 25);
 
-    ctx.fillText('Unconfirmed', cWidth, 10);
-    ctx.fillText('Confirmed', cWidth, 25);
-    ctx.fillText('Milestone', cWidth, 40);
+    ctx.fillText('Unconfirmed', cWidth - 60, 10);
+    ctx.fillText('Confirmed', cWidth - 60, 25);
+    ctx.fillText('Reattached', cWidth + 40, 10);
+    ctx.fillText('Milestone', cWidth + 40, 25);
 
     ctx.fillStyle = 'rgba(0,0,0,1)';
-    ctx.fillRect(cWidth - 15, 10, pxSize, pxSize);
+    ctx.fillRect(cWidth - 75, 10, pxSize, pxSize);
     ctx.fillStyle = 'rgba(0,255,0,1)';
-    ctx.fillRect(cWidth - 15, 25, pxSize, pxSize);
+    ctx.fillRect(cWidth - 75, 25, pxSize, pxSize);
+    ctx.fillStyle = 'rgba(255,255,0,1)';
+    ctx.fillRect(cWidth + 25, 10, pxSize, pxSize);
     ctx.fillStyle = 'rgba(0,0,255,1)';
-    ctx.fillRect(cWidth - 15, 40, pxSize, pxSize);
+    ctx.fillRect(cWidth + 25, 25, pxSize, pxSize);
 
     /*  Draw TX pixels and additional metrics */
     pxls.map( (px, pixelIndex ) => {
@@ -487,8 +500,11 @@ const DrawCanvas = (txList_DrawCanvas) => {
             strokeCol = strokeColorNorm;
         }
 
-        if (px.confirmed === true && px.milestone === 'f') {
+        if (px.confirmed === true && px.milestone === 'f' && px.reattached === false) {
             pxColor = pxColorConf;
+            strokeCol = strokeColorNorm;
+        } else if(px.confirmed === true && px.milestone === 'f' && px.reattached === true) {
+            pxColor = pxColorReattach;
             strokeCol = strokeColorNorm;
         }
 
@@ -693,16 +709,18 @@ const InitWebSocket = () => {
         const newInfo = JSON.parse(response.data);
         if (newInfo.newTX){
 
-            if(filterForValueTX && newInfo.newTX.value > 0){
+            if(filterForValueTX && newInfo.newTX.value !== 0){
                 txList.push(newInfo.newTX);
             } else if (!filterForValueTX){
                 txList.push(newInfo.newTX);
             }
 
         } else if(newInfo.update) {
-            UpdateTXStatus(newInfo.update, false);
+            UpdateTXStatus(newInfo.update, 'txConfirmed');
         } else if (newInfo.updateMilestone){
-            UpdateTXStatus(newInfo.updateMilestone, true);
+            UpdateTXStatus(newInfo.updateMilestone, 'Milestone');
+        } else if (newInfo.updateReattach){
+            UpdateTXStatus(newInfo.updateReattach, 'Reattach');
         } else {
             console.log(`Unrecognized message from Websocket: ${newInfo}`);
         }
@@ -710,7 +728,7 @@ const InitWebSocket = () => {
 }
 
 const FilterZeroValue = (theList) => {
-    const filteredList = _.filter( theList, filterValue => filterValue.value > 0 );
+    const filteredList = _.filter( theList, filterValue => filterValue.value !== 0 );
     return filteredList;
 }
 
