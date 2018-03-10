@@ -392,7 +392,7 @@ const UpdateTXStatus = (update, updateType) => {
 
     const hashIndex = txList.findIndex(tx => tx.hash === txHash);
     if(hashIndex !== -1 && txList[hashIndex] !== undefined){
-        if(updateType === 'txConfirmed' || updateType === 'Milestone'){
+        if(updateType === 'txConfirmed' || updateType === 'Milestone' || updateType === 'Reattach'){
             txList[hashIndex].ctime = confirmationTime;
             txList[hashIndex].confirmed = true;
         }
@@ -400,7 +400,6 @@ const UpdateTXStatus = (update, updateType) => {
             txList[hashIndex].milestone = milestoneType;
         }
         if(updateType === 'Reattach'){
-            txList[hashIndex].confirmed = true;
             txList[hashIndex].reattached = true;
         }
 
