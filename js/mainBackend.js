@@ -340,9 +340,11 @@ document.getElementById('hideZero').addEventListener('click', () => {
     if (checkBox.checked === true){
         filterForValueTX = true;
         txList = FilterZeroValue(txList);
+        CalcToplist(false);
     } else {
         filterForValueTX = false;
         InitialHistoryPoll(false);
+        CalcToplist(false);
     }
 }, false);
 /* Uncheck on load */
@@ -539,7 +541,7 @@ const DrawCanvas = (txList_DrawCanvas) => {
      window.setTimeout( () => DrawCanvas(txList), 100 );
 }
 
-const CalcToplist = () => {
+const CalcToplist = (initial) => {
         /* Create toplist */
         const txListConfStatus = _.groupBy(txList, 'confirmed');
         const confirmed_new = _.countBy(txListConfStatus.true, 'address');
@@ -610,7 +612,9 @@ const CalcToplist = () => {
         if(confList.length > 0) {
             createTable(confList);
         }
-        window.setTimeout( () => CalcToplist(), 15000 );
+        if(initial){
+            window.setTimeout( () => CalcToplist(true), 15000 );
+        }
 }
 
 const CalcMetrics = () => {
@@ -676,7 +680,9 @@ const InitialHistoryPoll = (firstLoad) => {
 
         txList = _.reverse(response.txHistory);
         CalcMetrics();
-        CalcToplist();
+        if(firstLoad){
+            CalcToplist(true);
+        }
 
         /* After polling of history is finished init websocket (on first load) */
         if( firstLoad ){InitWebSocket()}
