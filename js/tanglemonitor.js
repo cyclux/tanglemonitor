@@ -683,7 +683,7 @@ const CalcMetrics = () => {
 const InitialHistoryPoll = (firstLoad) => {
 
     let pollingURL = '';
-    devState === 'prod' ? pollingURL = 'https://junglecrowd.org:4433/api/v1/getRecentTransactions?amount=15000' : pollingURL = `http://localhost:8081/api/v1/getRecentTransactions?amount=${txAmountToPoll}`;
+    devState === 'prod' ? pollingURL = 'https://tanglemonitor:4433/api/v1/getRecentTransactions?amount=15000' : pollingURL = `http://localhost:8080/api/v1/getRecentTransactions?amount=${txAmountToPoll}`;
 
     /* Fetch current tangle TX from remote backend */
     fetch(pollingURL, {cache: 'no-cache'})
@@ -713,7 +713,7 @@ const InitialHistoryPoll = (firstLoad) => {
 const InitWebSocket = () => {
 
     let wsURL = '';
-    devState === 'prod' ? wsURL = 'wss://junglecrowd.org:4433' : wsURL = 'ws://localhost:8080'
+    devState === 'prod' ? wsURL = 'wss://tanglemonitor.com:4433' : wsURL = 'ws://localhost:8080'
 
     const connection = new WebSocket(wsURL, ['soap', 'xmpp']);
     connection.onopen = () => {
