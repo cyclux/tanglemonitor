@@ -441,8 +441,8 @@ const DrawCanvas = (txList_DrawCanvas) => {
             address: tx.address,
             confirmed: tx.confirmed,
             reattached: tx.reattached,
-            time: tx.receivedAt,
-            txTime: tx.timestamp,
+            receivedAt: tx.receivedAt,
+            timestamp: tx.timestamp,
             ctime: tx.ctime,
             milestone: tx.milestone
         });
@@ -529,7 +529,7 @@ const DrawCanvas = (txList_DrawCanvas) => {
 
             pxColor = pxColorMilestone;
             strokeCol = strokeColorNorm;
-            const minElapsed = Math.floor( (Math.floor(Date.now() / 1000) - px.time) / 60 );
+            const minElapsed = Math.floor( (Math.floor(Date.now() / 1000) - px.receivedAt) / 60 );
             ctx.fillText(`${minElapsed} min ago`, (margin + cWidth + 5), (px.y + offsetHeight) );
         }
 
@@ -639,7 +639,7 @@ const CalcMetrics = () => {
     let timerTemp = [];
     txList.map( (tx, txNumber) => {
         if(txNumber % (txPerLine*2) === 0){
-            timerTemp.push(tx.timestamp);
+            timerTemp.push(tx.receivedAt);
         }
     });
     timer = timerTemp;
@@ -653,7 +653,7 @@ const CalcMetrics = () => {
             }
             /* Accumulate confirmed TX with confirmation time */
             if(tx.confirmed === true){
-                acc.push(tx.ctime - tx.timestamp);
+                acc.push(tx.ctime - tx.receivedAt);
         }
         return acc;
     }, [] );
@@ -665,8 +665,8 @@ const CalcMetrics = () => {
     totalConfirmationTime = _.round(totalConfirmationTime / 60, 1);
 
     if (totalTransactions > 0){
-        totalTPS = Math.round(totalTransactions / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
-        totalCTPS = Math.round(totalConfirmations.length / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
+        totalTPS = Math.round(totalTransactions / ((Date.now() - (txList[0].receivedAt * 1000)) / 1000) * 100) / 100;
+        totalCTPS = Math.round(totalConfirmations.length / ((Date.now() - (txList[0].receivedAt * 1000)) / 1000) * 100) / 100;
     }
 
     /* Adapt maxTransactions to TPS */
