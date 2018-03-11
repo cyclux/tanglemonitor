@@ -310,7 +310,7 @@ c.addEventListener('mousemove', evt => {
 
         if(txOfMousePosition.hash){
 
-            let txConfirmationTime = _.round( (txOfMousePosition.ctime - txOfMousePosition.time) / 60, 2);
+            let txConfirmationTime = _.round( (txOfMousePosition.ctime - txOfMousePosition.receivedAt) / 60, 2);
 
             if(txOfMousePosition.confirmed){
                 txConfirmationTime = `${txConfirmationTime} Minutes`
