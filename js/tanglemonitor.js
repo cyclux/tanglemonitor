@@ -441,7 +441,8 @@ const DrawCanvas = (txList_DrawCanvas) => {
             address: tx.address,
             confirmed: tx.confirmed,
             reattached: tx.reattached,
-            time: tx.timestamp,
+            time: tx.receivedAt,
+            txTime: tx.timestamp,
             ctime: tx.ctime,
             milestone: tx.milestone
         });
