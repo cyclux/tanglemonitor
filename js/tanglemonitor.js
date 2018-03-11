@@ -2,7 +2,10 @@
 /* global window, document, WebSocket, fetch, console, _ */
 'use strict';
 
-const devState = 'prod';
+const host = window.location.hostname;
+let devState;
+host === 'localhost' ? devState = 'dev' : devState = 'prod';
+
 /* Set canvas and dimensions */
 const c = document.getElementById('canvas');
 const ctx = c.getContext('2d');
@@ -309,6 +312,13 @@ c.addEventListener('mousemove', evt => {
 
             let txConfirmationTime = _.round( (txOfMousePosition.ctime - txOfMousePosition.time) / 60, 2);
             txOfMousePosition.confirmed ? txConfirmationTime = `${txConfirmationTime} Minutes` : txConfirmationTime = 'Not confirmed yet';
+            if(txOfMousePosition.confirmed){
+                txConfirmationTime = `${txConfirmationTime} Minutes`
+            } else if (txOfMousePosition.reattached){
+                txConfirmationTime = 'Reattached transaction';
+            } else {
+                txConfirmationTime = 'Not confirmed yet';
+            }
 
             tooltip.innerHTML = `Address: ${txOfMousePosition.address}<br>TX Hash: ${txOfMousePosition.hash}<br>Confirmation Time: ${txConfirmationTime}`;
             selectedAddress = txOfMousePosition.address;
