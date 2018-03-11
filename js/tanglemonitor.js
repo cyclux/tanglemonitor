@@ -179,7 +179,7 @@ function createTable(currentList) {
         for(let i = 0; i < currentList[0].length; i++) {
             const current_cell = document.createElement('td');
             const img = document.createElement('img');
-            img.setAttribute('src', 'css/sort.png');
+            img.setAttribute('src', 'img/sort.png');
             img.classList.add('table_head_sortpic');
 
             let currenttext;
