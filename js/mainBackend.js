@@ -392,7 +392,7 @@ const UpdateTXStatus = (update, updateType) => {
 
     const hashIndex = txList.findIndex(tx => tx.hash === txHash);
     if(hashIndex !== -1 && txList[hashIndex] !== undefined){
-        if(updateType === 'txConfirmed' || updateType === 'Milestone' || updateType === 'Reattach'){
+        if(updateType === 'txConfirmed' || updateType === 'Milestone'){
             txList[hashIndex].ctime = confirmationTime;
             txList[hashIndex].confirmed = true;
         }
@@ -504,7 +504,7 @@ const DrawCanvas = (txList_DrawCanvas) => {
         if (px.confirmed === true && px.milestone === 'f' && px.reattached === false) {
             pxColor = pxColorConf;
             strokeCol = strokeColorNorm;
-        } else if(px.confirmed === true && px.milestone === 'f' && px.reattached === true) {
+        } else if(px.confirmed === false && px.milestone === 'f' && px.reattached === true) {
             pxColor = pxColorReattach;
             strokeCol = strokeColorNorm;
         }
@@ -633,16 +633,22 @@ const CalcMetrics = () => {
     });
     timer = timerTemp;
 
+    let reattachCounter = 0;
     totalConfirmations = txList
         .reduce( (acc, tx) => {
-        if(tx.confirmed !== false){
-        acc.push(tx.ctime - tx.timestamp);
+            /* Accumulate reattaches */
+            if(tx.reattached === true){
+                reattachCounter++;
+            }
+            /* Accumulate confirmed TX with confirmation time */
+            if(tx.confirmed === true){
+                acc.push(tx.ctime - tx.timestamp);
         }
         return acc;
     }, [] );
 
-    /* Calculate confirmation rate of all TX */
-    totalConfRate = Math.round(totalConfirmations.length / txList.length * 10000) / 100;
+    /* Calculate confirmation rate of all confirmed TX, excluding reattaches */
+    totalConfRate = Math.round(totalConfirmations.length / (totalTransactions - reattachCounter) * 10000) / 100;
     /* Calculate average confirmation time of all confirmed TX */
     totalConfirmationTime = _.mean(totalConfirmations);
     totalConfirmationTime = _.round(totalConfirmationTime / 60, 1);
