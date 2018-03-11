@@ -683,7 +683,7 @@ const CalcMetrics = () => {
 const InitialHistoryPoll = (firstLoad) => {
 
     let pollingURL = '';
-    devState === 'prod' ? pollingURL = 'https://tanglemonitor:4433/api/v1/getRecentTransactions?amount=15000' : pollingURL = `http://localhost:8080/api/v1/getRecentTransactions?amount=${txAmountToPoll}`;
+    devState === 'prod' ? pollingURL = 'https://tanglemonitor.com:4433/api/v1/getRecentTransactions?amount=15000' : pollingURL = `http://localhost:8080/api/v1/getRecentTransactions?amount=${txAmountToPoll}`;
 
     /* Fetch current tangle TX from remote backend */
     fetch(pollingURL, {cache: 'no-cache'})
