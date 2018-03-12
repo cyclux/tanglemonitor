@@ -725,7 +725,6 @@ const InitWebSocket = () => {
     connection.onclose = () => {
         console.log(`Websocket disconnected. Reconnecting..`);
         window.setTimeout( () => InitWebSocket(), 3000 );
-        connection.terminate();
     };
     connection.onmessage = (response) => {
         const newInfo = JSON.parse(response.data);
