@@ -714,7 +714,7 @@ const InitWebSocket = () => {
     let socketURL = '';
     devState === 'prod' ? socketURL = 'https://tanglemonitor.com:4434' : socketURL = 'http://localhost:8081'
 
-    const socket = io(socketURL);
+    const socket = io.connect(socketURL);
 
     socket.on('connect', () => {
         console.log('Successfully connected to Websocket..');
