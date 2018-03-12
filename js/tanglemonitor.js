@@ -712,9 +712,11 @@ const InitialHistoryPoll = (firstLoad) => {
 // Init Websocket for client
 const InitWebSocket = () => {
     let socketURL = '';
-    devState === 'prod' ? socketURL = 'https://tanglemonitor.com:4434' : socketURL = 'http://localhost:8081'
+    devState === 'prod' ? socketURL = 'https://tanglemonitor.com:4434' : socketURL = 'http://localhost:8081';
+    let sslState = true;
+    devState === 'prod' ? sslState = true : sslState = false;
 
-    const socket = io.connect(socketURL);
+    const socket = io.connect(socketURL, {secure:sslState});
 
     socket.on('connect', () => {
         console.log('Successfully connected to Websocket..');
