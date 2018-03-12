@@ -504,8 +504,8 @@ const DrawCanvas = (txList_DrawCanvas) => {
         }
 
         /* Adapt TX color to confirmation or milestone status */
-        let pxColor;
-        let strokeCol;
+        let pxColor = pxColorUnconf;
+        let strokeCol = strokeColorNorm;
 
         if (px.confirmed === false || px.confirmed === undefined){
             pxColor = pxColorUnconf;
