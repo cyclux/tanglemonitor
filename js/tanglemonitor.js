@@ -1,5 +1,5 @@
 /*eslint no-console: ["error", { allow: ["log", "error"] }] */
-/* global window, document, WebSocket, fetch, console, _ */
+/* global window, document, io, fetch, console, _ */
 'use strict';
 
 const host = window.location.hostname;
@@ -711,41 +711,31 @@ const InitialHistoryPoll = (firstLoad) => {
 
 // Init Websocket for client
 const InitWebSocket = () => {
+    let socketURL = '';
+    devState === 'prod' ? socketURL = 'https://tanglemonitor.com:4434' : socketURL = 'http://localhost:8081'
 
-    let wsURL = '';
-    devState === 'prod' ? wsURL = 'wss://tanglemonitor.com:4433' : wsURL = 'ws://localhost:8080'
+    const socket = io(socketURL);
 
-    const connection = new WebSocket(wsURL, ['soap', 'xmpp']);
-    connection.onopen = () => {
-        connection.send('Gimme transactions!');
-    };
-    connection.onerror = () => {
-        console.log(`WebSocket Connection Error.`);
-    };
-    connection.onclose = () => {
-        console.log(`Websocket disconnected. Reconnecting..`);
-        window.setTimeout( () => InitWebSocket(), 3000 );
-    };
-    connection.onmessage = (response) => {
-        const newInfo = JSON.parse(response.data);
-        if (newInfo.newTX){
+    socket.on('connect', () => {
+        console.log('Successfully connected to Websocket..');
+        socket.on('newTX', function(newTX){
 
-            if(filterForValueTX && newInfo.newTX.value !== 0){
-                txList.push(newInfo.newTX);
+            if(filterForValueTX && newTX.value !== 0){
+                txList.push(newTX);
             } else if (!filterForValueTX){
-                txList.push(newInfo.newTX);
+                txList.push(newTX);
             }
-
-        } else if(newInfo.update) {
-            UpdateTXStatus(newInfo.update, 'txConfirmed');
-        } else if (newInfo.updateMilestone){
-            UpdateTXStatus(newInfo.updateMilestone, 'Milestone');
-        } else if (newInfo.updateReattach){
-            UpdateTXStatus(newInfo.updateReattach, 'Reattach');
-        } else {
-            console.log(`Unrecognized message from Websocket: ${newInfo}`);
-        }
-    };
+        });
+        socket.on('update', function(update){
+            UpdateTXStatus(update, 'txConfirmed');
+        });
+        socket.on('updateMilestone', function(updateMilestone){
+            UpdateTXStatus(updateMilestone, 'Milestone');
+        });
+        socket.on('updateReattach', function(updateReattach){
+            UpdateTXStatus(updateReattach, 'Reattach');
+        });
+    });
 }
 
 const FilterZeroValue = (theList) => {
