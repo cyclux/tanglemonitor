@@ -497,9 +497,12 @@ const DrawCanvas = (txList_DrawCanvas) => {
 
             /* Calc current TPS and display appropriately */
             const confRateRangeList = txList.slice(step * confRateRange, step * confRateRange + confRateRange);
+            let reattachents = 0;
             const confRate = Math.round(confRateRangeList
-                .filter(tx => tx.confirmed !== false)
-                .length / confRateRangeList.length * 100);
+                .filter(tx => {
+                    if(tx.reattached){reattachents++}
+                    return tx.confirmed !== false})
+                .length / (confRateRangeList.length - reattachents) * 100);
 
             const tps = Math.round((txPerLine*2) / ((timer[step+1] - timer[step]) ) * 10) / 10;
 
