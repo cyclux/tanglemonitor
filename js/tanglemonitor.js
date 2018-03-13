@@ -322,6 +322,7 @@ c.addEventListener('mousemove', evt => {
 
             tooltip.innerHTML = `Address:\u00A0${txOfMousePosition.address}<br>
                                 TX Hash:\u00A0${txOfMousePosition.hash}<br>
+                                Tag:\u00A0\u00A0\u00A0\u00A0\u00A0${txOfMousePosition.tag}<br>
                                 C. Time:\u00A0${txConfirmationTime}<br>
                                 Value:\u00A0\u00A0\u00A0${txOfMousePosition.value !== 0 ? Math.round(txOfMousePosition.value / 1000000 * 100) / 100 + ' MIOTA' : 'Zero value transaction' }`;
             selectedAddress = txOfMousePosition.address;
@@ -443,6 +444,7 @@ const DrawCanvas = (txList_DrawCanvas) => {
             bundle: tx.bundle,
             address: tx.address,
             value: tx.value,
+            tag: tx.tag,
             confirmed: tx.confirmed,
             reattached: tx.reattached,
             receivedAt: tx.receivedAt,
