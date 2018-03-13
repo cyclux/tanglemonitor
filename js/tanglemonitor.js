@@ -323,7 +323,7 @@ c.addEventListener('mousemove', evt => {
             tooltip.innerHTML = `Address:\u00A0${txOfMousePosition.address}<br>
                                 TX Hash:\u00A0${txOfMousePosition.hash}<br>
                                 C. Time:\u00A0${txConfirmationTime}<br>
-                                Value:\u00A0\u00A0\u00A0${txOfMousePosition.value !== 0 ? txOfMousePosition.value / 1000000 + ' MIOTA' : 'Zero value transaction' }`;
+                                Value:\u00A0\u00A0\u00A0${txOfMousePosition.value !== 0 ? Math.round(txOfMousePosition.value / 1000000 * 100) / 100 + ' MIOTA' : 'Zero value transaction' }`;
             selectedAddress = txOfMousePosition.address;
             tooltip.style.display = 'block';
             tooltip.style.top = `${mousePos.yReal+15}px`;
