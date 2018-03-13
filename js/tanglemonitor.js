@@ -320,7 +320,10 @@ c.addEventListener('mousemove', evt => {
                 txConfirmationTime = 'Not confirmed yet';
             }
 
-            tooltip.innerHTML = `Address: ${txOfMousePosition.address}<br>TX Hash: ${txOfMousePosition.hash}<br>Confirmation Time: ${txConfirmationTime}`;
+            tooltip.innerHTML = `Address:\u00A0${txOfMousePosition.address}<br>
+                                TX Hash:\u00A0${txOfMousePosition.hash}<br>
+                                C. Time:\u00A0${txConfirmationTime}<br>
+                                Value:\u00A0\u00A0\u00A0${txOfMousePosition.value !== 0 ? txOfMousePosition.value / 1000000 + ' MIOTA' : 'Zero value transaction' }`;
             selectedAddress = txOfMousePosition.address;
             tooltip.style.display = 'block';
             tooltip.style.top = `${mousePos.yReal+15}px`;
@@ -439,6 +442,7 @@ const DrawCanvas = (txList_DrawCanvas) => {
             hash: tx.hash,
             bundle: tx.bundle,
             address: tx.address,
+            value: tx.value,
             confirmed: tx.confirmed,
             reattached: tx.reattached,
             receivedAt: tx.receivedAt,
