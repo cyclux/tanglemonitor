@@ -38,6 +38,7 @@ const pxColorMilestone = {r:0, g:0, b:255, a:1};
 let txList = [];
 let filterForValueTX = false;
 let selectedAddress = '';
+let selectedAddressBuffer = '';
 let totalConfRate = 0;
 let totalConfirmations = [];
 let totalConfirmationTime = 0;
@@ -60,7 +61,7 @@ let txOfMousePosition = {};
 
 const ChangeAddress = () => {
     selectedAddress = document.getElementById('address_input').value.substring(0,81);
-    document.getElementById('status').innerHTML = `Address selection changed`;
+    //document.getElementById('status').innerHTML = `Address selection changed`;
 }
 
 document.getElementById('address_button').onclick = function(){ChangeAddress()};
@@ -110,13 +111,16 @@ function createTable(currentList) {
 
             for(let i = 0; i < currentList[0].length; i++) {
                 const current_cell = document.createElement('td');
-                current_cell.addEventListener('mouseenter', () => {
+                current_cell.addEventListener('click', () => {
                     selectedAddress = current_cell.getAttribute('tx');
+                    selectedAddressBuffer = current_cell.getAttribute('tx');
+                    document.getElementById('address_input').value = current_cell.getAttribute('tx');
                 }, false);
-
+                /*
                 current_cell.addEventListener('click', () => {
                     OpenLink(current_cell.getAttribute('tx'));
                 }, false);
+                */
                 /* Insert table contents */
                 let currenttext;
 
@@ -345,7 +349,14 @@ c.addEventListener('mouseout', () => {
     tooltip.style.display = 'none';
     document.body.style.cursor = 'auto';
     txOfMousePosition = {};
+    selectedAddress = selectedAddressBuffer;
+}, false);
+
+/* Reset address selection */
+document.getElementById('address_button_reset').addEventListener('click', () => {
     selectedAddress = '';
+    selectedAddressBuffer = '';
+    document.getElementById('address_input').value = '';
 }, false);
 
 /* Switch for filtering zero value TX */
