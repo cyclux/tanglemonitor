@@ -604,9 +604,9 @@ const CalcToplist = (initial) => {
             const confirmationTimeCollector = txListConfStatus.true.reduce( (acc, txs) => {
 
                 if (txs.address === tx[0]){
-                    acc[0].push(txs.ctime - txs.timestamp);
+                    acc[0].push(txs.ctime - txs.receivedAt);
                 } else {
-                    acc[1].push(txs.ctime - txs.timestamp);
+                    acc[1].push(txs.ctime - txs.receivedAt);
                 }
                 return acc;}, [[], []]);
 
@@ -622,8 +622,8 @@ const CalcToplist = (initial) => {
             const confirmRatio = confirmedOnes / unconfirmedOnes;
             const confirmRatioTotal = confirmedTotalCount / unconfirmedTotalCount;
             const confirmationMeanRatio = ((confirmRatio  / confirmRatioTotal) * 100) - 100;
-            const addressTPS = Math.round(total / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
-            const addressCTPS = Math.round(confirmedOnes / ((Date.now() - (txList[0].timestamp * 1000)) / 1000) * 100) / 100;
+            const addressTPS = Math.round(total / ((Date.now() - (txList[0].receivedAt * 1000)) / 1000) * 100) / 100;
+            const addressCTPS = Math.round(confirmedOnes / ((Date.now() - (txList[0].receivedAt * 1000)) / 1000) * 100) / 100;
 
             confList[index].unshift([0]);
             confList[index].pop();
