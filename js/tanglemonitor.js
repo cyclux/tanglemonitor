@@ -541,16 +541,19 @@ const DrawCanvas = (txList_DrawCanvas) => {
         }
 
         if (px.milestone === 'm') {
+            ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+            ctx.fillRect( (margin + cWidth + 5) , (px.y + offsetHeight), 100, pxSize);
 
             ctx.font = `${fontSizeAxis} ${fontFace}`;
             ctx.fillStyle = textColor;
             ctx.textBaseline = 'hanging';
             ctx.textAlign = "left";
 
+
             pxColor = pxColorMilestone;
             strokeCol = strokeColorNorm;
             const minElapsed = Math.floor( (Math.floor(Date.now() / 1000) - px.receivedAt) / 60 );
-            ctx.fillText(`${minElapsed} min ago`, (margin + cWidth + 5), (px.y + offsetHeight) );
+            ctx.fillText(`${minElapsed} min`, (margin + cWidth + 5), (px.y + offsetHeight) );
         }
 
         if (px.milestone === 't') {
