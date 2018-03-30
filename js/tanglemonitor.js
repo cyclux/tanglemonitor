@@ -294,10 +294,10 @@ const GetTXofMousePosition = (mousePosition) => {
 
 const OpenLink = (tx) => {
     if(tx){
-        window.open(`https://thetangle.org/address/${tx}`);
+        window.open(`https://testnet.thetangle.org/address/${tx}`);
     }
     if(txOfMousePosition.hash){
-        window.open(`https://thetangle.org/transaction/${txOfMousePosition.hash}`);
+        window.open(`https://testnet.thetangle.org/transaction/${txOfMousePosition.hash}`);
     }
 }
 
