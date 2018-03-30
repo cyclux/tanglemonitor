@@ -11,6 +11,18 @@ body{
             user-select: none;
 }
 
+.center{
+  text-align: center;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+#testnet{
+  font-size: 18px;
+}
+
 canvas#canvas{
     z-index: 1;
     border: 0px solid #000000;
