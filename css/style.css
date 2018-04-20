@@ -15,7 +15,7 @@ body{
 canvas#canvas{
     z-index: 1;
     border: 0px solid #000000;
-    margin: 0 auto 60px;
+    margin: 0 auto;
     display: block;
 }
 
@@ -148,7 +148,7 @@ div#donation-address{
   font-size: .85em;
   display: inline-flex;
   text-align: center;
-  margin: 30px auto;
+  margin: 20px auto 76px auto;
 }
 
 img#heart{
