@@ -1,5 +1,6 @@
 body{
     font-family: Consolas;
+    text-align: center;
 }
 
 .noselect {
@@ -138,4 +139,18 @@ div#status{
     display: table;
     margin: 5px auto;
     font-size: 13px;
+}
+
+div#donation-address{
+  border: 1px dotted;
+  border-radius: 5px;
+  padding: 4px 6px 2px 6px;
+  font-size: .85em;
+  display: inline-flex;
+  text-align: center;
+  margin: 30px auto;
+}
+
+img#heart{
+  margin-right: 3px;
 }
