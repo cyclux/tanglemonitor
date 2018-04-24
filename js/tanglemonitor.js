@@ -51,6 +51,7 @@ let toplistAdditional = 0;
 let topListCount = 0;
 let toplistSortIndex = [2, 'desc'];
 let toplistMinTX = 10;
+let InitialHistoryPollCount = 10;
 
 let mousePos;
 let pixelMap = [];
@@ -575,79 +576,86 @@ const DrawCanvas = (txList_DrawCanvas) => {
 }
 
 const CalcToplist = (initial) => {
-        /* Create toplist */
-        const txListConfStatus = _.groupBy(txList, 'confirmed');
-        const confirmed_new = _.countBy(txListConfStatus.true, 'address');
-        const unconfirmed_new = _.countBy(txListConfStatus.false, 'address');
+  const txListConfStatus = _.groupBy(txList, 'confirmed');
 
-        const confirmedTotalCount = txListConfStatus.true.length;
-        const unconfirmedTotalCount = txListConfStatus.false.length;
+  if(txListConfStatus && txListConfStatus.true && txListConfStatus.true.length){
 
-        const customizer = (objValue, srcValue) => {
-            objValue = _.defaultTo(objValue, 0);
-            return [objValue, srcValue];
-        }
+      /* Create toplist */
 
-        let confList = _.assignInWith(confirmed_new, unconfirmed_new, customizer);
-        confList = Object.entries(confList);
+      const confirmed_new = _.countBy(txListConfStatus.true, 'address');
+      const unconfirmed_new = _.countBy(txListConfStatus.false, 'address');
 
-        confList = confList.reduce( (acc, curr) => {
-            if (!Array.isArray(curr[1])){
-                acc.push([curr[0], [curr[1], 0]]);
-            } else {
-                acc.push(curr);
-            }
-            return acc;
-        }, []);
+      const confirmedTotalCount = txListConfStatus.true.length;
+      const unconfirmedTotalCount = txListConfStatus.false.length;
+
+      const customizer = (objValue, srcValue) => {
+          objValue = _.defaultTo(objValue, 0);
+          return [objValue, srcValue];
+      }
+
+      let confList = _.assignInWith(confirmed_new, unconfirmed_new, customizer);
+      confList = Object.entries(confList);
+
+      confList = confList.reduce( (acc, curr) => {
+          if (!Array.isArray(curr[1])){
+              acc.push([curr[0], [curr[1], 0]]);
+          } else {
+              acc.push(curr);
+          }
+          return acc;
+      }, []);
 
 
-        confList.map( (tx, index) => {
-            const unconfirmedOnes = tx[1][1];
-            const confirmedOnes = tx[1][0];
-            const confirmationTimeCollector = txListConfStatus.true.reduce( (acc, txs) => {
+      confList.map( (tx, index) => {
+          const unconfirmedOnes = tx[1][1];
+          const confirmedOnes = tx[1][0];
+          const confirmationTimeCollector = txListConfStatus.true.reduce( (acc, txs) => {
 
-                if (txs.address === tx[0]){
-                    acc[0].push(txs.ctime - txs.receivedAt);
-                } else {
-                    acc[1].push(txs.ctime - txs.receivedAt);
-                }
-                return acc;}, [[], []]);
+              if (txs.address === tx[0]){
+                  acc[0].push(txs.ctime - txs.receivedAt);
+              } else {
+                  acc[1].push(txs.ctime - txs.receivedAt);
+              }
+              return acc;}, [[], []]);
 
-            const confirmationTime = confirmationTimeCollector[0];
-            const confirmationTimeOthers = confirmationTimeCollector[1];
-            const confirmationTimeMeanOthers = _.mean(confirmationTimeOthers) / 60;
-            const confirmationTimeMean = _.mean(confirmationTime) / 60;
-            const confirmationTimeMeanRatio = ((confirmationTimeMean/confirmationTimeMeanOthers) * 100) - 100;
+          const confirmationTime = confirmationTimeCollector[0];
+          const confirmationTimeOthers = confirmationTimeCollector[1];
+          const confirmationTimeMeanOthers = _.mean(confirmationTimeOthers) / 60;
+          const confirmationTimeMean = _.mean(confirmationTime) / 60;
+          const confirmationTimeMeanRatio = ((confirmationTimeMean/confirmationTimeMeanOthers) * 100) - 100;
 
-            const total = unconfirmedOnes + confirmedOnes;
-            const confirmedOnesRatio = (confirmedOnes/total) * 100;
-            const unconfirmedOnesRatio = (unconfirmedOnes/total) * 100;
-            const confirmRatio = confirmedOnes / unconfirmedOnes;
-            const confirmRatioTotal = confirmedTotalCount / unconfirmedTotalCount;
-            const confirmationMeanRatio = ((confirmRatio  / confirmRatioTotal) * 100) - 100;
-            const addressTPS = Math.round(total / ((Date.now() - (txList[0].receivedAt * 1000)) / 1000) * 100) / 100;
-            const addressCTPS = Math.round(confirmedOnes / ((Date.now() - (txList[0].receivedAt * 1000)) / 1000) * 100) / 100;
+          const total = unconfirmedOnes + confirmedOnes;
+          const confirmedOnesRatio = (confirmedOnes/total) * 100;
+          const unconfirmedOnesRatio = (unconfirmedOnes/total) * 100;
+          const confirmRatio = confirmedOnes / unconfirmedOnes;
+          const confirmRatioTotal = confirmedTotalCount / unconfirmedTotalCount;
+          const confirmationMeanRatio = ((confirmRatio  / confirmRatioTotal) * 100) - 100;
+          const addressTPS = Math.round(total / ((Date.now() - (txList[0].receivedAt * 1000)) / 1000) * 100) / 100;
+          const addressCTPS = Math.round(confirmedOnes / ((Date.now() - (txList[0].receivedAt * 1000)) / 1000) * 100) / 100;
 
-            confList[index].unshift([0]);
-            confList[index].pop();
-            confList[index].push([total]);
-            confList[index].push([confirmedOnes, confirmedOnesRatio]);
-            confList[index].push([unconfirmedOnes, unconfirmedOnesRatio]);
-            confList[index].push([confirmRatio]);
-            confList[index].push([confirmationMeanRatio]);
-            confList[index].push([addressTPS]);
-            confList[index].push([addressCTPS]);
-            confList[index].push([confirmationTimeMean]);
-            confList[index].push([confirmationTimeMeanRatio]);
-        });
+          confList[index].unshift([0]);
+          confList[index].pop();
+          confList[index].push([total]);
+          confList[index].push([confirmedOnes, confirmedOnesRatio]);
+          confList[index].push([unconfirmedOnes, unconfirmedOnesRatio]);
+          confList[index].push([confirmRatio]);
+          confList[index].push([confirmationMeanRatio]);
+          confList[index].push([addressTPS]);
+          confList[index].push([addressCTPS]);
+          confList[index].push([confirmationTimeMean]);
+          confList[index].push([confirmationTimeMeanRatio]);
+      });
 
-        topList = confList;
-        if(confList.length > 0) {
-            createTable(confList);
-        }
-        if(initial){
-            window.setTimeout( () => CalcToplist(true), 15000 );
-        }
+      topList = confList;
+      if(confList.length > 0) {
+          createTable(confList);
+      }
+  }
+
+  if(initial){
+      window.setTimeout( () => CalcToplist(true), 15000 );
+  }
+
 }
 
 const CalcMetrics = () => {
@@ -728,7 +736,11 @@ const InitialHistoryPoll = (firstLoad) => {
     })
     .catch((e) => {
         console.error('Error fetching txHistory', e);
-        window.setTimeout( () => InitialHistoryPoll(firstLoad), 2500 );
+        if(InitialHistoryPollCount > 0){
+          window.setTimeout( () => InitialHistoryPoll(firstLoad), 2500 );
+          InitialHistoryPollCount--;
+        }
+
     });
 }
 
