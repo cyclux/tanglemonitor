@@ -104,6 +104,7 @@ div#tooltip{
     display: none;
     z-index: 2;
     font-size: 13px;
+    text-align: left;
     background: #ffffff;
     border: 1px solid #000000;
     border-radius: 5px;
