@@ -540,12 +540,15 @@ const DrawCanvas = (txList_DrawCanvas) => {
 
             /* Calc current TPS and display appropriately */
             const confRateRangeList = txList.slice(step * confRateRange, step * confRateRange + confRateRange);
-            let reattachents = 0;
-            const confRate = Math.round(confRateRangeList
+            //let reattachments = 0;
+            const totalRangeTxAmount = confRateRangeList.length
+            const confirmedRangeTxAmount = confRateRangeList
                 .filter(tx => {
-                    if(tx.reattached){reattachents++}
-                    return tx.confirmed !== false})
-                .length / (confRateRangeList.length - reattachents) * 100);
+                    //if(tx.reattached){reattachments++}
+                    return tx.confirmed !== false}).length;
+
+            const unconfirmedRangeTxAmount = totalRangeTxAmount - confirmedRangeTxAmount
+            const confRate = Math.round(confirmedRangeTxAmount / (confirmedRangeTxAmount + unconfirmedRangeTxAmount) * 100);
 
             const tps = Math.round((txPerLine*2) / ((timer[step+1] - timer[step]) ) * 10) / 10;
 
@@ -704,12 +707,12 @@ const CalcMetrics = () => {
     });
     timer = timerTemp;
 
-    let reattachCounter = 0;
+    //let reattachCounter = 0;
     totalConfirmations = txList
         .reduce( (acc, tx) => {
             /* Accumulate reattaches */
             if(tx.reattached === true){
-                reattachCounter++;
+                //reattachCounter++;
             }
             /* Accumulate confirmed TX with confirmation time */
             if(tx.confirmed === true){
@@ -719,12 +722,10 @@ const CalcMetrics = () => {
     }, [] );
 
     const totalConfirmationsCount = totalConfirmations.length;
-    //const totalUnconfirmedCount = totalTransactions - totalConfirmationsCount; // Keep for DEBUG
+    const totalUnconfirmedCount = totalTransactions - totalConfirmationsCount; // Keep for DEBUG
 
     /* Calculate confirmation rate of all confirmed TX, excluding reattaches */
-    totalConfRate = Math.round((totalConfirmationsCount / (totalTransactions - reattachCounter)) * 10000) / 100;
-    //const totalConfRate2 = Math.round((totalConfirmationsCount / (totalConfirmationsCount + totalUnconfirmedCount - reattachCounter)) * 10000) / 100; // Keep for DEBUG
-    //console.log('DEBUG totalConfRate2:', totalConfRate2);
+    totalConfRate = Math.round((totalConfirmationsCount / (totalConfirmationsCount + totalUnconfirmedCount)) * 10000) / 100;
 
     /* Calculate average confirmation time of all confirmed TX */
     totalConfirmationTime = _.mean(totalConfirmations);
