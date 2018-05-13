@@ -811,7 +811,9 @@ const InitWebSocket = () => {
 }
 
 const FilterZeroValue = (theList) => {
-    const filteredList = _.filter( theList, filterValue => filterValue.value !== 0 );
+    const filteredList = _.filter( theList, filterValue => {
+      return filterValue.value !== 0 || filterValue.milestone === 'm';
+    } );
     return filteredList;
 }
 
