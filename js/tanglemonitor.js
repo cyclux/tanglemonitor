@@ -37,6 +37,7 @@ const pxColorMilestone = {r:0, g:0, b:255, a:1};
 
 let txList = [];
 let filterForValueTX = false;
+let manualPoll = false;
 let endlessMode = false;
 let selectedAddress = '';
 let selectedAddressBuffer = '';
@@ -426,6 +427,8 @@ document.getElementById('minNumberOfTxIncluded_button').addEventListener('click'
 document.getElementById('txToPollWrapper_button').addEventListener('click', () => {
     txAmountToPoll = parseInt(document.getElementById('txToPoll').value);
     document.getElementById('loadingTX').classList.remove('hide');
+    manualPoll = true;
+    maxTransactions = txAmountToPoll;
     InitialHistoryPoll(false);
 }, false);
 
@@ -733,9 +736,9 @@ const CalcMetrics = () => {
     }
 
     /* Adapt maxTransactions to TPS */
-    if (totalTPS > 15 && !endlessMode){
+    if (totalTPS > 15 && !endlessMode && !manualPoll){
         maxTransactions = 30000;
-    } else if (totalTPS <= 15 && !endlessMode) {
+    } else if (totalTPS <= 15 && !endlessMode && !manualPoll) {
         maxTransactions = 15000;
     }
     //updateMetrics(totalTPS, totalCTPS, totalConfRate, totalConfirmationTime);
