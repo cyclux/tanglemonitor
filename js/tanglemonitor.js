@@ -711,12 +711,14 @@ const CalcMetrics = () => {
     totalConfirmations = txList
         .reduce( (acc, tx) => {
             /* Accumulate reattaches */
+            /*
             if(tx.reattached === true){
-                //reattachCounter++;
+                reattachCounter++;
             }
+            */
             /* Accumulate confirmed TX with confirmation time */
             if(tx.confirmed === true){
-                acc.push(tx.ctime - tx.receivedAt);
+                acc.push({ctime: tx.ctime - tx.receivedAt, milestone: tx.milestone === 'f' ? false : true});
         }
         return acc;
     }, [] );
@@ -728,7 +730,11 @@ const CalcMetrics = () => {
     totalConfRate = Math.round((totalConfirmationsCount / (totalConfirmationsCount + totalUnconfirmedCount)) * 10000) / 100;
 
     /* Calculate average confirmation time of all confirmed TX */
-    totalConfirmationTime = _.mean(totalConfirmations);
+    totalConfirmationTime = _.meanBy( totalConfirmations, confTimes => {
+      if(confTimes.milestone === false){
+        return confTimes.ctime;
+      }
+    });
     totalConfirmationTime = _.round(totalConfirmationTime / 60, 1);
 
     if (totalTransactions > 0){
