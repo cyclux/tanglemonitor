@@ -16,9 +16,19 @@
         <div id="toplist_wrapper">
 
             <div id="minNumberOfTxWrapper">
-                <span>Min. TX amount</span>
+                <span>Min. TX amount (toplist)</span>
                 <input type="text" id="minNumberOfTxIncluded" value="10">
                 <button id="minNumberOfTxIncluded_button" type="button">Set</button>
+            </div>
+
+            <div id="txToPollWrapper">
+                <span>Amount of past tx</span>
+                <input type="text" id="txToPoll" value="15000">
+                <button id="txToPollWrapper_button" type="button">Set</button>
+                <div id="loadingTX" class="hide">
+                  <img src="img/loading_spinner.gif" alt="Loading.." />
+                </div>
+
             </div>
 
             <div id="hideZeroValue">

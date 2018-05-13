@@ -25,7 +25,7 @@ const strokeColorSelect = '#ff0000';
 const fontFace = 'Consolas';
 const fontSizeHeader = '13px';
 const fontSizeAxis = '11px';
-const txAmountToPoll = 15000;
+let txAmountToPoll = 15000;
 let maxTransactions = 15000;
 
 const coordinator = 'KPWCHICGJZXKE9GSUDXZYUAPLHAKAHYHDXN';
@@ -422,6 +422,13 @@ document.getElementById('minNumberOfTxIncluded_button').addEventListener('click'
     createTable(topList);
 }, false);
 
+/* Set amount of TX to poll from server */
+document.getElementById('txToPollWrapper_button').addEventListener('click', () => {
+    txAmountToPoll = parseInt(document.getElementById('txToPoll').value);
+    document.getElementById('loadingTX').classList.remove('hide');
+    InitialHistoryPoll(false);
+}, false);
+
 /* Get current line position */
 const calcLineCount = (i, pxSize, cWidth) => {
     const lines = Math.floor(i * pxSize / cWidth);
@@ -739,14 +746,14 @@ const CalcMetrics = () => {
 const InitialHistoryPoll = (firstLoad) => {
 
     let pollingURL = '';
-    devState === 'prod' ? pollingURL = 'https://tanglemonitor.com:4433/api/v1/getRecentTransactions?amount=15000' : pollingURL = `http://localhost:8080/api/v1/getRecentTransactions?amount=${txAmountToPoll}`;
+    devState === 'prod' ? pollingURL = `https://tanglemonitor.com:4433/api/v1/getRecentTransactions?amount=${txAmountToPoll}` : pollingURL = `http://localhost:8080/api/v1/getRecentTransactions?amount=${txAmountToPoll}`;
 
     /* Fetch current tangle TX from remote backend */
     fetch(pollingURL, {cache: 'no-cache'})
     .then( json_test => json_test.json() )
     .then( response => {
         document.getElementById('loading').style.display = 'none';
-
+        document.getElementById('loadingTX').classList.add('hide');
         /* Filter if switch for only value TX is set */
         if( filterForValueTX ){ response.txHistory = FilterZeroValue(response.txHistory) }
 
