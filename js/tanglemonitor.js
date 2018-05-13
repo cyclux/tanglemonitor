@@ -37,6 +37,7 @@ const pxColorMilestone = {r:0, g:0, b:255, a:1};
 
 let txList = [];
 let filterForValueTX = false;
+let endlessMode = false;
 let selectedAddress = '';
 let selectedAddressBuffer = '';
 let totalConfRate = 0;
@@ -361,9 +362,9 @@ document.getElementById('address_button_reset').addEventListener('click', () => 
 }, false);
 
 /* Switch for filtering zero value TX */
-const checkBox = document.getElementById('hideZero');
+const checkBoxZero = document.getElementById('hideZero');
 document.getElementById('hideZero').addEventListener('click', () => {
-    if (checkBox.checked === true){
+    if (checkBoxZero.checked === true){
         filterForValueTX = true;
         txList = FilterZeroValue(txList);
         CalcToplist(false);
@@ -373,8 +374,26 @@ document.getElementById('hideZero').addEventListener('click', () => {
         CalcToplist(false);
     }
 }, false);
+
+/* Switch for endless TX mode */
+let maxTransactionsBuffer = maxTransactions;
+
+const checkBoxEndless = document.getElementById('endlessMode');
+document.getElementById('endlessMode').addEventListener('click', () => {
+    if (checkBoxEndless.checked === true){
+        endlessMode = true;
+        maxTransactionsBuffer = maxTransactions;
+        maxTransactions = 10000000000000;
+
+    } else {
+        endlessMode = false;
+        maxTransactions = maxTransactionsBuffer;
+    }
+}, false);
+
 /* Uncheck on load */
-checkBox.checked = false;
+checkBoxZero.checked = false;
+checkBoxEndless.checked = false;
 
 /* Additional event listeners */
 c.addEventListener('click', () => {
@@ -689,21 +708,27 @@ const CalcMetrics = () => {
         return acc;
     }, [] );
 
+    const totalConfirmationsCount = totalConfirmations.length;
+    //const totalUnconfirmedCount = totalTransactions - totalConfirmationsCount; // Keep for DEBUG
+
     /* Calculate confirmation rate of all confirmed TX, excluding reattaches */
-    totalConfRate = Math.round(totalConfirmations.length / (totalTransactions - reattachCounter) * 10000) / 100;
+    totalConfRate = Math.round((totalConfirmationsCount / (totalTransactions - reattachCounter)) * 10000) / 100;
+    //const totalConfRate2 = Math.round((totalConfirmationsCount / (totalConfirmationsCount + totalUnconfirmedCount - reattachCounter)) * 10000) / 100; // Keep for DEBUG
+    //console.log('DEBUG totalConfRate2:', totalConfRate2);
+
     /* Calculate average confirmation time of all confirmed TX */
     totalConfirmationTime = _.mean(totalConfirmations);
     totalConfirmationTime = _.round(totalConfirmationTime / 60, 1);
 
     if (totalTransactions > 0){
         totalTPS = Math.round(totalTransactions / ((Date.now() - (txList[0].receivedAt * 1000)) / 1000) * 100) / 100;
-        totalCTPS = Math.round(totalConfirmations.length / ((Date.now() - (txList[0].receivedAt * 1000)) / 1000) * 100) / 100;
+        totalCTPS = Math.round(totalConfirmationsCount / ((Date.now() - (txList[0].receivedAt * 1000)) / 1000) * 100) / 100;
     }
 
     /* Adapt maxTransactions to TPS */
-    if (totalTPS > 15){
+    if (totalTPS > 15 && !endlessMode){
         maxTransactions = 30000;
-    } else {
+    } else if (totalTPS <= 15 && !endlessMode) {
         maxTransactions = 15000;
     }
     //updateMetrics(totalTPS, totalCTPS, totalConfRate, totalConfirmationTime);
