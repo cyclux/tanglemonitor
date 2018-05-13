@@ -135,7 +135,7 @@ function createTable(currentList) {
                         currenttext = `${currentList[j][1].substring(0,35) === coordinator ? '[COO]' + coordinator.substring(0,30) : currentList[j][1].substring(0,35)}...`;
                     break;
                     case 2:
-                        currenttext = `${currentList[j][2]}`;
+                        currenttext = `${currentList[j][2]} [${Math.round(parseInt(currentList[j][2])/maxTransactions*100)}%]`;
                     break;
                     case 3:
                         currenttext = `${currentList[j][3][0]} [${currentList[j][3][1] < 100 ? currentList[j][3][1].toFixed(1) : currentList[j][3][1].toFixed(0)}%]`;
