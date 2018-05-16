@@ -43,6 +43,9 @@ let selectedAddress = '';
 let selectedAddressBuffer = '';
 let totalConfRate = 0;
 let totalConfirmations = [];
+let milestoneMetrics = [];
+let milestoneIntervalList = [];
+let milestoneInterval = 0;
 let totalConfirmationTime = 0;
 let totalTransactions = 0;
 let totalTPS = 0;
@@ -616,12 +619,18 @@ const DrawCanvas = txList_DrawCanvas => {
   ctx.fillText('Total TX count    ' + totalTransactions, margin + 10, 10);
   ctx.fillText('Avg. TPS          ' + totalTPS, margin + 10, 25);
   ctx.fillText('Avg. conf. rate   ' + totalConfRate + ' %', margin + 10, 40);
+
   ctx.fillText(
-    'Avg. conf. time  ' + totalConfirmationTime + ' min',
+    'Avg. conf. time   ' + totalConfirmationTime + ' min',
     margin + 220,
     10
   );
-  ctx.fillText('Avg. CTPS        ' + totalCTPS, margin + 220, 25);
+  ctx.fillText('Avg. CTPS         ' + totalCTPS, margin + 220, 25);
+  ctx.fillText(
+    'Avg. MS interval  ' + milestoneInterval + ' min',
+    margin + 220,
+    40
+  );
 
   ctx.fillText('Unconfirmed', cWidth - 60, 10);
   ctx.fillText('Confirmed', cWidth - 60, 25);
@@ -859,6 +868,10 @@ const CalcToplist = initial => {
 };
 
 const CalcMetrics = () => {
+  /* Reset milestone interval buffer */
+  milestoneMetrics = [];
+  milestoneIntervalList = [];
+
   /* Calculate metrics */
   totalTransactions = txList.length;
   // Restrict max TX to display
@@ -889,9 +902,21 @@ const CalcMetrics = () => {
         ctime: tx.ctime - tx.receivedAt,
         milestone: tx.milestone === 'f' ? false : true
       });
+
+      if (tx.milestone === 'm') {
+        milestoneMetrics.push(tx.receivedAt);
+      }
     }
     return acc;
   }, []);
+
+  milestoneMetrics.map((milestone, iter) => {
+    if (iter > 0) {
+      milestoneIntervalList.push(milestone - milestoneMetrics[iter - 1]);
+    }
+  });
+
+  milestoneInterval = Math.round(_.mean(milestoneIntervalList) / 60 * 10) / 10;
 
   const totalConfirmationsCount = totalConfirmations.length;
   const totalUnconfirmedCount = totalTransactions - totalConfirmationsCount; // Keep for DEBUG
