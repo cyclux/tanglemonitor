@@ -20,6 +20,7 @@ const pxSize = 10;
 const txPerLine = Math.ceil(cWidth / pxSize);
 
 const textColor = '#000000';
+//const strokeColorNorm = 'rgba(255,255,255,0.1)';
 const strokeColorNorm = '#cccccc';
 const strokeColorSelect = '#ff0000';
 const fontFace = 'Consolas';
@@ -648,6 +649,9 @@ const DrawCanvas = txList_DrawCanvas => {
 
   /*  Draw TX pixels and additional metrics */
   pxls.map((px, pixelIndex) => {
+    /* Set default stroke offset */
+    let strokeOffset = 0;
+
     /* Declare amount of TX for calculation of TPS / confirmation rate metrics */
     const confRateRange = txPerLine * 2;
     if (pixelIndex % confRateRange == 0) {
@@ -749,6 +753,7 @@ const DrawCanvas = txList_DrawCanvas => {
 
     if (px.address === selectedAddress) {
       strokeCol = strokeColorSelect;
+      strokeOffset = 1;
       pxColor.a = 1;
     }
     /* Display actual TX pixel */
@@ -765,7 +770,12 @@ const DrawCanvas = txList_DrawCanvas => {
     ctx.fillRect(px.x + margin, px.y + offsetHeight, pxSize, pxSize);
     ctx.strokeStyle = strokeCol;
     ctx.lineWidth = 1;
-    ctx.strokeRect(px.x + margin, px.y + offsetHeight, pxSize, pxSize);
+    ctx.strokeRect(
+      px.x + margin,
+      px.y + offsetHeight,
+      pxSize - strokeOffset,
+      pxSize - strokeOffset
+    );
   });
   window.setTimeout(() => DrawCanvas(txList), 100);
 };
