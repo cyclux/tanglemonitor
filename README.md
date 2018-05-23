@@ -1,4 +1,4 @@
-# Tanglemonitor
+# Tanglemonitor: Testnet
 Visualisation and detailed live metrics of the IOTA confirmation process.
 
-https://tanglemonitor.com
+https://testnet.tanglemonitor.com
