@@ -976,7 +976,7 @@ const CalcMetrics = () => {
 const InitialHistoryPoll = firstLoad => {
   let pollingURL = '';
   devState === 'prod'
-    ? (pollingURL = `https://tanglemonitor.com:4433/api/v1/getRecentTransactions?amount=${txAmountToPoll}`)
+    ? (pollingURL = `https://tanglemonitor.com:4439/api/v1/getRecentTransactions?amount=${txAmountToPoll}`)
     : (pollingURL = `http://localhost:8080/api/v1/getRecentTransactions?amount=${txAmountToPoll}`);
 
   /* Fetch current tangle TX from remote backend */
@@ -1014,7 +1014,7 @@ const InitialHistoryPoll = firstLoad => {
 const InitWebSocket = () => {
   let socketURL = '';
   devState === 'prod'
-    ? (socketURL = 'https://tanglemonitor.com:4434')
+    ? (socketURL = 'https://tanglemonitor.com:4440')
     : (socketURL = 'http://localhost:8081');
   let sslState = true;
   devState === 'prod' ? (sslState = true) : (sslState = false);
