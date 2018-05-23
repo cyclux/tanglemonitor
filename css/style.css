@@ -70,6 +70,10 @@ div#loadingTX{
   height: 15px;
 }
 
+div#net_title{
+  font-size: 18px;
+}
+
 .toplist{
     display: inline-block;
     cursor: pointer;
