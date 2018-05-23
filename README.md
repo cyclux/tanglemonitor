@@ -1,4 +1,6 @@
 # Tanglemonitor
 Visualisation and detailed live metrics of the IOTA confirmation process.
 
-https://tanglemonitor.com
+Mainnet: https://tanglemonitor.com
+Testnet: https://testnet.tanglemonitor.com
+Spamnet: https://spamnet.tanglemonitor.com
