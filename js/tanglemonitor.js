@@ -29,7 +29,7 @@ const fontSizeAxis = '11px';
 let txAmountToPoll = 15000;
 let maxTransactions = 15000;
 
-const coordinator = 'KPWCHICGJZXKE9GSUDXZYUAPLHAKAHYHDXN';
+const coordinator = 'QGJGQYBNBPXLMKQQYEDLAJFCEVCNRDTVGLQ';
 
 const pxColorUnconf = { r: 0, g: 0, b: 0, a: 1 };
 const pxColorConf = { r: 0, g: 255, b: 0, a: 1 };
