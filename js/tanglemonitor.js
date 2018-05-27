@@ -878,13 +878,7 @@ const InitialHistoryPoll = firstLoad => {
 // Init Websocket for client
 const InitWebSocket = () => {
   let socketURL = '';
-<<<<<<< HEAD
-  devState === 'prod'
-    ? (socketURL = 'https://tanglemonitor.com:4440')
-    : (socketURL = 'http://localhost:8081');
-=======
-  devState === 'prod' ? (socketURL = 'https://tanglemonitor.com:4434') : (socketURL = 'http://localhost:8081');
->>>>>>> master
+  devState === 'prod' ? (socketURL = 'https://tanglemonitor.com:4440') : (socketURL = 'http://localhost:8081');
   let sslState = true;
   devState === 'prod' ? (sslState = true) : (sslState = false);
 
