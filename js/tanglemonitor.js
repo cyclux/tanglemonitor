@@ -67,9 +67,7 @@ let rateLimiter = 0;
 let txOfMousePosition = {};
 
 const ChangeAddress = () => {
-  selectedAddress = document
-    .getElementById('address_input')
-    .value.substring(0, 81);
+  selectedAddress = document.getElementById('address_input').value.substring(0, 81);
   //document.getElementById('status').innerHTML = `Address selection changed`;
 };
 
@@ -108,9 +106,7 @@ function createTable(currentList) {
   const head_tr = document.createElement('tr');
 
   topListCount = 0;
-  currentList.length >= 15
-    ? (topListCount = 15)
-    : (topListCount = currentList.length);
+  currentList.length >= 15 ? (topListCount = 15) : (topListCount = currentList.length);
   topListCount = topListCount + toplistAdditional;
 
   /* Prevent greater topListCount than actual length under any circumstance */
@@ -131,9 +127,7 @@ function createTable(currentList) {
           () => {
             selectedAddress = current_cell.getAttribute('tx');
             selectedAddressBuffer = current_cell.getAttribute('tx');
-            document.getElementById(
-              'address_input'
-            ).value = current_cell.getAttribute('tx');
+            document.getElementById('address_input').value = current_cell.getAttribute('tx');
           },
           false
         );
@@ -151,46 +145,24 @@ function createTable(currentList) {
             break;
           case 1:
             currenttext = `${
-              currentList[j][1].substring(0, 35) === coordinator
-                ? '[COO]' + coordinator.substring(0, 30)
-                : currentList[j][1].substring(0, 35)
+              currentList[j][1].substring(0, 35) === coordinator ? '[COO]' + coordinator.substring(0, 30) : currentList[j][1].substring(0, 35)
             }...`;
             break;
           case 2:
-            currenttext = `${currentList[j][2]} [${Math.round(
-              parseInt(currentList[j][2]) / maxTransactions * 100
-            )}%]`;
+            currenttext = `${currentList[j][2]} [${Math.round(parseInt(currentList[j][2]) / maxTransactions * 100)}%]`;
             break;
           case 3:
-            currenttext = `${currentList[j][3][0]} [${
-              currentList[j][3][1] < 100
-                ? currentList[j][3][1].toFixed(1)
-                : currentList[j][3][1].toFixed(0)
-            }%]`;
+            currenttext = `${currentList[j][3][0]} [${currentList[j][3][1] < 100 ? currentList[j][3][1].toFixed(1) : currentList[j][3][1].toFixed(0)}%]`;
             break;
           case 4:
-            currenttext = `${currentList[j][4][0]} [${
-              currentList[j][4][1] < 100
-                ? currentList[j][4][1].toFixed(1)
-                : currentList[j][4][1].toFixed(0)
-            }%]`;
+            currenttext = `${currentList[j][4][0]} [${currentList[j][4][1] < 100 ? currentList[j][4][1].toFixed(1) : currentList[j][4][1].toFixed(0)}%]`;
             break;
           case 5:
-            currenttext = `${
-              currentList[j][5][0] === Infinity
-                ? 'inf.'
-                : currentList[j][5][0].toFixed(2)
-            }`;
+            currenttext = `${currentList[j][5][0] === Infinity ? 'inf.' : currentList[j][5][0].toFixed(2)}`;
             break;
           case 6:
-            currenttext = `${
-              currentList[j][6][0] === Infinity
-                ? 'inf.'
-                : currentList[j][6][0] > 0 ? '+' : ''
-            }${
-              currentList[j][6][0] < Infinity
-                ? currentList[j][6][0].toFixed(0) + '%'
-                : ''
+            currenttext = `${currentList[j][6][0] === Infinity ? 'inf.' : currentList[j][6][0] > 0 ? '+' : ''}${
+              currentList[j][6][0] < Infinity ? currentList[j][6][0].toFixed(0) + '%' : ''
             }`;
             break;
           case 7:
@@ -203,9 +175,7 @@ function createTable(currentList) {
             currenttext = `${currentList[j][9][0].toFixed(1)} min`;
             break;
           case 10:
-            currenttext = `${currentList[j][10][0] > 0 ? '+' : ''}${currentList[
-              j
-            ][10][0].toFixed(1)}%`;
+            currenttext = `${currentList[j][10][0] > 0 ? '+' : ''}${currentList[j][10][0].toFixed(1)}%`;
             break;
 
           default:
@@ -314,15 +284,9 @@ const GetMousePos = (c, evt) => {
     let doc = document.documentElement,
       body = document.body;
 
-    evt.pageX =
-      evt.clientX +
-      ((doc && doc.scrollLeft) || (body && body.scrollLeft) || 0) -
-      (doc.clientLeft || 0);
+    evt.pageX = evt.clientX + ((doc && doc.scrollLeft) || (body && body.scrollLeft) || 0) - (doc.clientLeft || 0);
 
-    evt.pageY =
-      evt.clientY +
-      ((doc && doc.scrollTop) || (body && body.scrollTop) || 0) -
-      (doc.clientTop || 0);
+    evt.pageY = evt.clientY + ((doc && doc.scrollTop) || (body && body.scrollTop) || 0) - (doc.clientTop || 0);
   }
   /* Mouse position within canvas */
   let rect = c.getBoundingClientRect();
@@ -338,12 +302,7 @@ const GetTXofMousePosition = mousePosition => {
   mousePosition.y = mousePosition.y - offsetHeight;
   mousePosition.x = mousePosition.x - margin;
   const txAtMouse = pixelMap.reduce((acc, tx) => {
-    if (
-      mousePosition.x >= tx.x &&
-      mousePosition.x < tx.x + pxSize &&
-      mousePosition.y >= tx.y &&
-      mousePosition.y < tx.y + pxSize
-    ) {
+    if (mousePosition.x >= tx.x && mousePosition.x < tx.x + pxSize && mousePosition.y >= tx.y && mousePosition.y < tx.y + pxSize) {
       acc = tx;
     }
     return acc;
@@ -374,10 +333,7 @@ c.addEventListener(
       txOfMousePosition = GetTXofMousePosition(mousePos);
 
       if (txOfMousePosition.hash) {
-        let txConfirmationTime = _.round(
-          (txOfMousePosition.ctime - txOfMousePosition.receivedAt) / 60,
-          2
-        );
+        let txConfirmationTime = _.round((txOfMousePosition.ctime - txOfMousePosition.receivedAt) / 60, 2);
 
         if (txOfMousePosition.confirmed) {
           txConfirmationTime = `${txConfirmationTime} Minutes`;
@@ -389,17 +345,12 @@ c.addEventListener(
 
         tooltip.innerHTML = `Address:\u00A0${txOfMousePosition.address}<br>
                                 TX Hash:\u00A0${txOfMousePosition.hash}<br>
-                                Tag:\u00A0\u00A0\u00A0\u00A0\u00A0${
-                                  txOfMousePosition.tag
-                                }<br>
+                                Bundle:\u00A0\u00A0${txOfMousePosition.bundle}<br>
+                                Tag:\u00A0\u00A0\u00A0\u00A0\u00A0${txOfMousePosition.tag}<br>
                                 C. Time:\u00A0${txConfirmationTime}<br>
                                 Value:\u00A0\u00A0\u00A0${
                                   txOfMousePosition.value !== 0
-                                    ? Math.round(
-                                        txOfMousePosition.value / 1000000 * 100
-                                      ) /
-                                        100 +
-                                      ' MIOTA'
+                                    ? Math.round(txOfMousePosition.value / 1000000 * 100) / 100 + ' MIOTA'
                                     : 'Zero value transaction'
                                 }`;
         selectedAddress = txOfMousePosition.address;
@@ -523,9 +474,7 @@ document.getElementById('toplist-reset').addEventListener(
 document.getElementById('minNumberOfTxIncluded_button').addEventListener(
   'click',
   () => {
-    toplistMinTX = parseInt(
-      document.getElementById('minNumberOfTxIncluded').value
-    );
+    toplistMinTX = parseInt(document.getElementById('minNumberOfTxIncluded').value);
     createTable(topList);
   },
   false
@@ -569,11 +518,7 @@ const UpdateTXStatus = (update, updateType) => {
       txList[hashIndex].reattached = true;
     }
   } else {
-    console.log(
-      `${
-        updateType === 'Milestone' ? 'Milestone' : 'TX'
-      } not found in local DB - Hash: ${txHash} | updateType: ${updateType}`
-    );
+    console.log(`${updateType === 'Milestone' ? 'Milestone' : 'TX'} not found in local DB - Hash: ${txHash} | updateType: ${updateType}`);
   }
 };
 
@@ -621,17 +566,9 @@ const DrawCanvas = txList_DrawCanvas => {
   ctx.fillText('Avg. TPS          ' + totalTPS, margin + 10, 25);
   ctx.fillText('Avg. conf. rate   ' + totalConfRate + ' %', margin + 10, 40);
 
-  ctx.fillText(
-    'Avg. conf. time   ' + totalConfirmationTime + ' min',
-    margin + 220,
-    10
-  );
+  ctx.fillText('Avg. conf. time   ' + totalConfirmationTime + ' min', margin + 220, 10);
   ctx.fillText('Avg. CTPS         ' + totalCTPS, margin + 220, 25);
-  ctx.fillText(
-    'Avg. MS interval  ' + milestoneInterval + ' min',
-    margin + 220,
-    40
-  );
+  ctx.fillText('Avg. MS interval  ' + milestoneInterval + ' min', margin + 220, 40);
 
   ctx.fillText('Unconfirmed', cWidth - 60, 10);
   ctx.fillText('Confirmed', cWidth - 60, 25);
@@ -663,10 +600,7 @@ const DrawCanvas = txList_DrawCanvas => {
       ctx.textAlign = 'right';
 
       /* Calc current TPS and display appropriately */
-      const confRateRangeList = txList.slice(
-        step * confRateRange,
-        step * confRateRange + confRateRange
-      );
+      const confRateRangeList = txList.slice(step * confRateRange, step * confRateRange + confRateRange);
       //let reattachments = 0;
       const totalRangeTxAmount = confRateRangeList.length;
       const confirmedRangeTxAmount = confRateRangeList.filter(tx => {
@@ -674,24 +608,12 @@ const DrawCanvas = txList_DrawCanvas => {
         return tx.confirmed !== false;
       }).length;
 
-      const unconfirmedRangeTxAmount =
-        totalRangeTxAmount - confirmedRangeTxAmount;
-      const confRate = Math.round(
-        confirmedRangeTxAmount /
-          (confirmedRangeTxAmount + unconfirmedRangeTxAmount) *
-          100
-      );
+      const unconfirmedRangeTxAmount = totalRangeTxAmount - confirmedRangeTxAmount;
+      const confRate = Math.round(confirmedRangeTxAmount / (confirmedRangeTxAmount + unconfirmedRangeTxAmount) * 100);
 
-      const tps =
-        Math.round(txPerLine * 2 / (timer[step + 1] - timer[step]) * 10) / 10;
+      const tps = Math.round(txPerLine * 2 / (timer[step + 1] - timer[step]) * 10) / 10;
 
-      ctx.fillText(
-        (isNaN(confRate) ? '0' : confRate) +
-          '%' +
-          (isNaN(tps) ? ' [...]' : ' [' + tps.toFixed(1) + ' TPS]'),
-        margin - 5,
-        px.y + offsetHeight + 5
-      );
+      ctx.fillText((isNaN(confRate) ? '0' : confRate) + '%' + (isNaN(tps) ? ' [...]' : ' [' + tps.toFixed(1) + ' TPS]'), margin - 5, px.y + offsetHeight + 5);
     }
 
     /* Adapt TX color to confirmation or milestone status */
@@ -704,19 +626,11 @@ const DrawCanvas = txList_DrawCanvas => {
       pxColor.a = 1;
     }
 
-    if (
-      px.confirmed === true &&
-      px.milestone === 'f' &&
-      px.reattached === false
-    ) {
+    if (px.confirmed === true && px.milestone === 'f' && px.reattached === false) {
       pxColor = pxColorConf;
       strokeCol = strokeColorNorm;
       pxColor.a = 1;
-    } else if (
-      px.confirmed === false &&
-      px.milestone === 'f' &&
-      px.reattached === true
-    ) {
+    } else if (px.confirmed === false && px.milestone === 'f' && px.reattached === true) {
       pxColor = pxColorReattach;
       strokeCol = strokeColorNorm;
       pxColor.a = 1;
@@ -733,14 +647,8 @@ const DrawCanvas = txList_DrawCanvas => {
 
       pxColor = pxColorMilestone;
       strokeCol = strokeColorNorm;
-      const minElapsed = Math.floor(
-        (Math.floor(Date.now() / 1000) - px.receivedAt) / 60
-      );
-      ctx.fillText(
-        `${minElapsed} min`,
-        margin + cWidth + 5,
-        px.y + offsetHeight
-      );
+      const minElapsed = Math.floor((Math.floor(Date.now() / 1000) - px.receivedAt) / 60);
+      ctx.fillText(`${minElapsed} min`, margin + cWidth + 5, px.y + offsetHeight);
 
       pxColor.a = 1;
     }
@@ -757,25 +665,11 @@ const DrawCanvas = txList_DrawCanvas => {
       pxColor.a = 1;
     }
     /* Display actual TX pixel */
-    ctx.fillStyle =
-      'rgba(' +
-      pxColor.r +
-      ',' +
-      pxColor.g +
-      ',' +
-      pxColor.b +
-      ',' +
-      pxColor.a +
-      ')';
+    ctx.fillStyle = 'rgba(' + pxColor.r + ',' + pxColor.g + ',' + pxColor.b + ',' + pxColor.a + ')';
     ctx.fillRect(px.x + margin, px.y + offsetHeight, pxSize, pxSize);
     ctx.strokeStyle = strokeCol;
     ctx.lineWidth = 1;
-    ctx.strokeRect(
-      px.x + margin,
-      px.y + offsetHeight,
-      pxSize - strokeOffset,
-      pxSize - strokeOffset
-    );
+    ctx.strokeRect(px.x + margin, px.y + offsetHeight, pxSize - strokeOffset, pxSize - strokeOffset);
   });
   window.setTimeout(() => DrawCanvas(txList), 100);
 };
@@ -783,11 +677,7 @@ const DrawCanvas = txList_DrawCanvas => {
 const CalcToplist = initial => {
   const txListConfStatus = _.groupBy(txList, 'confirmed');
 
-  if (
-    txListConfStatus &&
-    txListConfStatus.true &&
-    txListConfStatus.true.length
-  ) {
+  if (txListConfStatus && txListConfStatus.true && txListConfStatus.true.length) {
     /* Create toplist */
 
     const confirmed_new = _.countBy(txListConfStatus.true, 'address');
@@ -832,26 +722,16 @@ const CalcToplist = initial => {
       const confirmationTimeOthers = confirmationTimeCollector[1];
       const confirmationTimeMeanOthers = _.mean(confirmationTimeOthers) / 60;
       const confirmationTimeMean = _.mean(confirmationTime) / 60;
-      const confirmationTimeMeanRatio =
-        confirmationTimeMean / confirmationTimeMeanOthers * 100 - 100;
+      const confirmationTimeMeanRatio = confirmationTimeMean / confirmationTimeMeanOthers * 100 - 100;
 
       const total = unconfirmedOnes + confirmedOnes;
       const confirmedOnesRatio = confirmedOnes / total * 100;
       const unconfirmedOnesRatio = unconfirmedOnes / total * 100;
       const confirmRatio = confirmedOnes / unconfirmedOnes;
       const confirmRatioTotal = confirmedTotalCount / unconfirmedTotalCount;
-      const confirmationMeanRatio =
-        confirmRatio / confirmRatioTotal * 100 - 100;
-      const addressTPS =
-        Math.round(
-          total / ((Date.now() - txList[0].receivedAt * 1000) / 1000) * 100
-        ) / 100;
-      const addressCTPS =
-        Math.round(
-          confirmedOnes /
-            ((Date.now() - txList[0].receivedAt * 1000) / 1000) *
-            100
-        ) / 100;
+      const confirmationMeanRatio = confirmRatio / confirmRatioTotal * 100 - 100;
+      const addressTPS = Math.round(total / ((Date.now() - txList[0].receivedAt * 1000) / 1000) * 100) / 100;
+      const addressCTPS = Math.round(confirmedOnes / ((Date.now() - txList[0].receivedAt * 1000) / 1000) * 100) / 100;
 
       confList[index].unshift([0]);
       confList[index].pop();
@@ -932,12 +812,7 @@ const CalcMetrics = () => {
   const totalUnconfirmedCount = totalTransactions - totalConfirmationsCount; // Keep for DEBUG
 
   /* Calculate confirmation rate of all confirmed TX, excluding reattaches */
-  totalConfRate =
-    Math.round(
-      totalConfirmationsCount /
-        (totalConfirmationsCount + totalUnconfirmedCount) *
-        10000
-    ) / 100;
+  totalConfRate = Math.round(totalConfirmationsCount / (totalConfirmationsCount + totalUnconfirmedCount) * 10000) / 100;
 
   /* Calculate average confirmation time of all confirmed TX */
   totalConfirmationTime = _.meanBy(totalConfirmations, confTimes => {
@@ -948,18 +823,8 @@ const CalcMetrics = () => {
   totalConfirmationTime = _.round(totalConfirmationTime / 60, 1);
 
   if (totalTransactions > 0) {
-    totalTPS =
-      Math.round(
-        totalTransactions /
-          ((Date.now() - txList[0].receivedAt * 1000) / 1000) *
-          100
-      ) / 100;
-    totalCTPS =
-      Math.round(
-        totalConfirmationsCount /
-          ((Date.now() - txList[0].receivedAt * 1000) / 1000) *
-          100
-      ) / 100;
+    totalTPS = Math.round(totalTransactions / ((Date.now() - txList[0].receivedAt * 1000) / 1000) * 100) / 100;
+    totalCTPS = Math.round(totalConfirmationsCount / ((Date.now() - txList[0].receivedAt * 1000) / 1000) * 100) / 100;
   }
 
   /* Adapt maxTransactions to TPS */
@@ -1013,9 +878,7 @@ const InitialHistoryPoll = firstLoad => {
 // Init Websocket for client
 const InitWebSocket = () => {
   let socketURL = '';
-  devState === 'prod'
-    ? (socketURL = 'https://tanglemonitor.com:4434')
-    : (socketURL = 'http://localhost:8081');
+  devState === 'prod' ? (socketURL = 'https://tanglemonitor.com:4434') : (socketURL = 'http://localhost:8081');
   let sslState = true;
   devState === 'prod' ? (sslState = true) : (sslState = false);
 
