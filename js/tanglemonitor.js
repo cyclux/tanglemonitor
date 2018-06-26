@@ -149,7 +149,7 @@ function createTable(currentList) {
             }...`;
             break;
           case 2:
-            currenttext = `${currentList[j][2]} [${Math.round(parseInt(currentList[j][2]) / maxTransactions * 100)}%]`;
+            currenttext = `${currentList[j][2]} [${Math.round((parseInt(currentList[j][2]) / maxTransactions) * 100)}%]`;
             break;
           case 3:
             currenttext = `${currentList[j][3][0]} [${currentList[j][3][1] < 100 ? currentList[j][3][1].toFixed(1) : currentList[j][3][1].toFixed(0)}%]`;
@@ -350,7 +350,7 @@ c.addEventListener(
                                 C. Time:\u00A0${txConfirmationTime}<br>
                                 Value:\u00A0\u00A0\u00A0${
                                   txOfMousePosition.value !== 0
-                                    ? Math.round(txOfMousePosition.value / 1000000 * 100) / 100 + ' MIOTA'
+                                    ? Math.round((txOfMousePosition.value / 1000000) * 100) / 100 + ' MIOTA'
                                     : 'Zero value transaction'
                                 }`;
         selectedAddress = txOfMousePosition.address;
@@ -495,7 +495,7 @@ document.getElementById('txToPollWrapper_button').addEventListener(
 
 /* Get current line position */
 const calcLineCount = (i, pxSize, cWidth) => {
-  const lines = Math.floor(i * pxSize / cWidth);
+  const lines = Math.floor((i * pxSize) / cWidth);
   return lines;
 };
 
@@ -609,9 +609,9 @@ const DrawCanvas = txList_DrawCanvas => {
       }).length;
 
       const unconfirmedRangeTxAmount = totalRangeTxAmount - confirmedRangeTxAmount;
-      const confRate = Math.round(confirmedRangeTxAmount / (confirmedRangeTxAmount + unconfirmedRangeTxAmount) * 100);
+      const confRate = Math.round((confirmedRangeTxAmount / (confirmedRangeTxAmount + unconfirmedRangeTxAmount)) * 100);
 
-      const tps = Math.round(txPerLine * 2 / (timer[step + 1] - timer[step]) * 10) / 10;
+      const tps = Math.round(((txPerLine * 2) / (timer[step + 1] - timer[step])) * 10) / 10;
 
       ctx.fillText((isNaN(confRate) ? '0' : confRate) + '%' + (isNaN(tps) ? ' [...]' : ' [' + tps.toFixed(1) + ' TPS]'), margin - 5, px.y + offsetHeight + 5);
     }
@@ -626,12 +626,15 @@ const DrawCanvas = txList_DrawCanvas => {
       pxColor.a = 1;
     }
 
-    if (px.confirmed === true && px.milestone === 'f' && px.reattached === false) {
-      pxColor = pxColorConf;
+    if (px.milestone === 'f' && px.reattached === true) {
+      //px.confirmed === false && ..
+      pxColor = pxColorReattach;
       strokeCol = strokeColorNorm;
       pxColor.a = 1;
-    } else if (px.confirmed === false && px.milestone === 'f' && px.reattached === true) {
-      pxColor = pxColorReattach;
+    }
+
+    if (px.confirmed === true && px.milestone === 'f' && px.reattached === false) {
+      pxColor = pxColorConf;
       strokeCol = strokeColorNorm;
       pxColor.a = 1;
     }
@@ -722,16 +725,16 @@ const CalcToplist = initial => {
       const confirmationTimeOthers = confirmationTimeCollector[1];
       const confirmationTimeMeanOthers = _.mean(confirmationTimeOthers) / 60;
       const confirmationTimeMean = _.mean(confirmationTime) / 60;
-      const confirmationTimeMeanRatio = confirmationTimeMean / confirmationTimeMeanOthers * 100 - 100;
+      const confirmationTimeMeanRatio = (confirmationTimeMean / confirmationTimeMeanOthers) * 100 - 100;
 
       const total = unconfirmedOnes + confirmedOnes;
-      const confirmedOnesRatio = confirmedOnes / total * 100;
-      const unconfirmedOnesRatio = unconfirmedOnes / total * 100;
+      const confirmedOnesRatio = (confirmedOnes / total) * 100;
+      const unconfirmedOnesRatio = (unconfirmedOnes / total) * 100;
       const confirmRatio = confirmedOnes / unconfirmedOnes;
       const confirmRatioTotal = confirmedTotalCount / unconfirmedTotalCount;
-      const confirmationMeanRatio = confirmRatio / confirmRatioTotal * 100 - 100;
-      const addressTPS = Math.round(total / ((Date.now() - txList[0].receivedAt * 1000) / 1000) * 100) / 100;
-      const addressCTPS = Math.round(confirmedOnes / ((Date.now() - txList[0].receivedAt * 1000) / 1000) * 100) / 100;
+      const confirmationMeanRatio = (confirmRatio / confirmRatioTotal) * 100 - 100;
+      const addressTPS = Math.round((total / ((Date.now() - txList[0].receivedAt * 1000) / 1000)) * 100) / 100;
+      const addressCTPS = Math.round((confirmedOnes / ((Date.now() - txList[0].receivedAt * 1000) / 1000)) * 100) / 100;
 
       confList[index].unshift([0]);
       confList[index].pop();
@@ -806,13 +809,13 @@ const CalcMetrics = () => {
     }
   });
 
-  milestoneInterval = Math.round(_.mean(milestoneIntervalList) / 60 * 10) / 10;
+  milestoneInterval = Math.round((_.mean(milestoneIntervalList) / 60) * 10) / 10;
 
   const totalConfirmationsCount = totalConfirmations.length;
   const totalUnconfirmedCount = totalTransactions - totalConfirmationsCount; // Keep for DEBUG
 
   /* Calculate confirmation rate of all confirmed TX, excluding reattaches */
-  totalConfRate = Math.round(totalConfirmationsCount / (totalConfirmationsCount + totalUnconfirmedCount) * 10000) / 100;
+  totalConfRate = Math.round((totalConfirmationsCount / (totalConfirmationsCount + totalUnconfirmedCount)) * 10000) / 100;
 
   /* Calculate average confirmation time of all confirmed TX */
   totalConfirmationTime = _.meanBy(totalConfirmations, confTimes => {
@@ -823,8 +826,8 @@ const CalcMetrics = () => {
   totalConfirmationTime = _.round(totalConfirmationTime / 60, 1);
 
   if (totalTransactions > 0) {
-    totalTPS = Math.round(totalTransactions / ((Date.now() - txList[0].receivedAt * 1000) / 1000) * 100) / 100;
-    totalCTPS = Math.round(totalConfirmationsCount / ((Date.now() - txList[0].receivedAt * 1000) / 1000) * 100) / 100;
+    totalTPS = Math.round((totalTransactions / ((Date.now() - txList[0].receivedAt * 1000) / 1000)) * 100) / 100;
+    totalCTPS = Math.round((totalConfirmationsCount / ((Date.now() - txList[0].receivedAt * 1000) / 1000)) * 100) / 100;
   }
 
   /* Adapt maxTransactions to TPS */
@@ -882,7 +885,10 @@ const InitWebSocket = () => {
   let sslState = true;
   devState === 'prod' ? (sslState = true) : (sslState = false);
 
-  const socket = io.connect(socketURL, { secure: sslState });
+  const socket = io.connect(
+    socketURL,
+    { secure: sslState }
+  );
 
   socket.on('connect', () => {
     console.log('Successfully connected to Websocket..');
