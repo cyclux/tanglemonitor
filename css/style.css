@@ -84,6 +84,15 @@ div#loadingTX {
   height: 15px;
 }
 
+.net_title {
+  margin: 0 auto 25px;
+}
+
+.net_title > select {
+  font-size: 17px;
+  border: none;
+}
+
 .toplist {
   display: inline-block;
   cursor: pointer;
