@@ -14,9 +14,13 @@
         </div>
 
         <div id="toplist_wrapper">
-          <div class="center net_title">
-            Spamnet
-          </div>
+            <div class="center net_title">
+              <select id="netselector" class="" name="netselector">
+                <option value="mainnet">Mainnet</option>
+                <option value="testnet">Testnet</option>
+                <option value="spamnet" selected>Spamnet</option>
+              </select>
+            </div>
             <div id="minNumberOfTxWrapper">
                 <span>Min. TX amount (toplist)</span>
                 <input type="text" id="minNumberOfTxIncluded" value="10">
