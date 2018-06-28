@@ -72,20 +72,14 @@ div#loadingTX {
   height: 15px;
 }
 
-<<<<<<< HEAD
-.net_title{
+.net_title {
   font-size: 18px;
   margin: 0 auto 25px;
 }
 
-.toplist{
-    display: inline-block;
-    cursor: pointer;
-=======
 .toplist {
   display: inline-block;
   cursor: pointer;
->>>>>>> master
 }
 
 div#toplist-menu {
