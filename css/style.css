@@ -1,180 +1,189 @@
-body{
-    font-family: Consolas;
-    text-align: center;
+body {
+  font-family: Consolas;
+  text-align: center;
 }
 
-.hide{
+.hide {
   display: none !important;
 }
 
 .noselect {
   -webkit-touch-callout: none;
-    -webkit-user-select: none;
-     -khtml-user-select: none;
-       -moz-user-select: none;
-        -ms-user-select: none;
-            user-select: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
-canvas#canvas{
-    z-index: 1;
-    border: 0px solid #000000;
-    margin: 0 auto;
-    display: block;
+canvas#canvas {
+  z-index: 1;
+  border: 0px solid #000000;
+  margin: 0 auto;
+  display: block;
 }
 
-div#loading{
-    font-size: 20px;
-    font-weight: bold;
-    display: table;
-    margin: 0 auto;
+div#loading {
+  font-size: 20px;
+  font-weight: bold;
+  display: table;
+  margin: 0 auto;
 }
 
-div#toplist_wrapper{
-    width: 1150px;
-    display: table;
-    margin: 0 auto;
+div#toplist_wrapper {
+  width: 1150px;
+  display: table;
+  margin: 0 auto;
 }
 
-div#minNumberOfTxWrapper{
-    font-size: 14px;
-    margin: 0 0 15px 10px;
-    float: left;
+div#minNumberOfTxWrapper {
+  font-size: 14px;
+  margin: 0 0 15px 10px;
+  float: left;
 }
 
-div#txToPollWrapper{
-    font-size: 14px;
-    margin: 0 0 15px 30px;
-    float: left;
+div#txToPollWrapper {
+  font-size: 14px;
+  margin: 0 0 15px 30px;
+  float: left;
 }
 
-div#loadingTX{
+div#loadingTX {
   display: inline-block;
 }
 
-div#loadingTX > img{
+div#loadingTX > img {
   width: 15px;
 }
 
-input#minNumberOfTxIncluded, input#txToPoll{
-    width: 50px;
+input#minNumberOfTxIncluded,
+input#txToPoll {
+  width: 50px;
 }
 
-div#hideZeroValue, div#endlessModeWrapper{
-    margin: 0 50px 15px 0;
-    float: right;
+div#hideZeroValue,
+div#endlessModeWrapper {
+  margin: 0 50px 15px 0;
+  float: right;
 }
 
-div#loadingTX{
+div#loadingTX {
   width: 15px;
   height: 15px;
 }
 
-.toplist{
-    display: inline-block;
-    cursor: pointer;
+.toplist {
+  display: inline-block;
+  cursor: pointer;
 }
 
-div#toplist-menu{
-    margin: 10px auto;
-    display: inherit;
+div#toplist-menu {
+  margin: 10px auto;
+  display: inherit;
 }
 
-table#toplist{
-    padding: 2px;
-    border: 0px solid #000000;
-    border-collapse: collapse;
-    font-size: 13px;
+table#toplist {
+  padding: 2px;
+  border: 0px solid #000000;
+  border-collapse: collapse;
+  font-size: 13px;
 }
 
-.table_head_sortpic{
-    width: 17px;
-    height: 17px;
-    vertical-align: bottom;
+.table_head_sortpic {
+  width: 17px;
+  height: 17px;
+  vertical-align: bottom;
 }
 
-tbody>tr:nth-child(odd) {
-    background-color: #f2f2f2;
+tbody > tr:nth-child(odd) {
+  background-color: #f2f2f2;
 }
 
-tbody>tr>td:nth-child(2) {
-    text-align: left;
+tbody > tr > td:nth-child(2) {
+  text-align: left;
 }
 
-tbody{
-    cursor: pointer;
-    text-align: right;
+tbody {
+  cursor: pointer;
+  text-align: right;
 }
 
-table, th, td {
-    border: 0px solid black;
-    padding: 2px 6px;
+table,
+th,
+td {
+  border: 0px solid black;
+  padding: 2px 6px;
 }
 
 thead {
-    text-align: right;
-    background-color: #ffffff !important;
-    font-size: 15px;
-    font-weight: bold;
-    cursor: pointer;
+  text-align: right;
+  background-color: #ffffff !important;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
 }
-thead>tr>td:nth-child(2) {
-    text-align: left;
-}
-
-div#tooltip{
-    position: absolute;
-    display: none;
-    z-index: 2;
-    font-size: 13px;
-    text-align: left;
-    background: #ffffff;
-    border: 1px solid #000000;
-    border-radius: 5px;
-    padding: 5px;
-    white-space: nowrap;
+thead > tr > td:nth-child(2) {
+  text-align: left;
 }
 
-div#github_buttons{
-    text-align: right;
-    margin-right: 20px;
-    margin-top: 20px;
+div#hideSpecificAddressCheckboxWrapper {
+  position: absolute;
+  cursor: pointer;
 }
 
-div#inputs{
-    width: 950px;
-    display: block;
-    text-align: center;
-    margin: 5px auto 0px;
+div#tooltip {
+  position: absolute;
+  display: none;
+  z-index: 2;
+  font-size: 13px;
+  text-align: left;
+  background: #ffffff;
+  border: 1px solid #000000;
+  border-radius: 5px;
+  padding: 5px;
+  white-space: nowrap;
 }
 
-input#address_input{
-    width: 791px;
-    margin: 5px auto;
-    display: inline-block;
-    padding: 1px 0px 2px 4px;
+div#github_buttons {
+  text-align: right;
+  margin-right: 20px;
+  margin-top: 20px;
 }
 
-button#address_button{
-    display: inline-block;
+div#inputs {
+  width: 950px;
+  display: block;
+  text-align: center;
+  margin: 5px auto 0px;
 }
 
-div#status{
-    display: table;
-    margin: 5px auto;
-    font-size: 13px;
+input#address_input {
+  width: 791px;
+  margin: 5px auto;
+  display: inline-block;
+  padding: 1px 0px 2px 4px;
 }
 
-div#donation-address{
+button#address_button {
+  display: inline-block;
+}
+
+div#status {
+  display: table;
+  margin: 5px auto;
+  font-size: 13px;
+}
+
+div#donation-address {
   border: 1px dotted;
   border-radius: 5px;
   padding: 4px 6px 2px 6px;
-  font-size: .85em;
+  font-size: 0.85em;
   display: inline-flex;
   text-align: center;
   margin: 20px auto 76px auto;
 }
 
-img#heart{
+img#heart {
   margin-right: 3px;
 }
