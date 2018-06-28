@@ -73,8 +73,12 @@ div#loadingTX {
 }
 
 .net_title {
-  font-size: 18px;
   margin: 0 auto 25px;
+}
+
+.net_title > select {
+  font-size: 17px;
+  border: none;
 }
 
 .toplist {

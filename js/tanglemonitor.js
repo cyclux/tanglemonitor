@@ -1,5 +1,5 @@
 /*eslint no-console: ["error", { allow: ["log", "error"] }] */
-/* global window, document, io, fetch, console, _ */
+/* global window, document, io, netSwitch, fetch, console, _ */
 'use strict';
 
 const host = window.location.hostname;
@@ -418,6 +418,14 @@ c.addEventListener(
   },
   false
 );
+
+/* Net selector event listener */
+const netselector = document.getElementById('netselector');
+const netSwitch = () => {
+  window.location.replace(`https://${netselector.value === 'mainnet' ? 'www' : netselector.value}.tanglemonitor.com`);
+};
+
+netselector.addEventListener('change', netSwitch);
 
 /* Reset address selection */
 document.getElementById('address_button_reset').addEventListener(
