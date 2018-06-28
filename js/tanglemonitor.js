@@ -1,5 +1,5 @@
 /*eslint no-console: ["error", { allow: ["log", "error"] }] */
-/* global window, document, io, netSwitch, fetch, console, _ */
+/* global window, document, io, fetch, console, _ */
 'use strict';
 
 const host = window.location.hostname;
