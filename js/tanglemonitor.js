@@ -38,6 +38,8 @@ const pxColorMilestone = { r: 0, g: 0, b: 255, a: 1 };
 
 let txList = [];
 let filterForValueTX = false;
+let filterForSpecificAddresses = [];
+let filterAddress = '';
 let manualPoll = false;
 let endlessMode = false;
 let selectedAddress = '';
@@ -84,6 +86,14 @@ const updateMetrics = (totalTPS, totalCTPS, totalConfRate, totalConfirmationTime
 }
 */
 
+const getRowPosition = el => {
+  el = el.getBoundingClientRect();
+  return {
+    left: el.left + window.scrollX,
+    top: el.top + window.scrollY
+  };
+};
+
 /* Table creation for toplist */
 function createTable(currentList) {
   /* Set minimum TX amount to be displayed */
@@ -116,9 +126,38 @@ function createTable(currentList) {
     topListCount = 0;
   }
 
+  const hideSpecificAddressCheckboxWrapper = document.getElementById('hideSpecificAddressCheckboxWrapper');
+  hideSpecificAddressCheckboxWrapper.classList.add('hide');
+
   if (currentList.length > 0) {
     for (let j = 0; j < topListCount; j++) {
       const current_row = document.createElement('tr');
+
+      current_row.addEventListener(
+        'mouseenter',
+        () => {
+          filterAddress = current_row.getAttribute('tx');
+          const listPosition = getRowPosition(current_row);
+
+          hideSpecificAddressCheckboxWrapper.style.top = `${listPosition.top + 1}px`;
+          hideSpecificAddressCheckboxWrapper.style.left = `${listPosition.left - 20}px`;
+
+          //filterForSpecificAddresses.includes(filterAddress) ? (hideSpecificAddressCheckbox.checked = true) : (hideSpecificAddressCheckbox.checked = false);
+
+          hideSpecificAddressCheckboxWrapper.classList.remove('hide');
+        },
+        false
+      );
+
+      /*
+      current_row.addEventListener(
+        'mouseleave',
+        () => {
+          document.getElementById('hideSpecificAddressCheckbox').classList.add('hide');
+        },
+        false
+      );
+      */
 
       for (let i = 0; i < currentList[0].length; i++) {
         const current_cell = document.createElement('td');
@@ -131,11 +170,7 @@ function createTable(currentList) {
           },
           false
         );
-        /*
-                current_cell.addEventListener('click', () => {
-                    OpenLink(current_cell.getAttribute('tx'));
-                }, false);
-                */
+
         /* Insert table contents */
         let currenttext;
 
@@ -184,7 +219,10 @@ function createTable(currentList) {
 
         const currenttextNode = document.createTextNode(currenttext);
         current_cell.appendChild(currenttextNode);
+
+        /* TODO: switch to current_row also for address selection */
         current_cell.setAttribute('tx', currentList[j][1]);
+        current_row.setAttribute('tx', currentList[j][1]);
 
         /* Colorize dependent of values */
         if (currentList[j][6][0] >= 0 && i == 6) {
@@ -410,6 +448,32 @@ document.getElementById('hideZero').addEventListener(
   false
 );
 
+/* Switch for filtering specific addresses */
+//const hideSpecificAddressCheckboxWrapper = document.getElementById('hideSpecificAddressCheckboxWrapper');
+document.getElementById('hideSpecificAddressCheckboxWrapper').addEventListener(
+  'click',
+  () => {
+    filterForSpecificAddresses.push(filterAddress);
+    txList = FilterSpecificAddresses(txList);
+    CalcToplist(false);
+    /*
+    Alternative solution with switch
+
+    if (hideSpecificAddressCheckboxWrapper.checked === true) {
+      filterForSpecificAddresses.push(filterAddress);
+      txList = FilterSpecificAddresses(txList);
+      CalcToplist(false);
+    } else {
+      filterForSpecificAddresses = filterForSpecificAddresses.filter(addr => addr !== filterAddress);
+
+      InitialHistoryPoll(false);
+      CalcToplist(false);
+    }
+    */
+  },
+  false
+);
+
 /* Switch for endless TX mode */
 let maxTransactionsBuffer = maxTransactions;
 
@@ -626,12 +690,15 @@ const DrawCanvas = txList_DrawCanvas => {
       pxColor.a = 1;
     }
 
-    if (px.confirmed === true && px.milestone === 'f' && px.reattached === false) {
-      pxColor = pxColorConf;
+    if (px.milestone === 'f' && px.reattached === true) {
+      //px.confirmed === false && ..
+      pxColor = pxColorReattach;
       strokeCol = strokeColorNorm;
       pxColor.a = 1;
-    } else if (px.confirmed === false && px.milestone === 'f' && px.reattached === true) {
-      pxColor = pxColorReattach;
+    }
+
+    if (px.confirmed === true && px.milestone === 'f') {
+      pxColor = pxColorConf;
       strokeCol = strokeColorNorm;
       pxColor.a = 1;
     }
@@ -774,6 +841,7 @@ const CalcMetrics = () => {
   txList.map((tx, txNumber) => {
     if (txNumber % (txPerLine * 2) === 0) {
       timerTemp.push(tx.receivedAt);
+      //console.log(tx.receivedAt);
     }
   });
   timer = timerTemp;
@@ -855,6 +923,10 @@ const InitialHistoryPoll = firstLoad => {
         response.txHistory = FilterZeroValue(response.txHistory);
       }
 
+      if (filterForSpecificAddresses.length > 0) {
+        response.txHistory = FilterSpecificAddresses(response.txHistory);
+      }
+
       txList = _.reverse(response.txHistory);
       CalcMetrics();
       if (firstLoad) {
@@ -890,9 +962,26 @@ const InitWebSocket = () => {
   socket.on('connect', () => {
     console.log('Successfully connected to Websocket..');
     socket.on('newTX', function(newTX) {
+      let filterCriteria = [true];
+
       if (filterForValueTX && newTX.value !== 0) {
-        txList.push(newTX);
+        filterCriteria.push(true);
       } else if (!filterForValueTX) {
+        filterCriteria.push(true);
+      } else {
+        filterCriteria.push(false);
+      }
+
+      if (filterForSpecificAddresses.length > 0) {
+        /* Find solution for several addresses */
+        if (filterForSpecificAddresses.includes(newTX.address)) {
+          filterCriteria.push(false);
+        } else {
+          filterCriteria.push(true);
+        }
+      }
+
+      if (!filterCriteria.includes(false)) {
         txList.push(newTX);
       }
     });
@@ -911,6 +1000,13 @@ const InitWebSocket = () => {
 const FilterZeroValue = theList => {
   const filteredList = _.filter(theList, filterValue => {
     return filterValue.value !== 0 || filterValue.milestone === 'm';
+  });
+  return filteredList;
+};
+
+const FilterSpecificAddresses = theList => {
+  const filteredList = _.filter(theList, filterValue => {
+    return !filterForSpecificAddresses.includes(filterValue.address);
   });
   return filteredList;
 };
