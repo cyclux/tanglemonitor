@@ -619,6 +619,7 @@ const DrawCanvas = txList_DrawCanvas => {
       confirmed: tx.confirmed,
       reattached: tx.reattached,
       receivedAt: tx.receivedAt,
+      receivedAtms: tx.receivedAtms,
       timestamp: tx.timestamp,
       ctime: tx.ctime,
       milestone: tx.milestone
@@ -683,7 +684,7 @@ const DrawCanvas = txList_DrawCanvas => {
       const unconfirmedRangeTxAmount = totalRangeTxAmount - confirmedRangeTxAmount;
       const confRate = Math.round((confirmedRangeTxAmount / (confirmedRangeTxAmount + unconfirmedRangeTxAmount)) * 100);
 
-      const tps = Math.round(((txPerLine * 2) / (timer[step + 1] - timer[step])) * 10) / 10;
+      const tps = Math.round(((txPerLine * 2) / (timer[step + 1] / 1000 - timer[step] / 1000)) * 10) / 10;
 
       ctx.fillText((isNaN(confRate) ? '0' : confRate) + '%' + (isNaN(tps) ? ' [...]' : ' [' + tps.toFixed(1) + ' TPS]'), margin - 5, px.y + offsetHeight + 5);
     }
@@ -805,8 +806,8 @@ const CalcToplist = initial => {
       const confirmRatio = confirmedOnes / unconfirmedOnes;
       const confirmRatioTotal = confirmedTotalCount / unconfirmedTotalCount;
       const confirmationMeanRatio = (confirmRatio / confirmRatioTotal) * 100 - 100;
-      const addressTPS = Math.round((total / ((Date.now() - txList[0].receivedAt * 1000) / 1000)) * 100) / 100;
-      const addressCTPS = Math.round((confirmedOnes / ((Date.now() - txList[0].receivedAt * 1000) / 1000)) * 100) / 100;
+      const addressTPS = Math.round((total / ((Date.now() - txList[0].receivedAtms) / 1000)) * 100) / 100;
+      const addressCTPS = Math.round((confirmedOnes / ((Date.now() - txList[0].receivedAtms) / 1000)) * 100) / 100;
 
       confList[index].unshift([0]);
       confList[index].pop();
@@ -848,7 +849,7 @@ const CalcMetrics = () => {
   let timerTemp = [];
   txList.map((tx, txNumber) => {
     if (txNumber % (txPerLine * 2) === 0) {
-      timerTemp.push(tx.receivedAt);
+      timerTemp.push(tx.receivedAtms);
       //console.log(tx.receivedAt);
     }
   });
@@ -885,7 +886,7 @@ const CalcMetrics = () => {
   milestoneInterval = Math.round((_.mean(milestoneIntervalList) / 60) * 10) / 10;
 
   const totalConfirmationsCount = totalConfirmations.length;
-  const totalUnconfirmedCount = totalTransactions - totalConfirmationsCount; // Keep for DEBUG
+  const totalUnconfirmedCount = totalTransactions - totalConfirmationsCount;
 
   /* Calculate confirmation rate of all confirmed TX, excluding reattaches */
   totalConfRate = Math.round((totalConfirmationsCount / (totalConfirmationsCount + totalUnconfirmedCount)) * 10000) / 100;
@@ -899,8 +900,8 @@ const CalcMetrics = () => {
   totalConfirmationTime = _.round(totalConfirmationTime / 60, 1);
 
   if (totalTransactions > 0) {
-    totalTPS = Math.round((totalTransactions / ((Date.now() - txList[0].receivedAt * 1000) / 1000)) * 100) / 100;
-    totalCTPS = Math.round((totalConfirmationsCount / ((Date.now() - txList[0].receivedAt * 1000) / 1000)) * 100) / 100;
+    totalTPS = Math.round((totalTransactions / ((Date.now() - txList[0].receivedAtms) / 1000)) * 100) / 100;
+    totalCTPS = Math.round((totalConfirmationsCount / ((Date.now() - txList[0].receivedAtms) / 1000)) * 100) / 100;
   }
 
   /* Adapt maxTransactions to TPS */
@@ -990,6 +991,7 @@ const InitWebSocket = () => {
       }
 
       if (!filterCriteria.includes(false)) {
+        //console.log(newTX);
         txList.push(newTX);
       }
     });
