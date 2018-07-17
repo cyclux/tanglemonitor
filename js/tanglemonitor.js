@@ -70,6 +70,7 @@ let txOfMousePosition = {};
 
 const ChangeAddress = () => {
   selectedAddress = document.getElementById('address_input').value.substring(0, 81);
+  selectedAddressBuffer = document.getElementById('address_input').value.substring(0, 81);
   //document.getElementById('status').innerHTML = `Address selection changed`;
 };
 
