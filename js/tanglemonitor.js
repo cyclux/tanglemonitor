@@ -993,6 +993,7 @@ const InitWebSocket = () => {
 
       if (!filterCriteria.includes(false)) {
         //console.log(newTX);
+        newTX.receivedAtms = parseInt(Date.now());
         txList.push(newTX);
       }
     });
