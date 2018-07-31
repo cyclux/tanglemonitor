@@ -186,8 +186,8 @@ div#status {
 div#donation-address {
   border: 1px dotted;
   border-radius: 5px;
-  padding: 4px 6px 2px 6px;
-  font-size: 0.85em;
+  padding: 3px 6px 1px 6px;
+  font-size: 0.9em;
   display: inline-flex;
   text-align: center;
   margin: 20px auto 76px auto;
