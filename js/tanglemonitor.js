@@ -372,7 +372,7 @@ c.addEventListener(
       txOfMousePosition = GetTXofMousePosition(mousePos);
 
       if (txOfMousePosition.hash) {
-        let txConfirmationTime = _.round((txOfMousePosition.ctime - txOfMousePosition.receivedAt) / 60, 2);
+        let txConfirmationTime = _.round((txOfMousePosition.ctime - txOfMousePosition.receivedAt) / 1000 / 60, 2);
 
         if (txOfMousePosition.confirmed) {
           txConfirmationTime = `${txConfirmationTime} Minutes`;
@@ -724,7 +724,8 @@ const DrawCanvas = txList_DrawCanvas => {
 
       pxColor = pxColorMilestone;
       strokeCol = strokeColorNorm;
-      const minElapsed = Math.floor((Math.floor(Date.now() / 1000) - px.receivedAt) / 60);
+      //const minElapsed = Math.floor((Math.floor(Date.now() / 1000) - px.receivedAt) / 60); TODO Test this
+      const minElapsed = Math.floor((parseInt(Date.now()) - px.receivedAt) / 1000 / 60);
       ctx.fillText(`${minElapsed} min`, margin + cWidth + 5, px.y + offsetHeight);
 
       pxColor.a = 1;
@@ -797,8 +798,8 @@ const CalcToplist = initial => {
 
       const confirmationTime = confirmationTimeCollector[0];
       const confirmationTimeOthers = confirmationTimeCollector[1];
-      const confirmationTimeMeanOthers = _.mean(confirmationTimeOthers) / 60;
-      const confirmationTimeMean = _.mean(confirmationTime) / 60;
+      const confirmationTimeMeanOthers = _.mean(confirmationTimeOthers) / 1000 / 60;
+      const confirmationTimeMean = _.mean(confirmationTime) / 1000 / 60;
       const confirmationTimeMeanRatio = (confirmationTimeMean / confirmationTimeMeanOthers) * 100 - 100;
 
       const total = unconfirmedOnes + confirmedOnes;
@@ -807,8 +808,8 @@ const CalcToplist = initial => {
       const confirmRatio = confirmedOnes / unconfirmedOnes;
       const confirmRatioTotal = confirmedTotalCount / unconfirmedTotalCount;
       const confirmationMeanRatio = (confirmRatio / confirmRatioTotal) * 100 - 100;
-      const addressTPS = Math.round((total / ((Date.now() - txList[0].receivedAtms) / 1000)) * 100) / 100;
-      const addressCTPS = Math.round((confirmedOnes / ((Date.now() - txList[0].receivedAtms) / 1000)) * 100) / 100;
+      const addressTPS = Math.round((total / ((Date.now() - txList[0].receivedAt) / 1000)) * 100) / 100; // TODO change to receivedAt
+      const addressCTPS = Math.round((confirmedOnes / ((Date.now() - txList[0].receivedAt) / 1000)) * 100) / 100; // TODO change to receivedAt
 
       confList[index].unshift([0]);
       confList[index].pop();
@@ -850,8 +851,7 @@ const CalcMetrics = () => {
   let timerTemp = [];
   txList.map((tx, txNumber) => {
     if (txNumber % (txPerLine * 2) === 0) {
-      timerTemp.push(tx.receivedAtms);
-      //console.log(tx.receivedAt);
+      timerTemp.push(tx.receivedAt);
     }
   });
   timer = timerTemp;
@@ -884,7 +884,7 @@ const CalcMetrics = () => {
     }
   });
 
-  milestoneInterval = Math.round((_.mean(milestoneIntervalList) / 60) * 10) / 10;
+  milestoneInterval = Math.round((_.mean(milestoneIntervalList) / 1000 / 60) * 10) / 10;
 
   const totalConfirmationsCount = totalConfirmations.length;
   const totalUnconfirmedCount = totalTransactions - totalConfirmationsCount;
@@ -898,11 +898,11 @@ const CalcMetrics = () => {
       return confTimes.ctime;
     }
   });
-  totalConfirmationTime = _.round(totalConfirmationTime / 60, 1);
+  totalConfirmationTime = _.round(totalConfirmationTime / 1000 / 60, 1);
 
   if (totalTransactions > 0) {
-    totalTPS = Math.round((totalTransactions / ((Date.now() - txList[0].receivedAtms) / 1000)) * 100) / 100;
-    totalCTPS = Math.round((totalConfirmationsCount / ((Date.now() - txList[0].receivedAtms) / 1000)) * 100) / 100;
+    totalTPS = Math.round((totalTransactions / ((Date.now() - txList[0].receivedAt) / 1000)) * 100) / 100;
+    totalCTPS = Math.round((totalConfirmationsCount / ((Date.now() - txList[0].receivedAt) / 1000)) * 100) / 100;
   }
 
   /* Adapt maxTransactions to TPS */
@@ -993,8 +993,12 @@ const InitWebSocket = () => {
 
       if (!filterCriteria.includes(false)) {
         //console.log(newTX);
+        /*
+        Set timestamp on client locally
         newTX.receivedAtms = parseInt(Date.now());
+        */
         txList.push(newTX);
+        txList = _.orderBy(txList, ['receivedAt'], ['asc']);
       }
     });
     socket.on('update', function(update) {
