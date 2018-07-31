@@ -1,5 +1,5 @@
 body {
-  font-family: Consolas;
+  font-family: 'Inconsolata', monospace;
   text-align: center;
 }
 
@@ -31,7 +31,7 @@ div#loading {
 }
 
 div#toplist_wrapper {
-  width: 1150px;
+  width: 1130px;
   display: table;
   margin: 0 auto;
 }
@@ -95,7 +95,7 @@ table#toplist {
   padding: 2px;
   border: 0px solid #000000;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .table_head_sortpic {
@@ -186,8 +186,8 @@ div#status {
 div#donation-address {
   border: 1px dotted;
   border-radius: 5px;
-  padding: 4px 6px 2px 6px;
-  font-size: 0.85em;
+  padding: 3px 6px 1px 6px;
+  font-size: 0.9em;
   display: inline-flex;
   text-align: center;
   margin: 20px auto 76px auto;
