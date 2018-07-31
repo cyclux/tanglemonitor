@@ -724,7 +724,6 @@ const DrawCanvas = txList_DrawCanvas => {
 
       pxColor = pxColorMilestone;
       strokeCol = strokeColorNorm;
-      //const minElapsed = Math.floor((Math.floor(Date.now() / 1000) - px.receivedAt) / 60); TODO Test this
       const minElapsed = Math.floor((parseInt(Date.now()) - px.receivedAt) / 1000 / 60);
       ctx.fillText(`${minElapsed} min`, margin + cWidth + 5, px.y + offsetHeight);
 
@@ -805,11 +804,11 @@ const CalcToplist = initial => {
       const total = unconfirmedOnes + confirmedOnes;
       const confirmedOnesRatio = (confirmedOnes / total) * 100;
       const unconfirmedOnesRatio = (unconfirmedOnes / total) * 100;
-      const confirmRatio = confirmedOnes / unconfirmedOnes;
+      const confirmRatio = confirmedOnes / total; //former: confirmedOnes / unconfirmedOnes
       const confirmRatioTotal = confirmedTotalCount / unconfirmedTotalCount;
       const confirmationMeanRatio = (confirmRatio / confirmRatioTotal) * 100 - 100;
-      const addressTPS = Math.round((total / ((Date.now() - txList[0].receivedAt) / 1000)) * 100) / 100; // TODO change to receivedAt
-      const addressCTPS = Math.round((confirmedOnes / ((Date.now() - txList[0].receivedAt) / 1000)) * 100) / 100; // TODO change to receivedAt
+      const addressTPS = Math.round((total / ((Date.now() - txList[0].receivedAt) / 1000)) * 100) / 100;
+      const addressCTPS = Math.round((confirmedOnes / ((Date.now() - txList[0].receivedAt) / 1000)) * 100) / 100;
 
       confList[index].unshift([0]);
       confList[index].pop();
