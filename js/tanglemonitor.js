@@ -836,6 +836,7 @@ const CalcToplist = initial => {
 };
 
 const CalcMetrics = () => {
+  orderTxList();
   /* Reset milestone interval buffer */
   milestoneMetrics = [];
   milestoneIntervalList = [];
@@ -957,6 +958,10 @@ const InitialHistoryPoll = firstLoad => {
     });
 };
 
+const orderTxList = () => {
+  txList = _.orderBy(txList, ['receivedAt'], ['asc']);
+};
+
 // Init Websocket for client
 const InitWebSocket = () => {
   let socketURL = '';
@@ -998,7 +1003,6 @@ const InitWebSocket = () => {
         newTX.receivedAtms = parseInt(Date.now());
         */
         txList.push(newTX);
-        txList = _.orderBy(txList, ['receivedAt'], ['asc']);
       }
     });
     socket.on('update', function(update) {
