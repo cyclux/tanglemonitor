@@ -28,6 +28,7 @@ const fontSizeHeader = '13px';
 const fontSizeAxis = '11px';
 let txAmountToPoll = 15000;
 let maxTransactions = 15000;
+let websocketActive = false;
 
 const coordinator = 'QGJGQYBNBPXLMKQQYEDLAJFCEVCNRDTVGLQ';
 
@@ -945,7 +946,9 @@ const InitialHistoryPoll = firstLoad => {
 
       /* After polling of history is finished init websocket (on first load) */
       if (firstLoad) {
-        InitWebSocket();
+        if (!websocketActive) {
+          InitWebSocket();
+        }
       }
     })
     .catch(e => {
@@ -970,11 +973,12 @@ const InitWebSocket = () => {
 
   const socket = io.connect(
     socketURL,
-    { secure: sslState }
+    { secure: sslState, reconnect: true }
   );
 
   socket.on('connect', () => {
     console.log('Successfully connected to Websocket..');
+    websocketActive = true;
     socket.on('newTX', function(newTX) {
       let filterCriteria = [true];
 
