@@ -12,7 +12,7 @@ const ctx = c.getContext('2d');
 const tooltip = document.getElementById('tooltip');
 
 const offsetWidth = 200;
-const offsetHeight = 60;
+const offsetHeight = 75;
 const cWidth = c.width - offsetWidth;
 const margin = 110;
 
@@ -28,6 +28,7 @@ const fontSizeHeader = '13px';
 const fontSizeAxis = '11px';
 let txAmountToPoll = 15000;
 let maxTransactions = 15000;
+let websocketActive = false;
 
 const coordinator = 'KPWCHICGJZXKE9GSUDXZYUAPLHAKAHYHDXN';
 
@@ -35,6 +36,7 @@ const pxColorUnconf = { r: 0, g: 0, b: 0, a: 1 };
 const pxColorConf = { r: 0, g: 255, b: 0, a: 1 };
 const pxColorReattach = { r: 255, g: 255, b: 0, a: 1 };
 const pxColorMilestone = { r: 0, g: 0, b: 255, a: 1 };
+//const pxColorAvgConfTime = { r: 244, g: 65, b: 205, a: 1 };
 
 let txList = [];
 let filterForValueTX = false;
@@ -45,6 +47,7 @@ let endlessMode = false;
 let selectedAddress = '';
 let selectedAddressBuffer = '';
 let totalConfRate = 0;
+let totalConfRateEff = 0;
 let totalConfirmations = [];
 let milestoneMetrics = [];
 let milestoneIntervalList = [];
@@ -53,6 +56,9 @@ let totalConfirmationTime = 0;
 let totalTransactions = 0;
 let totalTPS = 0;
 let totalCTPS = 0;
+let totalTPSeff = 0;
+let totalCTPSeff = 0;
+let effectiveConfRateIndex = 0;
 
 let topList = [];
 let toplistAdditional = 0;
@@ -636,18 +642,20 @@ const DrawCanvas = txList_DrawCanvas => {
   ctx.textBaseline = 'hanging';
   ctx.textAlign = 'left';
 
-  ctx.fillText('Total TX count    ' + totalTransactions, margin + 10, 10);
-  ctx.fillText('Avg. TPS          ' + totalTPS, margin + 10, 25);
-  ctx.fillText('Avg. conf. rate   ' + totalConfRate + ' %', margin + 10, 40);
+  ctx.fillText('Total TX count        ' + totalTransactions, margin + 10, 10);
+  ctx.fillText('Avg. TPS              ' + totalTPS, margin + 10, 25);
+  ctx.fillText('Avg. conf.ratio       ' + totalConfRate + ' %', margin + 10, 40);
+  ctx.fillText('Avg. eff. conf.ratio  ' + totalConfRateEff + ' %', margin + 10, 55);
 
-  ctx.fillText('Avg. conf. time   ' + totalConfirmationTime + ' min', margin + 220, 10);
-  ctx.fillText('Avg. CTPS         ' + totalCTPS, margin + 220, 25);
-  ctx.fillText('Avg. MS interval  ' + milestoneInterval + ' min', margin + 220, 40);
+  ctx.fillText('Avg. conf. time   ' + totalConfirmationTime + ' min', margin + 240, 10);
+  ctx.fillText('Avg. CTPS         ' + totalCTPS, margin + 240, 25);
+  ctx.fillText('Avg. MS interval  ' + milestoneInterval + ' min', margin + 240, 40);
 
   ctx.fillText('Unconfirmed', cWidth - 60, 10);
   ctx.fillText('Confirmed', cWidth - 60, 25);
   ctx.fillText('Reattached', cWidth + 40, 10);
   ctx.fillText('Milestone', cWidth + 40, 25);
+  ctx.fillText('Avg.conf.time indicator', cWidth - 60 + 5, 40);
 
   ctx.fillStyle = 'rgba(0,0,0,1)';
   ctx.fillRect(cWidth - 75, 10, pxSize, pxSize);
@@ -657,6 +665,8 @@ const DrawCanvas = txList_DrawCanvas => {
   ctx.fillRect(cWidth + 25, 10, pxSize, pxSize);
   ctx.fillStyle = 'rgba(0,0,255,1)';
   ctx.fillRect(cWidth + 25, 25, pxSize, pxSize);
+  ctx.fillStyle = 'rgba(244,65,205,1)';
+  ctx.fillRect(cWidth - 75, 40 + 5, 15, 3);
 
   /*  Draw TX pixels and additional metrics */
   pxls.map((px, pixelIndex) => {
@@ -740,6 +750,16 @@ const DrawCanvas = txList_DrawCanvas => {
       strokeCol = strokeColorSelect;
       strokeOffset = 1;
       pxColor.a = 1;
+    }
+
+    if (pixelIndex === effectiveConfRateIndex) {
+      /*
+      strokeCol = strokeColorNorm;
+      pxColor = pxColorAvgConfTime;
+      strokeOffset = 1;
+      */
+      ctx.fillStyle = 'rgba(' + 244 + ',' + 65 + ',' + 205 + ',' + 1 + ')';
+      ctx.fillRect(margin + cWidth + 5, px.y + offsetHeight - 1, 15, 3);
     }
     /* Display actual TX pixel */
     ctx.fillStyle = 'rgba(' + pxColor.r + ',' + pxColor.g + ',' + pxColor.b + ',' + pxColor.a + ')';
@@ -836,6 +856,7 @@ const CalcToplist = initial => {
 
 const CalcMetrics = () => {
   orderTxList();
+  const now = Date.now();
   /* Reset milestone interval buffer */
   milestoneMetrics = [];
   milestoneIntervalList = [];
@@ -856,6 +877,14 @@ const CalcMetrics = () => {
   });
   timer = timerTemp;
 
+  /* Calculate average confirmation time of all confirmed TX */
+  const totalConfirmationTimeMs = _.meanBy(totalConfirmations, confTimes => {
+    if (confTimes.milestone === false) {
+      return confTimes.ctime;
+    }
+  });
+  totalConfirmationTime = _.round(totalConfirmationTimeMs / 1000 / 60, 1);
+
   //let reattachCounter = 0;
   totalConfirmations = txList.reduce((acc, tx) => {
     /* Accumulate reattaches */
@@ -868,7 +897,8 @@ const CalcMetrics = () => {
     if (tx.confirmed === true) {
       acc.push({
         ctime: tx.ctime - tx.receivedAt,
-        milestone: tx.milestone === 'f' ? false : true
+        milestone: tx.milestone === 'f' ? false : true,
+        effective: tx.receivedAt > now - totalConfirmationTimeMs ? false : true
       });
 
       if (tx.milestone === 'm') {
@@ -877,6 +907,8 @@ const CalcMetrics = () => {
     }
     return acc;
   }, []);
+
+  const totalConfirmationsCountEff = _.countBy(totalConfirmations, 'effective').true;
 
   milestoneMetrics.map((milestone, iter) => {
     if (iter > 0) {
@@ -889,26 +921,29 @@ const CalcMetrics = () => {
   const totalConfirmationsCount = totalConfirmations.length;
   const totalUnconfirmedCount = totalTransactions - totalConfirmationsCount;
 
-  /* Calculate confirmation rate of all confirmed TX, excluding reattaches */
+  /* Calculate (effective) confirmation rate of all confirmed TX, excluding reattaches */
   totalConfRate = Math.round((totalConfirmationsCount / (totalConfirmationsCount + totalUnconfirmedCount)) * 10000) / 100;
 
-  /* Calculate average confirmation time of all confirmed TX */
-  totalConfirmationTime = _.meanBy(totalConfirmations, confTimes => {
-    if (confTimes.milestone === false) {
-      return confTimes.ctime;
-    }
+  effectiveConfRateIndex = _.findIndex(txList, function(o) {
+    return o.receivedAt > now - totalConfirmationTimeMs;
   });
-  totalConfirmationTime = _.round(totalConfirmationTime / 1000 / 60, 1);
 
   if (totalTransactions > 0) {
-    totalTPS = Math.round((totalTransactions / ((Date.now() - txList[0].receivedAt) / 1000)) * 100) / 100;
-    totalCTPS = Math.round((totalConfirmationsCount / ((Date.now() - txList[0].receivedAt) / 1000)) * 100) / 100;
+    totalTPS = Math.round((totalTransactions / ((now - txList[0].receivedAt) / 1000)) * 100) / 100;
+    totalCTPS = Math.round((totalConfirmationsCount / ((now - txList[0].receivedAt) / 1000)) * 100) / 100;
+
+    if (txList[effectiveConfRateIndex] && txList[effectiveConfRateIndex].receivedAt) {
+      totalTPSeff = Math.round((effectiveConfRateIndex / ((now - txList[effectiveConfRateIndex].receivedAt) / 1000)) * 100) / 100;
+      totalCTPSeff = Math.round((totalConfirmationsCountEff / ((now - txList[effectiveConfRateIndex].receivedAt) / 1000)) * 100) / 100;
+      totalConfRateEff = Math.round((totalCTPSeff / totalTPSeff) * 10000) / 100;
+      //console.log(totalCTPS / totalTPS, effectiveConfRateIndex, totalCTPSeff / totalTPSeff, totalConfRateEff);
+    }
   }
 
   /* Adapt maxTransactions to TPS */
-  if (totalTPS > 15 && !endlessMode && !manualPoll) {
+  if (totalTPS > 20 && !endlessMode && !manualPoll) {
     maxTransactions = 30000;
-  } else if (totalTPS <= 15 && !endlessMode && !manualPoll) {
+  } else if (totalTPS <= 20 && !endlessMode && !manualPoll) {
     maxTransactions = 15000;
   }
   //updateMetrics(totalTPS, totalCTPS, totalConfRate, totalConfirmationTime);
@@ -944,7 +979,7 @@ const InitialHistoryPoll = firstLoad => {
       }
 
       /* After polling of history is finished init websocket (on first load) */
-      if (firstLoad) {
+      if (firstLoad && !websocketActive) {
         InitWebSocket();
       }
     })
@@ -970,11 +1005,12 @@ const InitWebSocket = () => {
 
   const socket = io.connect(
     socketURL,
-    { secure: sslState }
+    { secure: sslState, reconnect: true }
   );
 
   socket.on('connect', () => {
     console.log('Successfully connected to Websocket..');
+    websocketActive = true;
     socket.on('newTX', function(newTX) {
       let filterCriteria = [true];
 
