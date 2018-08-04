@@ -941,9 +941,9 @@ const CalcMetrics = () => {
   }
 
   /* Adapt maxTransactions to TPS */
-  if (totalTPS > 15 && !endlessMode && !manualPoll) {
+  if (totalTPS > 20 && !endlessMode && !manualPoll) {
     maxTransactions = 30000;
-  } else if (totalTPS <= 15 && !endlessMode && !manualPoll) {
+  } else if (totalTPS <= 20 && !endlessMode && !manualPoll) {
     maxTransactions = 15000;
   }
   //updateMetrics(totalTPS, totalCTPS, totalConfRate, totalConfirmationTime);
