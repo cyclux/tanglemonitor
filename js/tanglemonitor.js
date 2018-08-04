@@ -36,7 +36,7 @@ const pxColorUnconf = { r: 0, g: 0, b: 0, a: 1 };
 const pxColorConf = { r: 0, g: 255, b: 0, a: 1 };
 const pxColorReattach = { r: 255, g: 255, b: 0, a: 1 };
 const pxColorMilestone = { r: 0, g: 0, b: 255, a: 1 };
-const pxColorAvgConfTime = { r: 244, g: 65, b: 205, a: 1 };
+//const pxColorAvgConfTime = { r: 244, g: 65, b: 205, a: 1 };
 
 let txList = [];
 let filterForValueTX = false;
@@ -642,10 +642,10 @@ const DrawCanvas = txList_DrawCanvas => {
   ctx.textBaseline = 'hanging';
   ctx.textAlign = 'left';
 
-  ctx.fillText('Total TX count       ' + totalTransactions, margin + 10, 10);
-  ctx.fillText('Avg. TPS             ' + totalTPS, margin + 10, 25);
-  ctx.fillText('Avg. conf.rate       ' + totalConfRate + ' %', margin + 10, 40);
-  ctx.fillText('Avg. eff. conf.rate  ' + totalConfRateEff + ' %', margin + 10, 55);
+  ctx.fillText('Total TX count        ' + totalTransactions, margin + 10, 10);
+  ctx.fillText('Avg. TPS              ' + totalTPS, margin + 10, 25);
+  ctx.fillText('Avg. conf.ratio       ' + totalConfRate + ' %', margin + 10, 40);
+  ctx.fillText('Avg. eff. conf.ratio  ' + totalConfRateEff + ' %', margin + 10, 55);
 
   ctx.fillText('Avg. conf. time   ' + totalConfirmationTime + ' min', margin + 240, 10);
   ctx.fillText('Avg. CTPS         ' + totalCTPS, margin + 240, 25);
@@ -655,7 +655,7 @@ const DrawCanvas = txList_DrawCanvas => {
   ctx.fillText('Confirmed', cWidth - 60, 25);
   ctx.fillText('Reattached', cWidth + 40, 10);
   ctx.fillText('Milestone', cWidth + 40, 25);
-  ctx.fillText('Avg.conf.time indicator', cWidth - 60, 40);
+  ctx.fillText('Avg.conf.time indicator', cWidth - 60 + 5, 40);
 
   ctx.fillStyle = 'rgba(0,0,0,1)';
   ctx.fillRect(cWidth - 75, 10, pxSize, pxSize);
@@ -666,7 +666,7 @@ const DrawCanvas = txList_DrawCanvas => {
   ctx.fillStyle = 'rgba(0,0,255,1)';
   ctx.fillRect(cWidth + 25, 25, pxSize, pxSize);
   ctx.fillStyle = 'rgba(244,65,205,1)';
-  ctx.fillRect(cWidth - 75, 40, pxSize, pxSize);
+  ctx.fillRect(cWidth - 75, 40 + 5, 15, 3);
 
   /*  Draw TX pixels and additional metrics */
   pxls.map((px, pixelIndex) => {
@@ -753,9 +753,13 @@ const DrawCanvas = txList_DrawCanvas => {
     }
 
     if (pixelIndex === effectiveConfRateIndex) {
+      /*
       strokeCol = strokeColorNorm;
       pxColor = pxColorAvgConfTime;
       strokeOffset = 1;
+      */
+      ctx.fillStyle = 'rgba(' + 244 + ',' + 65 + ',' + 205 + ',' + 1 + ')';
+      ctx.fillRect(margin + cWidth + 5, px.y + offsetHeight - 1, 15, 3);
     }
     /* Display actual TX pixel */
     ctx.fillStyle = 'rgba(' + pxColor.r + ',' + pxColor.g + ',' + pxColor.b + ',' + pxColor.a + ')';
