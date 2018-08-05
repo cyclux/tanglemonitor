@@ -981,6 +981,8 @@ const InitialHistoryPoll = firstLoad => {
       /* After polling of history is finished init websocket (on first load) */
       if (firstLoad && !websocketActive) {
         InitWebSocket();
+      } else if (websocketActive) {
+        console.log('WebSocket already initialized');
       }
     })
     .catch(e => {
@@ -998,6 +1000,7 @@ const orderTxList = () => {
 
 // Init Websocket for client
 const InitWebSocket = () => {
+  websocketActive = true;
   let socketURL = '';
   devState === 'prod' ? (socketURL = 'https://tanglemonitor.com:4434') : (socketURL = 'http://localhost:8081');
   let sslState = true;
@@ -1009,8 +1012,8 @@ const InitWebSocket = () => {
   );
 
   socket.on('connect', () => {
-    console.log('Successfully connected to Websocket..');
-    websocketActive = true;
+    console.log(`Successfully connected to Websocket.. [websocketActive: ${websocketActive}]`);
+
     socket.on('newTX', function(newTX) {
       let filterCriteria = [true];
 
@@ -1048,6 +1051,30 @@ const InitWebSocket = () => {
     });
     socket.on('updateReattach', function(updateReattach) {
       UpdateTXStatus(updateReattach, 'Reattach');
+    });
+
+    socket.on('disconnect', reason => {
+      console.log(`WebSocket disconnect [${reason}]`);
+    });
+
+    socket.on('reconnect', attemptNumber => {
+      console.log(`WebSocket reconnect [${attemptNumber}]`);
+    });
+
+    socket.on('reconnect_error', error => {
+      console.log(`WebSocket reconnect_error [${error}]`);
+    });
+
+    socket.on('connect_timeout', timeout => {
+      console.log(`WebSocket connect_timeout [${timeout}]`);
+    });
+
+    socket.on('error', error => {
+      console.log(`WebSocket error [${error}]`);
+    });
+
+    socket.on('connect_error', error => {
+      console.log(`WebSocket connect_error [${error}]`);
     });
   });
 };
