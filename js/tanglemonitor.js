@@ -825,7 +825,7 @@ const CalcToplist = initial => {
       const confirmedOnesRatio = (confirmedOnes / total) * 100;
       const unconfirmedOnesRatio = (unconfirmedOnes / total) * 100;
       const confirmRatio = confirmedOnes / total; //former: confirmedOnes / unconfirmedOnes
-      const confirmRatioTotal = confirmedTotalCount / unconfirmedTotalCount;
+      const confirmRatioTotal = confirmedTotalCount / (confirmedTotalCount + unconfirmedTotalCount);
       const confirmationMeanRatio = (confirmRatio / confirmRatioTotal) * 100 - 100;
       const addressTPS = Math.round((total / ((Date.now() - txList[0].receivedAt) / 1000)) * 100) / 100;
       const addressCTPS = Math.round((confirmedOnes / ((Date.now() - txList[0].receivedAt) / 1000)) * 100) / 100;
