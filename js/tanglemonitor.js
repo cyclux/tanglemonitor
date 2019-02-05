@@ -1006,7 +1006,6 @@ const orderTxList = () => {
 
 // Init Websocket for client
 const InitWebSocket = () => {
-  console.log('Websocket triggered');
   if (!websocketActive) {
     websocketActive = true;
     let socketURL = '';
