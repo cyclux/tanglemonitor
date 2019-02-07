@@ -4,6 +4,7 @@
 
 const host = window.location.hostname;
 let devState;
+console.log(`host: ${host}`);
 host === 'localhost' ? (devState = 'dev') : (devState = 'prod');
 
 /* Set canvas and dimensions */
@@ -92,6 +93,11 @@ const updateMetrics = (totalTPS, totalCTPS, totalConfRate, totalConfirmationTime
     document.getElementById('metric_totalConfirmationTime').innerHTML = totalConfirmationTime;
 }
 */
+
+const getRndInteger = (min, max) => {
+  return Math.floor(Math.random() * (max - min + 1) ) + min;
+}
+
 
 const getRowPosition = el => {
   el = el.getBoundingClientRect();
@@ -1000,83 +1006,104 @@ const orderTxList = () => {
 
 // Init Websocket for client
 const InitWebSocket = () => {
-  websocketActive = true;
-  let socketURL = '';
-  devState === 'prod' ? (socketURL = 'https://tanglemonitor.com:4438') : (socketURL = 'http://localhost:8082');
-  let sslState = true;
-  devState === 'prod' ? (sslState = true) : (sslState = false);
+  if (!websocketActive) {
+    websocketActive = true;
+    let socketURL = '';
+    devState === 'prod' ? (socketURL = 'https://tanglemonitor.com:4438') : (socketURL = 'http://localhost:8082');
+    let sslState = true;
+    devState === 'prod' ? (sslState = true) : (sslState = false);
 
-  const socket = io.connect(
-    socketURL,
-    { secure: sslState, reconnect: true }
-  );
+    const socket = io.connect(
+      socketURL,
+      { secure: sslState, reconnection: false }
+    );
 
-  socket.on('connect', () => {
-    console.log(`Successfully connected to Websocket.. [websocketActive: ${websocketActive}]`);
+    socket.on('connect', () => {
+      console.log(`Successfully connected to Websocket.. [websocketActive: ${websocketActive}]`);
 
-    socket.on('newTX', function(newTX) {
-      let filterCriteria = [true];
+      socket.on('newTX', function(newTX) {
+        let filterCriteria = [true];
 
-      if (filterForValueTX && newTX.value !== 0) {
-        filterCriteria.push(true);
-      } else if (!filterForValueTX) {
-        filterCriteria.push(true);
-      } else {
-        filterCriteria.push(false);
-      }
-
-      if (filterForSpecificAddresses.length > 0) {
-        /* Find solution for several addresses */
-        if (filterForSpecificAddresses.includes(newTX.address)) {
-          filterCriteria.push(false);
-        } else {
+        if (filterForValueTX && newTX.value !== 0) {
           filterCriteria.push(true);
+        } else if (!filterForValueTX) {
+          filterCriteria.push(true);
+        } else {
+          filterCriteria.push(false);
         }
-      }
 
-      if (!filterCriteria.includes(false)) {
-        //console.log(newTX);
-        /*
-        Set timestamp on client locally
-        newTX.receivedAtms = parseInt(Date.now());
-        */
-        txList.push(newTX);
-      }
-    });
-    socket.on('update', function(update) {
-      UpdateTXStatus(update, 'txConfirmed');
-    });
-    socket.on('updateMilestone', function(updateMilestone) {
-      UpdateTXStatus(updateMilestone, 'Milestone');
-    });
-    socket.on('updateReattach', function(updateReattach) {
-      UpdateTXStatus(updateReattach, 'Reattach');
-    });
+        if (filterForSpecificAddresses.length > 0) {
+          /* Find solution for several addresses */
+          if (filterForSpecificAddresses.includes(newTX.address)) {
+            filterCriteria.push(false);
+          } else {
+            filterCriteria.push(true);
+          }
+        }
 
-    socket.on('disconnect', reason => {
-      console.log(`WebSocket disconnect [${reason}]`);
-    });
+        if (!filterCriteria.includes(false)) {
+          //console.log(newTX);
+          /*
+          Set timestamp on client locally
+          newTX.receivedAtms = parseInt(Date.now());
+          */
+          txList.push(newTX);
+        }
+      });
+      socket.on('update', function(update) {
+        UpdateTXStatus(update, 'txConfirmed');
+      });
+      socket.on('updateMilestone', function(updateMilestone) {
+        UpdateTXStatus(updateMilestone, 'Milestone');
+      });
+      socket.on('updateReattach', function(updateReattach) {
+        UpdateTXStatus(updateReattach, 'Reattach');
+      });
 
-    socket.on('reconnect', attemptNumber => {
-      console.log(`WebSocket reconnect [${attemptNumber}]`);
-    });
+      socket.on('disconnect', reason => {
+        console.log(`WebSocket disconnect [${reason}]`);
+        websocketActive = false;
 
-    socket.on('reconnect_error', error => {
-      console.log(`WebSocket reconnect_error [${error}]`);
-    });
+        window.setTimeout(() => {
+          InitWebSocket();
+        }, getRndInteger(10, 100));
 
-    socket.on('connect_timeout', timeout => {
-      console.log(`WebSocket connect_timeout [${timeout}]`);
-    });
+      });
 
-    socket.on('error', error => {
-      console.log(`WebSocket error [${error}]`);
-    });
+      socket.on('reconnect', attemptNumber => {
+        console.log(`WebSocket reconnect [${attemptNumber}]`);
+      });
 
-    socket.on('connect_error', error => {
-      console.log(`WebSocket connect_error [${error}]`);
+      socket.on('reconnect_error', error => {
+        console.log(`WebSocket reconnect_error [${error}]`);
+        websocketActive = false;
+        window.setTimeout(() => {
+          InitWebSocket();
+        }, getRndInteger(10, 100));
+      });
+
+      socket.on('connect_timeout', timeout => {
+        console.log(`WebSocket connect_timeout [${timeout}]`);
+        websocketActive = false;
+        window.setTimeout(() => {
+          InitWebSocket();
+        }, getRndInteger(10, 100));
+      });
+
+      socket.on('error', error => {
+        console.log(`WebSocket error [${error}]`);
+      });
+
+      socket.on('connect_error', error => {
+        console.log(`WebSocket connect_error [${error}]`);
+        websocketActive = false;
+        window.setTimeout(() => {
+          InitWebSocket();
+        }, getRndInteger(10, 100));
+      });
     });
-  });
+  }
+
 };
 
 const FilterZeroValue = theList => {
