@@ -63,9 +63,9 @@ let effectiveConfRateIndex = 0;
 
 let topList = [];
 let toplistAdditional = 0;
-let topListCount = 0;
+let topListCount = 15;
 let toplistSortIndex = [2, 'desc'];
-let toplistMinTX = 10;
+let toplistMinTX = 1;
 let InitialHistoryPollCount = 10;
 
 let mousePos;
@@ -81,7 +81,7 @@ const ChangeAddress = () => {
   //document.getElementById('status').innerHTML = `Address selection changed`;
 };
 
-document.getElementById('address_button').onclick = function() {
+document.getElementById('address_button').onclick = () => {
   ChangeAddress();
 };
 
@@ -95,9 +95,8 @@ const updateMetrics = (totalTPS, totalCTPS, totalConfRate, totalConfirmationTime
 */
 
 const getRndInteger = (min, max) => {
-  return Math.floor(Math.random() * (max - min + 1) ) + min;
-}
-
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
 
 const getRowPosition = el => {
   el = el.getBoundingClientRect();
@@ -108,12 +107,14 @@ const getRowPosition = el => {
 };
 
 /* Table creation for toplist */
-function createTable(currentList) {
+const createTable = currentList => {
   /* Set minimum TX amount to be displayed */
+  /*
   currentList = _.filter(currentList, n => {
     return n[2] >= toplistMinTX;
   });
 
+  */
   currentList = _.orderBy(
     currentList,
     listItem => {
@@ -122,28 +123,30 @@ function createTable(currentList) {
     [toplistSortIndex[1]]
   );
 
+  const currentListLength = currentList.length;
+
   const mytable = document.getElementById('toplist');
   mytable.innerHTML = '';
   const tablehead = document.createElement('thead');
   const tablebody = document.createElement('tbody');
   const head_tr = document.createElement('tr');
 
-  topListCount = 0;
-  currentList.length >= 15 ? (topListCount = 15) : (topListCount = currentList.length);
-  topListCount = topListCount + toplistAdditional;
-
   /* Prevent greater topListCount than actual length under any circumstance */
+  /*
   if (topListCount >= currentList.length) {
     topListCount = currentList.length;
   } else if (topListCount < 0) {
     topListCount = 0;
   }
+  */
 
-  const hideSpecificAddressCheckboxWrapper = document.getElementById('hideSpecificAddressCheckboxWrapper');
+  const hideSpecificAddressCheckboxWrapper = document.getElementById(
+    'hideSpecificAddressCheckboxWrapper'
+  );
   hideSpecificAddressCheckboxWrapper.classList.add('hide');
 
   if (currentList.length > 0) {
-    for (let j = 0; j < topListCount; j++) {
+    for (let j = 0; j < currentListLength; j++) {
       const current_row = document.createElement('tr');
 
       current_row.addEventListener(
@@ -193,25 +196,39 @@ function createTable(currentList) {
             break;
           case 1:
             currenttext = `${
-              currentList[j][1].substring(0, 35) === coordinator ? '[COO]' + coordinator.substring(0, 30) : currentList[j][1].substring(0, 35)
+              currentList[j][1].substring(0, 35) === coordinator
+                ? '[COO]' + coordinator.substring(0, 30)
+                : currentList[j][1].substring(0, 35)
             }...`;
             break;
           case 2:
-            currenttext = `${currentList[j][2]} [${Math.round((parseInt(currentList[j][2]) / maxTransactions) * 100)}%]`;
+            currenttext = `${currentList[j][2]} [${Math.round(
+              (parseInt(currentList[j][2]) / maxTransactions) * 100
+            )}%]`;
             break;
           case 3:
-            currenttext = `${currentList[j][3][0]} [${currentList[j][3][1] < 100 ? currentList[j][3][1].toFixed(1) : currentList[j][3][1].toFixed(0)}%]`;
+            currenttext = `${currentList[j][3][0]} [${
+              currentList[j][3][1] < 100
+                ? currentList[j][3][1].toFixed(1)
+                : currentList[j][3][1].toFixed(0)
+            }%]`;
             break;
           case 4:
-            currenttext = `${currentList[j][4][0]} [${currentList[j][4][1] < 100 ? currentList[j][4][1].toFixed(1) : currentList[j][4][1].toFixed(0)}%]`;
+            currenttext = `${currentList[j][4][0]} [${
+              currentList[j][4][1] < 100
+                ? currentList[j][4][1].toFixed(1)
+                : currentList[j][4][1].toFixed(0)
+            }%]`;
             break;
           case 5:
-            currenttext = `${currentList[j][5][0] === Infinity ? 'inf.' : currentList[j][5][0].toFixed(2)}`;
+            currenttext = `${
+              currentList[j][5][0] === Infinity ? 'inf.' : currentList[j][5][0].toFixed(2)
+            }`;
             break;
           case 6:
-            currenttext = `${currentList[j][6][0] === Infinity ? 'inf.' : currentList[j][6][0] > 0 ? '+' : ''}${
-              currentList[j][6][0] < Infinity ? currentList[j][6][0].toFixed(0) + '%' : ''
-            }`;
+            currenttext = `${
+              currentList[j][6][0] === Infinity ? 'inf.' : currentList[j][6][0] > 0 ? '+' : ''
+            }${currentList[j][6][0] < Infinity ? currentList[j][6][0].toFixed(0) + '%' : ''}`;
             break;
           case 7:
             currenttext = `${currentList[j][7][0].toFixed(2)}`;
@@ -220,10 +237,12 @@ function createTable(currentList) {
             currenttext = `${currentList[j][8][0].toFixed(2)}`;
             break;
           case 9:
-            currenttext = `${currentList[j][9][0].toFixed(1)} min`;
+            currenttext = currentList[j][9][0] ? `${currentList[j][9][0].toFixed(1)} min` : 'n/a';
             break;
           case 10:
-            currenttext = `${currentList[j][10][0] > 0 ? '+' : ''}${currentList[j][10][0].toFixed(1)}%`;
+            currenttext = currentList[j][10][0]
+              ? `${currentList[j][10][0] > 0 ? '+' : ''}${currentList[j][10][0].toFixed(1)}%`
+              : 'n/a';
             break;
 
           default:
@@ -326,7 +345,7 @@ function createTable(currentList) {
     mytable.appendChild(tablehead);
     mytable.appendChild(tablebody);
   }
-}
+};
 
 /* Collect and store mouse position for TX info at mouseover */
 const GetMousePos = (c, evt) => {
@@ -335,9 +354,15 @@ const GetMousePos = (c, evt) => {
     let doc = document.documentElement,
       body = document.body;
 
-    evt.pageX = evt.clientX + ((doc && doc.scrollLeft) || (body && body.scrollLeft) || 0) - (doc.clientLeft || 0);
+    evt.pageX =
+      evt.clientX +
+      ((doc && doc.scrollLeft) || (body && body.scrollLeft) || 0) -
+      (doc.clientLeft || 0);
 
-    evt.pageY = evt.clientY + ((doc && doc.scrollTop) || (body && body.scrollTop) || 0) - (doc.clientTop || 0);
+    evt.pageY =
+      evt.clientY +
+      ((doc && doc.scrollTop) || (body && body.scrollTop) || 0) -
+      (doc.clientTop || 0);
   }
   /* Mouse position within canvas */
   let rect = c.getBoundingClientRect();
@@ -353,7 +378,12 @@ const GetTXofMousePosition = mousePosition => {
   mousePosition.y = mousePosition.y - offsetHeight;
   mousePosition.x = mousePosition.x - margin;
   const txAtMouse = pixelMap.reduce((acc, tx) => {
-    if (mousePosition.x >= tx.x && mousePosition.x < tx.x + pxSize && mousePosition.y >= tx.y && mousePosition.y < tx.y + pxSize) {
+    if (
+      mousePosition.x >= tx.x &&
+      mousePosition.x < tx.x + pxSize &&
+      mousePosition.y >= tx.y &&
+      mousePosition.y < tx.y + pxSize
+    ) {
       acc = tx;
     }
     return acc;
@@ -384,7 +414,10 @@ c.addEventListener(
       txOfMousePosition = GetTXofMousePosition(mousePos);
 
       if (txOfMousePosition.hash) {
-        let txConfirmationTime = _.round((txOfMousePosition.ctime - txOfMousePosition.receivedAt) / 1000 / 60, 2);
+        let txConfirmationTime = _.round(
+          (txOfMousePosition.ctime - txOfMousePosition.receivedAt) / 1000 / 60,
+          2
+        );
 
         if (txOfMousePosition.confirmed) {
           txConfirmationTime = `${txConfirmationTime} Minutes`;
@@ -401,7 +434,8 @@ c.addEventListener(
                                 C. Time:\u00A0${txConfirmationTime}<br>
                                 Value:\u00A0\u00A0\u00A0${
                                   txOfMousePosition.value !== 0
-                                    ? Math.round((txOfMousePosition.value / 1000000) * 100) / 100 + ' MIOTA'
+                                    ? Math.round((txOfMousePosition.value / 1000000) * 100) / 100 +
+                                      ' MIOTA'
                                     : 'Zero value transaction'
                                 }`;
         selectedAddress = txOfMousePosition.address;
@@ -435,7 +469,9 @@ c.addEventListener(
 /* Net selector event listener */
 const netselector = document.getElementById('netselector');
 const netSwitch = () => {
-  window.location.replace(`https://${netselector.value === 'mainnet' ? 'www' : netselector.value}.tanglemonitor.com`);
+  window.location.replace(
+    `https://${netselector.value === 'mainnet' ? 'www' : netselector.value}.tanglemonitor.com`
+  );
 };
 
 netselector.addEventListener('change', netSwitch);
@@ -532,7 +568,7 @@ document.getElementById('toplist-more').addEventListener(
   'click',
   () => {
     toplistAdditional = toplistAdditional + 5;
-    createTable(topList);
+    CalcToplist(false);
   },
   false
 );
@@ -541,7 +577,7 @@ document.getElementById('toplist-all').addEventListener(
   'click',
   () => {
     toplistAdditional = 10000;
-    createTable(topList);
+    CalcToplist(false);
   },
   false
 );
@@ -549,8 +585,9 @@ document.getElementById('toplist-all').addEventListener(
 document.getElementById('toplist-reset').addEventListener(
   'click',
   () => {
+    topListCount = 15;
     toplistAdditional = 0;
-    createTable(topList);
+    CalcToplist(false);
   },
   false
 );
@@ -560,7 +597,7 @@ document.getElementById('minNumberOfTxIncluded_button').addEventListener(
   'click',
   () => {
     toplistMinTX = parseInt(document.getElementById('minNumberOfTxIncluded').value);
-    createTable(topList);
+    CalcToplist(false);
   },
   false
 );
@@ -603,7 +640,11 @@ const UpdateTXStatus = (update, updateType) => {
       txList[hashIndex].reattached = true;
     }
   } else {
-    console.log(`${updateType === 'Milestone' ? 'Milestone' : 'TX'} not found in local DB - Hash: ${txHash} | updateType: ${updateType}`);
+    console.log(
+      `${
+        updateType === 'Milestone' ? 'Milestone' : 'TX'
+      } not found in local DB - Hash: ${txHash} | updateType: ${updateType}`
+    );
   }
 };
 
@@ -632,8 +673,8 @@ const DrawCanvas = txList_DrawCanvas => {
       confirmed: tx.confirmed,
       reattached: tx.reattached,
       receivedAt: tx.receivedAt,
-      receivedAtms: tx.receivedAtms,
-      timestamp: tx.timestamp,
+      //receivedAtms: tx.receivedAtms,
+      //timestamp: tx.timestamp,
       ctime: tx.ctime,
       milestone: tx.milestone
     });
@@ -690,7 +731,10 @@ const DrawCanvas = txList_DrawCanvas => {
       ctx.textAlign = 'right';
 
       /* Calc current TPS and display appropriately */
-      const confRateRangeList = txList.slice(step * confRateRange, step * confRateRange + confRateRange);
+      const confRateRangeList = txList.slice(
+        step * confRateRange,
+        step * confRateRange + confRateRange
+      );
       //let reattachments = 0;
       const totalRangeTxAmount = confRateRangeList.length;
       const confirmedRangeTxAmount = confRateRangeList.filter(tx => {
@@ -699,11 +743,20 @@ const DrawCanvas = txList_DrawCanvas => {
       }).length;
 
       const unconfirmedRangeTxAmount = totalRangeTxAmount - confirmedRangeTxAmount;
-      const confRate = Math.round((confirmedRangeTxAmount / (confirmedRangeTxAmount + unconfirmedRangeTxAmount)) * 100);
+      const confRate = Math.round(
+        (confirmedRangeTxAmount / (confirmedRangeTxAmount + unconfirmedRangeTxAmount)) * 100
+      );
 
-      const tps = Math.round(((txPerLine * 2) / (timer[step + 1] / 1000 - timer[step] / 1000)) * 10) / 10;
+      const tps =
+        Math.round(((txPerLine * 2) / (timer[step + 1] / 1000 - timer[step] / 1000)) * 10) / 10;
 
-      ctx.fillText((isNaN(confRate) ? '0' : confRate) + '%' + (isNaN(tps) ? ' [...]' : ' [' + tps.toFixed(1) + ' TPS]'), margin - 5, px.y + offsetHeight + 5);
+      ctx.fillText(
+        (isNaN(confRate) ? '0' : confRate) +
+          '%' +
+          (isNaN(tps) ? ' [...]' : ' [' + tps.toFixed(1) + ' TPS]'),
+        margin - 5,
+        px.y + offsetHeight + 5
+      );
     }
 
     /* Adapt TX color to confirmation or milestone status */
@@ -772,95 +825,143 @@ const DrawCanvas = txList_DrawCanvas => {
     ctx.fillRect(px.x + margin, px.y + offsetHeight, pxSize, pxSize);
     ctx.strokeStyle = strokeCol;
     ctx.lineWidth = 1;
-    ctx.strokeRect(px.x + margin, px.y + offsetHeight, pxSize - strokeOffset, pxSize - strokeOffset);
+    ctx.strokeRect(
+      px.x + margin,
+      px.y + offsetHeight,
+      pxSize - strokeOffset,
+      pxSize - strokeOffset
+    );
   });
-  window.setTimeout(() => DrawCanvas(txList), 100);
+  window.setTimeout(() => DrawCanvas(txList), 250);
 };
 
 const CalcToplist = initial => {
-  const txListConfStatus = _.groupBy(txList, 'confirmed');
+  topListCount = topListCount + toplistAdditional;
 
-  if (txListConfStatus && txListConfStatus.true && txListConfStatus.true.length) {
-    /* Create toplist */
+  // Track total TX confirmations and non-confirmations
+  let confirmedTotalCount = 0;
+  let unconfirmedTotalCount = 0;
+  // Track address TX confirmations and non-confirmations + confirmation time
+  let metricsPerAddress = {};
+  // Track total average confirmation time
+  let totalAverageCtime = [];
+  // Iterate over whole TX database and gather data
+  txList.map(tx => {
+    // ctime & receivedAt are timestamps
+    const ctimeDelta = tx.ctime - tx.receivedAt;
+    if (tx.confirmed) totalAverageCtime.push(ctimeDelta);
+    // If address was not iterated over yet, set Object for first time
+    if (!metricsPerAddress[tx.address]) {
+      // c: track confirmed ones
+      // u: track unconfirmed ones
+      // t: track unconfirmed + confirmed ones (total)
+      // ct: track confirmation time
+      metricsPerAddress[tx.address] = {
+        c: tx.confirmed ? 1 : 0,
+        u: tx.confirmed ? 0 : 1,
+        t: 1,
+        ct: tx.confirmed ? [ctimeDelta] : []
+      };
+      // Otherwise increment values for given address
+    } else {
+      const confirmed = metricsPerAddress[tx.address].c;
+      const unconfirmed = metricsPerAddress[tx.address].u;
+      const total = metricsPerAddress[tx.address].t;
 
-    const confirmed_new = _.countBy(txListConfStatus.true, 'address');
-    const unconfirmed_new = _.countBy(txListConfStatus.false, 'address');
+      metricsPerAddress[tx.address].t = total + 1;
 
-    const confirmedTotalCount = txListConfStatus.true.length;
-    const unconfirmedTotalCount = txListConfStatus.false.length;
-
-    const customizer = (objValue, srcValue) => {
-      objValue = _.defaultTo(objValue, 0);
-      return [objValue, srcValue];
-    };
-
-    let confList = _.assignInWith(confirmed_new, unconfirmed_new, customizer);
-    confList = Object.entries(confList);
-
-    confList = confList.reduce((acc, curr) => {
-      if (!Array.isArray(curr[1])) {
-        acc.push([curr[0], [curr[1], 0]]);
+      if (tx.confirmed) {
+        metricsPerAddress[tx.address].c = confirmed + 1;
+        metricsPerAddress[tx.address].ct.push(ctimeDelta);
       } else {
-        acc.push(curr);
+        metricsPerAddress[tx.address].u = unconfirmed + 1;
       }
-      return acc;
-    }, []);
-
-    confList.map((tx, index) => {
-      const unconfirmedOnes = tx[1][1];
-      const confirmedOnes = tx[1][0];
-      const confirmationTimeCollector = txListConfStatus.true.reduce(
-        (acc, txs) => {
-          if (txs.address === tx[0]) {
-            acc[0].push(txs.ctime - txs.receivedAt);
-          } else {
-            acc[1].push(txs.ctime - txs.receivedAt);
-          }
-          return acc;
-        },
-        [[], []]
-      );
-
-      const confirmationTime = confirmationTimeCollector[0];
-      const confirmationTimeOthers = confirmationTimeCollector[1];
-      const confirmationTimeMeanOthers = _.mean(confirmationTimeOthers) / 1000 / 60;
-      const confirmationTimeMean = _.mean(confirmationTime) / 1000 / 60;
-      const confirmationTimeMeanRatio = (confirmationTimeMean / confirmationTimeMeanOthers) * 100 - 100;
-
-      const total = unconfirmedOnes + confirmedOnes;
-      const confirmedOnesRatio = (confirmedOnes / total) * 100;
-      const unconfirmedOnesRatio = (unconfirmedOnes / total) * 100;
-      const confirmRatio = confirmedOnes / total; //former: confirmedOnes / unconfirmedOnes
-      const confirmRatioTotal = confirmedTotalCount / (confirmedTotalCount + unconfirmedTotalCount);
-      const confirmationMeanRatio = (confirmRatio / confirmRatioTotal) * 100 - 100;
-      const addressTPS = Math.round((total / ((Date.now() - txList[0].receivedAt) / 1000)) * 100) / 100;
-      const addressCTPS = Math.round((confirmedOnes / ((Date.now() - txList[0].receivedAt) / 1000)) * 100) / 100;
-
-      confList[index].unshift([0]);
-      confList[index].pop();
-      confList[index].push([total]);
-      confList[index].push([confirmedOnes, confirmedOnesRatio]);
-      confList[index].push([unconfirmedOnes, unconfirmedOnesRatio]);
-      confList[index].push([confirmRatio]);
-      confList[index].push([confirmationMeanRatio]);
-      confList[index].push([addressTPS]);
-      confList[index].push([addressCTPS]);
-      confList[index].push([confirmationTimeMean]);
-      confList[index].push([confirmationTimeMeanRatio]);
-    });
-
-    topList = confList;
-    if (confList.length > 0) {
-      createTable(confList);
     }
+  });
+
+  // Transform object into list
+  metricsPerAddress = Object.entries(metricsPerAddress);
+
+  // If toplistMinTX over 1 was set by user, filter accordingly
+  if (toplistMinTX > 1) {
+    metricsPerAddress = _.filter(metricsPerAddress, address => {
+      return address[1].t >= toplistMinTX;
+    });
   }
 
+  // Order by total transactions
+  metricsPerAddress = _.orderBy(
+    metricsPerAddress,
+    listItem => {
+      return listItem[1].t;
+    },
+    [toplistSortIndex[1]]
+  );
+
+  // Prune to the amount of addresses to be listed
+  metricsPerAddress = metricsPerAddress.slice(0, topListCount);
+
+  let testList = [];
+
+  const confirmationTimeMeanTotal = _.mean(totalAverageCtime) / 1000 / 60;
+
+  metricsPerAddress.map(tx => {
+    const txAddress = tx[0];
+
+    const unconfirmedOnes = tx[1].u;
+    const confirmedOnes = tx[1].c;
+
+    confirmedTotalCount += confirmedOnes;
+    unconfirmedTotalCount += unconfirmedOnes;
+
+    const confirmationTime = tx[1].ct;
+    const total = tx[1].t;
+    //const confirmationTimeOthers = totalAverageCtime;
+
+    //const confirmationTimeMeanTotal = _.mean(confirmationTimeOthers) / 1000 / 60;
+    const confirmationTimeMean = _.mean(confirmationTime) / 1000 / 60;
+    const confirmationTimeMeanRatio =
+      (confirmationTimeMean / confirmationTimeMeanTotal) * 100 - 100;
+
+    //const total = unconfirmedOnes + confirmedOnes;
+    const confirmedOnesRatio = (confirmedOnes / total) * 100;
+    const unconfirmedOnesRatio = (unconfirmedOnes / total) * 100;
+    const confirmRatio = confirmedOnes / total; //former: confirmedOnes / unconfirmedOnes
+    const confirmRatioTotal = confirmedTotalCount / (confirmedTotalCount + unconfirmedTotalCount);
+    const confirmationMeanRatio = (confirmRatio / confirmRatioTotal) * 100 - 100;
+    const addressTPS =
+      Math.round((total / ((Date.now() - txList[0].receivedAt) / 1000)) * 100) / 100;
+    const addressCTPS =
+      Math.round((confirmedOnes / ((Date.now() - txList[0].receivedAt) / 1000)) * 100) / 100;
+
+    testList.push([
+      [0],
+      txAddress,
+      [total],
+      [confirmedOnes, confirmedOnesRatio],
+      [unconfirmedOnes, unconfirmedOnesRatio],
+      [confirmRatio],
+      [confirmationMeanRatio],
+      [addressTPS],
+      [addressCTPS],
+      [confirmationTimeMean],
+      [confirmationTimeMeanRatio]
+    ]);
+  });
+
+  topList = testList;
+
+  if (testList.length > 0) {
+    createTable(testList);
+  }
+  //}
+
   if (initial) {
-    window.setTimeout(() => CalcToplist(true), 15000);
+    window.setTimeout(() => CalcToplist(true), 30 * 1000);
   }
 };
 
-const CalcMetrics = () => {
+const CalcMetricsSummary = () => {
   orderTxList();
   const now = Date.now();
   /* Reset milestone interval buffer */
@@ -928,19 +1029,32 @@ const CalcMetrics = () => {
   const totalUnconfirmedCount = totalTransactions - totalConfirmationsCount;
 
   /* Calculate (effective) confirmation rate of all confirmed TX, excluding reattaches */
-  totalConfRate = Math.round((totalConfirmationsCount / (totalConfirmationsCount + totalUnconfirmedCount)) * 10000) / 100;
+  totalConfRate =
+    Math.round(
+      (totalConfirmationsCount / (totalConfirmationsCount + totalUnconfirmedCount)) * 10000
+    ) / 100;
 
-  effectiveConfRateIndex = _.findIndex(txList, function(o) {
+  effectiveConfRateIndex = _.findIndex(txList, o => {
     return o.receivedAt > now - totalConfirmationTimeMs;
   });
 
   if (totalTransactions > 0) {
     totalTPS = Math.round((totalTransactions / ((now - txList[0].receivedAt) / 1000)) * 100) / 100;
-    totalCTPS = Math.round((totalConfirmationsCount / ((now - txList[0].receivedAt) / 1000)) * 100) / 100;
+    totalCTPS =
+      Math.round((totalConfirmationsCount / ((now - txList[0].receivedAt) / 1000)) * 100) / 100;
 
     if (txList[effectiveConfRateIndex] && txList[effectiveConfRateIndex].receivedAt) {
-      totalTPSeff = Math.round((effectiveConfRateIndex / ((now - txList[effectiveConfRateIndex].receivedAt) / 1000)) * 100) / 100;
-      totalCTPSeff = Math.round((totalConfirmationsCountEff / ((now - txList[effectiveConfRateIndex].receivedAt) / 1000)) * 100) / 100;
+      totalTPSeff =
+        Math.round(
+          (effectiveConfRateIndex / ((now - txList[effectiveConfRateIndex].receivedAt) / 1000)) *
+            100
+        ) / 100;
+      totalCTPSeff =
+        Math.round(
+          (totalConfirmationsCountEff /
+            ((now - txList[effectiveConfRateIndex].receivedAt) / 1000)) *
+            100
+        ) / 100;
       totalConfRateEff = Math.round((totalCTPSeff / totalTPSeff) * 10000) / 100;
       //console.log(totalCTPS / totalTPS, effectiveConfRateIndex, totalCTPSeff / totalTPSeff, totalConfRateEff);
     }
@@ -953,7 +1067,7 @@ const CalcMetrics = () => {
     maxTransactions = 15000;
   }
   //updateMetrics(totalTPS, totalCTPS, totalConfRate, totalConfirmationTime);
-  window.setTimeout(() => CalcMetrics(), 1500);
+  window.setTimeout(() => CalcMetricsSummary(), 1500);
 };
 
 /* Fetch recent TX history */
@@ -978,8 +1092,8 @@ const InitialHistoryPoll = firstLoad => {
         response.txHistory = FilterSpecificAddresses(response.txHistory);
       }
 
-      txList = _.reverse(response.txHistory);
-      CalcMetrics();
+      txList = response.txHistory;
+      CalcMetricsSummary();
       if (firstLoad) {
         CalcToplist(true);
       }
@@ -1009,7 +1123,9 @@ const InitWebSocket = () => {
   if (!websocketActive) {
     websocketActive = true;
     let socketURL = '';
-    devState === 'prod' ? (socketURL = 'https://tanglemonitor.com:4434') : (socketURL = 'http://localhost:8081');
+    devState === 'prod'
+      ? (socketURL = 'https://tanglemonitor.com:4434')
+      : (socketURL = 'http://localhost:8081');
     let sslState = true;
     devState === 'prod' ? (sslState = true) : (sslState = false);
 
@@ -1021,7 +1137,7 @@ const InitWebSocket = () => {
     socket.on('connect', () => {
       console.log(`Successfully connected to Websocket.. [websocketActive: ${websocketActive}]`);
 
-      socket.on('newTX', function(newTX) {
+      socket.on('newTX', newTX => {
         let filterCriteria = [true];
 
         if (filterForValueTX && newTX.value !== 0) {
@@ -1050,24 +1166,25 @@ const InitWebSocket = () => {
           txList.push(newTX);
         }
       });
-      socket.on('update', function(update) {
+      socket.on('update', update => {
         UpdateTXStatus(update, 'txConfirmed');
       });
-      socket.on('updateMilestone', function(updateMilestone) {
+      socket.on('updateMilestone', updateMilestone => {
         UpdateTXStatus(updateMilestone, 'Milestone');
       });
-      socket.on('updateReattach', function(updateReattach) {
+      socket.on('updateReattach', updateReattach => {
         UpdateTXStatus(updateReattach, 'Reattach');
       });
 
       socket.on('disconnect', reason => {
         console.log(`WebSocket disconnect [${reason}]`);
         websocketActive = false;
+        socket.close();
 
         window.setTimeout(() => {
           InitWebSocket();
-        }, getRndInteger(10, 100));
-
+          console.log('WebSocket reconnecting...');
+        }, getRndInteger(100, 1000));
       });
 
       socket.on('reconnect', attemptNumber => {
@@ -1101,9 +1218,13 @@ const InitWebSocket = () => {
           InitWebSocket();
         }, getRndInteger(10, 100));
       });
+
+      // Ensure socket gets closed before exiting the session
+      window.addEventListener('beforeunload', () => {
+        socket.close();
+      });
     });
   }
-
 };
 
 const FilterZeroValue = theList => {
