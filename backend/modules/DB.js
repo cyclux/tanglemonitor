@@ -83,7 +83,7 @@ const nowInit = Date.now();
 const test = () => {
   setTimeout(() => {
     const now = Date.now();
-    console.log(parseInt((now - nowInit) / 1000 / 60), 'minutes after start');
+    console.log(`Running for ${parseInt((now - nowInit) / 1000 / 60, 10)} minutes`);
     console.log(collectionHistory, collection[collectionHistory].data.length);
     console.log(collectionTxNew, collection[collectionTxNew].data.length);
     console.log(collectionConfNew, collection[collectionConfNew].data.length);
@@ -120,10 +120,10 @@ const initMongoDB = (options, callback) => {
     (err, client) => {
       if (!err) {
         MongoDB = client.db(db);
-
+        // collectionOptions.size => 20971520 bytes equals around 20MB
         module.exports.createCollection({
           collection: collectionHistory,
-          collectionOptions: { capped: true, size: 100000000, max: 100000 },
+          collectionOptions: { capped: true, size: 20971520, max: 100000 },
           indexes: [
             { name: { hash: 1 }, indexOptions: { unique: true } },
             { name: { bundle: -1 }, indexOptions: {} }
@@ -132,20 +132,20 @@ const initMongoDB = (options, callback) => {
 
         module.exports.createCollection({
           collection: collectionTxNew,
-          collectionOptions: { capped: true, size: 100000000, max: 10000 },
+          collectionOptions: { capped: true, size: 20971520, max: 10000 },
           indexes: [{ name: { hash: 1 }, indexOptions: { unique: true } }]
         });
 
         module.exports.createCollection({
           collection: collectionConfNew,
-          collectionOptions: { capped: true, size: 100000000, max: 500 },
+          collectionOptions: { capped: true, size: 20971520, max: 500 },
           indexes: [{ name: { hash: 1 }, indexOptions: { unique: true } }]
         });
 
         module.exports.createCollection(
           {
             collection: collectionMileNew,
-            collectionOptions: { capped: true, size: 100000000, max: 100 },
+            collectionOptions: { capped: true, size: 20971520, max: 100 },
             indexes: [{ name: { hash: 1 }, indexOptions: { unique: true } }]
           },
           () => {
