@@ -1,5 +1,5 @@
 /*eslint no-console: ["error", { allow: ["log", "error"] }] */
-
+/* eslint security/detect-object-injection: 0 */
 const MongoClient = require('mongodb').MongoClient;
 const _ = require('lodash');
 const loki = require('lokijs');

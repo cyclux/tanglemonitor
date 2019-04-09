@@ -1,4 +1,5 @@
 /*eslint no-console: ["error", { allow: ["log", "error"] }] */
+/* eslint security/detect-object-injection: 0 */
 
 const _ = require('lodash');
 const IOTA = require('../iota.lib.js/lib/iota');
