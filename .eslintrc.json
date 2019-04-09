@@ -1,14 +1,14 @@
 {
-    "extends": "eslint:recommended",
-    "parserOptions": {
-        "ecmaVersion": 8,
-        "sourceType": "script",
-        "ecmaFeatures": {
-            "impliedStrict": true
-        }
-    },
-    "env": {},
-    "rules": {
-      "quotes": ["error", "single", { "avoidEscape": true } ]
+  "extends": ["eslint:recommended"],
+  "parserOptions": {
+    "ecmaVersion": 8,
+    "sourceType": "script",
+    "ecmaFeatures": {
+      "impliedStrict": true
     }
+  },
+  "env": {},
+  "rules": {
+    "quotes": ["error", "single", { "avoidEscape": true }]
+  }
 }

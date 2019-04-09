@@ -1,7 +1,8 @@
 {
-  "extends": "eslint:recommended",
+  "plugins": ["security"],
+  "extends": ["eslint:recommended", "plugin:security/recommended"],
   "env": {
-    "node":  true,
+    "node": true,
     "es6": true,
     "mocha": true
   },
@@ -10,7 +11,7 @@
     "require-yield": 0,
     "strict": ["error", "global"],
     "no-unused-vars": ["error", { "vars": "all", "args": "none" }],
-    "quotes": ["error", "single", { "avoidEscape": true } ],
+    "quotes": ["error", "single", { "avoidEscape": true }],
     "space-before-function-paren": ["error", "never"]
   }
 }

@@ -1,5 +1,4 @@
 /*eslint no-console: ['error', { allow: ['log', 'error'] }] */
-/* global console */
 
 const express = require('express');
 const path = require('path');

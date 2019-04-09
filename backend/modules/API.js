@@ -1,5 +1,4 @@
 /*eslint no-console: ['error', { allow: ['log', 'error'] }] */
-/* global console */
 
 const fs = require('fs');
 const compression = require('compression');
