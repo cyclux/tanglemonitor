@@ -2,10 +2,10 @@
 /* global window, document, io, fetch, console, _ */
 'use strict';
 
+// Set environment according to current deployment
 const host = window.location.hostname;
-let devState;
-console.log(`host: ${host}`);
-host === 'localhost' ? (devState = 'dev') : (devState = 'prod');
+let envState = 'prod';
+if (host !== 'localhost') envState = 'dev';
 
 /* Set canvas and dimensions */
 const c = document.getElementById('canvas');
@@ -21,7 +21,6 @@ const pxSize = 10;
 const txPerLine = Math.ceil(cWidth / pxSize);
 
 const textColor = '#000000';
-//const strokeColorNorm = 'rgba(255,255,255,0.1)';
 const strokeColorNorm = '#cccccc';
 const strokeColorSelect = '#ff0000';
 const fontFace = 'Consolas';
@@ -1074,7 +1073,7 @@ const CalcMetricsSummary = () => {
 /* Fetch recent TX history */
 const InitialHistoryPoll = firstLoad => {
   let pollingURL = '';
-  devState === 'prod'
+  envState === 'prod'
     ? (pollingURL = `https://tanglemonitor.com:4433/api/v1/getRecentTransactions?amount=${txAmountToPoll}`)
     : (pollingURL = `http://localhost:8080/api/v1/getRecentTransactions?amount=${txAmountToPoll}`);
 
@@ -1125,11 +1124,11 @@ const InitWebSocket = () => {
   if (!websocketActive) {
     websocketActive = true;
     let socketURL = '';
-    devState === 'prod'
+    envState === 'prod'
       ? (socketURL = 'https://tanglemonitor.com:4434')
       : (socketURL = 'http://localhost:8081');
     let sslState = true;
-    devState === 'prod' ? (sslState = true) : (sslState = false);
+    envState === 'prod' ? (sslState = true) : (sslState = false);
 
     const socket = io.connect(
       socketURL,
