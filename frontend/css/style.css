@@ -4,7 +4,11 @@ body {
 }
 
 .hide {
-  display: none !important;
+  display: none;
+}
+
+.inline_block {
+  display: inline-block;
 }
 
 .noselect {
@@ -46,10 +50,6 @@ div#txToPollWrapper {
   font-size: 14px;
   margin: 0 0 15px 30px;
   float: left;
-}
-
-div#loadingTX {
-  display: inline-block;
 }
 
 div#loadingTX > img {
@@ -126,7 +126,7 @@ td {
 
 thead {
   text-align: right;
-  background-color: #ffffff !important;
+  background-color: #ffffff;
   font-size: 15px;
   font-weight: bold;
   cursor: pointer;

@@ -608,6 +608,7 @@ document.getElementById('txToPollWrapper_button').addEventListener(
   () => {
     txAmountToPoll = parseInt(document.getElementById('txToPoll').value);
     document.getElementById('loadingTX').classList.remove('hide');
+    document.getElementById('loadingTX').classList.add('inline_block');
     manualPoll = true;
     maxTransactions = txAmountToPoll;
     InitialHistoryPoll(false);
@@ -1083,6 +1084,7 @@ const InitialHistoryPoll = firstLoad => {
     .then(response => {
       document.getElementById('loading').style.display = 'none';
       document.getElementById('loadingTX').classList.add('hide');
+      document.getElementById('loadingTX').classList.remove('inline_block');
       /* Filter if switch for only value TX is set */
       if (filterForValueTX) {
         response.txHistory = FilterZeroValue(response.txHistory);
