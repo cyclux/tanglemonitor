@@ -46,7 +46,7 @@ module.exports = {
     api.use((req, res, next) => {
       const domainString =
         domain !== 'localhost'
-          ? `https://${settings.subdomain !== '' ? settings.subdomain + '.' : ''}${settings.domain}`
+          ? `https://${settings.subdomain !== '' ? settings.subdomain + '.' : ''}${config.domain}`
           : `http://${settings.subdomain !== '' ? settings.subdomain + '.' : ''}localhost` +
             `${config.webServer.standalone ? ':' + config.webServer.port : ''}`;
       res.header('Access-Control-Allow-Origin', domainString);
