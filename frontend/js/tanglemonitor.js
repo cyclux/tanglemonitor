@@ -5,7 +5,7 @@
 // Set environment according to current deployment
 const host = window.location.hostname;
 let envState = 'prod';
-if (host !== 'localhost') envState = 'dev';
+if (host === 'localhost') envState = 'dev';
 
 /* Set canvas and dimensions */
 const c = document.getElementById('canvas');
