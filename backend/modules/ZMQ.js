@@ -6,8 +6,6 @@ const request = require('request');
 
 const config = require('../.config');
 const Time = require('../modules/Time');
-const TXprocessor = require('../modules/TXprocessor');
-const DB = require('../modules/DB');
 
 /*  Store ZMQ Socket objects */
 let zmqSockets = {};
@@ -25,6 +23,15 @@ let zmqNodes;
 /*  Threshold which determines at which delta between LMI and LSSMI
     the node should be considered "out-of-sync" (user defined via config) */
 let nodeSyncDeltaThreshold;
+
+process.on('message', msg => {
+  if (msg && msg.init && msg.init) {
+    const settings = msg.init;
+    module.exports.init(settings, statusZMQ => {
+      process.send({ consoleLog: statusZMQ });
+    });
+  }
+});
 
 const checkIsConnectedZmqNode = zmqNode => {
   if (
@@ -91,54 +98,22 @@ const processZmqMsg = (zmqMsg, settings) => {
   }
 
   if (zmqTX.newTX) {
-    /* Compensate for possible wrong timestamp precision */
+    // Compensate for possible wrong timestamp precision
 
     if (Math.ceil(Math.log10(zmqTX.newTX.receivedAt + 1)) === 10) {
       zmqTX.newTX.receivedAt = zmqTX.newTX.receivedAt * 1000;
     }
 
-    /*
-    if (Math.ceil(Math.log10(zmqTX.newTX.timestamp + 1)) === 10) {
-      zmqTX.newTX.timestamp = zmqTX.newTX.timestamp * 1000;
-    }
-    */
-
-    /* Only process new TX if they were already received by another node recently */
+    // Only process new TX if they were already received by another node recently
     if (syncingCheckBuffer.includes(zmqTX.newTX.hash)) {
-      DB.insertOne(
-        { collection: settings.collectionTxNew, item: { hash: zmqTX.newTX.hash } },
-        (err, res) => {
-          if (res) {
-            const dbResponse = { newTX: zmqTX.newTX, settings: settings };
-            TXprocessor.NewTX(dbResponse);
-          }
-        }
-      );
+      process.send({ type: 'cmd', call: 'newTX', zmqTX: zmqTX, settings: settings });
     } else {
       syncingCheckBuffer.unshift(zmqTX.newTX.hash);
     }
   } else if (zmqTX.newConf) {
-    // Only process confirmation if it was not already sent by another node*/
-    DB.insertOne(
-      { collection: settings.collectionConfNew, item: { hash: zmqTX.newConf.hash } },
-      (err, res) => {
-        if (res) {
-          TXprocessor.Confirmation({
-            transactions: [zmqTX.newConf],
-            inclusionStates: [true],
-            settings: settings
-          });
-        }
-      }
-    );
+    process.send({ type: 'cmd', call: 'newConf', zmqTX: zmqTX, settings: settings });
   } else if (zmqTX.newMile) {
-    // Only process if the Milestone was not already received from another node
-    DB.insertOne({ collection: settings.collectionMileNew, item: zmqTX.newMile }, (err, res) => {
-      if (res) {
-        const dbResponse = { newMile: zmqTX.newMile, settings: settings };
-        TXprocessor.Milestone(dbResponse);
-      }
-    });
+    process.send({ type: 'cmd', call: 'newMile', zmqTX: zmqTX, settings: settings });
   } else {
     if (zmqTX && !zmqTX.default) console.log(Time.Stamp() + `zmqTX not recognized: ${zmqTX}`);
   }

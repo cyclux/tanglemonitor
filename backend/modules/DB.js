@@ -1,5 +1,5 @@
 /*eslint no-console: ["error", { allow: ["log", "error"] }] */
-/* eslint security/detect-object-injection: 0 */
+/* eslint security/detect-object-injection: 0 */ // Safe, as we do not pass user input to the objects
 const MongoClient = require('mongodb').MongoClient;
 const _ = require('lodash');
 const loki = require('lokijs');
@@ -172,7 +172,8 @@ module.exports = {
     switch (config.DB.driver) {
       case 'standalone':
         initStandaloneDB({}, result => {
-          process.on('SIGINT', function() {
+          process.on('beforeExit', code => {
+            console.log(`About to exit with code: ${code}`);
             console.log(Time.Stamp() + 'Flushing DB on exit...');
             lokiDB.close();
           });
