@@ -1,8 +1,10 @@
 /*eslint no-console: ["error", { allow: ["log", "error"] }] */
 /* eslint security/detect-object-injection: 0 */ // Safe, as we do not pass user input to the objects
+
 const MongoClient = require('mongodb').MongoClient;
 const _ = require('lodash');
 const loki = require('lokijs');
+const lfsa = require('lokijs/src/loki-fs-structured-adapter.js');
 const config = require('../.config');
 const Time = require('../modules/Time');
 
@@ -46,10 +48,22 @@ const lokiDBCollectionsGen = params => {
   }
 };
 
+const showDBinfo = () => {
+  setTimeout(() => {
+    const now = Date.now();
+    console.log(`Running for ${parseInt((now - nowInit) / 1000 / 60, 10)} minutes`);
+    console.log(collectionHistory, collection[collectionHistory].data.length);
+    console.log(collectionTxNew, collection[collectionTxNew].data.length);
+    console.log(collectionConfNew, collection[collectionConfNew].data.length);
+    console.log(collectionMileNew, collection[collectionMileNew].data.length);
+    showDBinfo();
+  }, 60 * 1000);
+};
+
 const lokiDBInitialize = () => {
   lokiDBCollectionsGen({
     collectionName: collectionHistory,
-    collectionTtlAge: 60 * 60 * 1000,
+    collectionTtlAge: 2 * 60 * 60 * 1000,
     ttlInterval: 60 * 1000,
     uniqueCollections: ['hash']
   });
@@ -75,29 +89,19 @@ const lokiDBInitialize = () => {
     uniqueCollections: ['hash']
   });
 
-  test();
+  showDBinfo();
 };
 
 const nowInit = Date.now();
 
-const test = () => {
-  setTimeout(() => {
-    const now = Date.now();
-    console.log(`Running for ${parseInt((now - nowInit) / 1000 / 60, 10)} minutes`);
-    console.log(collectionHistory, collection[collectionHistory].data.length);
-    console.log(collectionTxNew, collection[collectionTxNew].data.length);
-    console.log(collectionConfNew, collection[collectionConfNew].data.length);
-    console.log(collectionMileNew, collection[collectionMileNew].data.length);
-    test();
-  }, 60 * 1000);
-};
-
-const initStandaloneDB = (options, callback) => {
-  lokiDB = new loki('lokiDB', {
+const initLokiJS = (options, callback) => {
+  const adapter = new lfsa();
+  lokiDB = new loki('DB/lokiDB', {
+    adapter: adapter,
     autoload: config.DB.persistent ? true : false,
     autoloadCallback: lokiDBInitialize,
     autosave: config.DB.persistent ? true : false,
-    autosaveInterval: 5 * 60 * 1000
+    autosaveInterval: 1 * 60 * 1000
   });
 
   callback(Time.Stamp() + 'Standalone DB [LokiJS] initialized...');
@@ -171,7 +175,7 @@ module.exports = {
 
     switch (config.DB.driver) {
       case 'standalone':
-        initStandaloneDB({}, result => {
+        initLokiJS({}, result => {
           process.on('beforeExit', code => {
             console.log(`About to exit with code: ${code}`);
             console.log(Time.Stamp() + 'Flushing DB on exit...');
@@ -187,7 +191,7 @@ module.exports = {
         break;
 
       default:
-        initStandaloneDB({}, result => {
+        initLokiJS({}, result => {
           callback(result);
         });
     }
@@ -229,7 +233,7 @@ module.exports = {
   },
 
   insertOne: (params, callback) => {
-    const standaloneinsertOne = () => {
+    const lokiInsertOne = () => {
       let error = false;
       try {
         collection[params.collection].insert(params.item);
@@ -252,7 +256,7 @@ module.exports = {
     if (collection[params.collection]) {
       switch (config.DB.driver) {
         case 'standalone':
-          standaloneinsertOne();
+          lokiInsertOne();
 
           break;
         case 'MongoDB':
@@ -260,7 +264,7 @@ module.exports = {
           break;
 
         default:
-          standaloneinsertOne();
+          lokiInsertOne();
       }
     } else {
       console.log(Time.Stamp() + 'DB not ready yet [call: insertOne]. Retrying to access...');
@@ -269,7 +273,7 @@ module.exports = {
 
   update: (params, callback) => {
     if (collection[params.collection]) {
-      const standaloneUpdate = () => {
+      const lokiUpdate = () => {
         let error = false;
         let result = false;
         try {
@@ -295,14 +299,14 @@ module.exports = {
 
       switch (config.DB.driver) {
         case 'standalone':
-          standaloneUpdate();
+          lokiUpdate();
           break;
         case 'MongoDB':
           mongoDBupdate();
           break;
 
         default:
-          standaloneUpdate();
+          lokiUpdate();
       }
     } else {
       console.log(Time.Stamp() + 'DB not ready yet [call: update]. Retrying to access...');
@@ -311,7 +315,7 @@ module.exports = {
 
   updateMany: (params, callback) => {
     if (collection[params.collection]) {
-      const standaloneUpdateMany = () => {
+      const lokiUpdateMany = () => {
         let error = false;
         let result = [];
         try {
@@ -339,14 +343,14 @@ module.exports = {
 
       switch (config.DB.driver) {
         case 'standalone':
-          standaloneUpdateMany();
+          lokiUpdateMany();
           break;
         case 'MongoDB':
           mongoDBupdateMany();
           break;
 
         default:
-          standaloneUpdateMany();
+          lokiUpdateMany();
       }
     } else {
       console.log(Time.Stamp() + 'DB not ready yet [call: updateMany]. Retrying to access...');
@@ -355,7 +359,7 @@ module.exports = {
 
   distinct: (params, callback) => {
     if (collection[params.collection]) {
-      const standaloneDistinct = () => {
+      const lokiDistinct = () => {
         let error = false;
         let result = [];
         try {
@@ -387,14 +391,14 @@ module.exports = {
 
       switch (config.DB.driver) {
         case 'standalone':
-          standaloneDistinct();
+          lokiDistinct();
           break;
         case 'MongoDB':
           mongoDBDistinct();
           break;
 
         default:
-          standaloneDistinct();
+          lokiDistinct();
       }
     } else {
       console.log(Time.Stamp() + 'DB not ready yet [call: distinct]. Retrying to access...');
@@ -402,11 +406,11 @@ module.exports = {
   },
 
   find: (params, callback) => {
-    const standaloneFind = () => {
+    const lokiFind = () => {
       let result = collection[params.collection]
         .chain()
         .find(params.item)
-        .data();
+        .data({ removeMeta: true });
 
       if (params.settings.limit) result = _.takeRight(result, params.settings.limit);
       if (callback) callback(false, result);
@@ -421,14 +425,14 @@ module.exports = {
     if (collection[params.collection]) {
       switch (config.DB.driver) {
         case 'standalone':
-          standaloneFind();
+          lokiFind();
           break;
         case 'MongoDB':
           mongoDBFind();
           break;
 
         default:
-          standaloneFind();
+          lokiFind();
       }
     } else {
       console.log(Time.Stamp() + 'DB not ready yet [call: find]. Retrying to access...');

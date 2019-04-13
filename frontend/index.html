@@ -1,126 +1,137 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <title>TangleMonitor - Live visualisation and metrics of the IOTA Tangle</title>
-        <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
-        <link href="https://fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet">
-        <link rel="stylesheet" type="text/css" href="css/style.min.css">
+  <head>
+    <meta charset="utf-8" />
+    <title>TangleMonitor - Live visualisation and metrics of the IOTA Tangle</title>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+    <link href="https://fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet" />
+    <link rel="stylesheet" type="text/css" href="css/style.min.css" />
 
-        <script type="text/javascript">
-          var _paq = _paq || [];
-          _paq.push(['trackPageView']);
-          _paq.push(['enableLinkTracking']);
-          (function() {
-            var u="https://tanglenodes.io/analytics/";
-            _paq.push(['setTrackerUrl', u+'piwik.php']);
-            _paq.push(['setSiteId', '2']);
-            var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-            g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
-          })();
-        </script>
+    <script type="text/javascript">
+      var _paq = _paq || [];
+      _paq.push(['trackPageView']);
+      _paq.push(['enableLinkTracking']);
+      (function() {
+        var u = 'https://tanglenodes.io/analytics/';
+        _paq.push(['setTrackerUrl', u + 'piwik.php']);
+        _paq.push(['setSiteId', '2']);
+        var d = document,
+          g = d.createElement('script'),
+          s = d.getElementsByTagName('script')[0];
+        g.type = 'text/javascript';
+        g.async = true;
+        g.defer = true;
+        g.src = u + 'piwik.js';
+        s.parentNode.insertBefore(g, s);
+      })();
+    </script>
+  </head>
 
-    </head>
+  <body>
+    <div id="github_buttons">
+      <a
+        class="github-button"
+        href="https://github.com/cyclux/tanglemonitor/subscription"
+        data-icon="octicon-eye"
+        data-size="large"
+        aria-label="Watch cyclux/tanglemonitor on GitHub"
+        >Watch</a
+      >
+      <a
+        class="github-button"
+        href="https://github.com/cyclux/tanglemonitor/issues"
+        data-icon="octicon-issue-opened"
+        data-size="large"
+        aria-label="Issue cyclux/tanglemonitor on GitHub"
+        >Issue</a
+      >
+    </div>
 
-    <body>
-        <div id="github_buttons">
-            <a class="github-button" href="https://github.com/cyclux/tanglemonitor/subscription" data-icon="octicon-eye" data-size="large" aria-label="Watch cyclux/tanglemonitor on GitHub">Watch</a>
-            <a class="github-button" href="https://github.com/cyclux/tanglemonitor/issues" data-icon="octicon-issue-opened" data-size="large" aria-label="Issue cyclux/tanglemonitor on GitHub">Issue</a>
-        </div>
+    <div id="toplist_wrapper">
+      <div class="center net_title">
+        <select id="netselector" class="" name="netselector">
+          <option value="mainnet" selected>Mainnet</option>
+          <option value="testnet">Devnet</option>
+          <option value="spamnet">Spamnet</option>
+        </select>
+      </div>
+      <div id="minNumberOfTxWrapper">
+        <span>Min. TX amount (toplist)</span>
+        <input type="text" id="minNumberOfTxIncluded" value="1" />
+        <button id="minNumberOfTxIncluded_button" type="button">Set</button>
+      </div>
 
-        <div id="toplist_wrapper">
-            <div class="center net_title">
-              <select id="netselector" class="" name="netselector">
-                <option value="mainnet" selected>Mainnet</option>
-                <option value="testnet">Devnet</option>
-                <option value="spamnet">Spamnet</option>
-              </select>
-            </div>
-            <div id="minNumberOfTxWrapper">
-                <span>Min. TX amount (toplist)</span>
-                <input type="text" id="minNumberOfTxIncluded" value="1">
-                <button id="minNumberOfTxIncluded_button" type="button">Set</button>
-            </div>
+      <div id="txToPollWrapper">
+        <span>Amount of past tx</span> <input type="text" id="txToPoll" value="15000" />
+        <button id="txToPollWrapper_button" type="button">Set</button>
+        <div id="loadingTX" class="hide"><img src="img/loading_spinner.gif" alt="Loading.." /></div>
+      </div>
 
-            <div id="txToPollWrapper">
-                <span>Amount of past tx</span>
-                <input type="text" id="txToPoll" value="15000">
-                <button id="txToPollWrapper_button" type="button">Set</button>
-                <div id="loadingTX" class="hide">
-                  <img src="img/loading_spinner.gif" alt="Loading.." />
-                </div>
+      <div id="hideZeroValue">
+        <span>Hide zero value TX</span> <input type="checkbox" id="hideZero" />
+      </div>
 
-            </div>
+      <div id="endlessModeWrapper">
+        <span>Endless mode</span> <input type="checkbox" id="endlessMode" />
+      </div>
 
-            <div id="hideZeroValue">
-                <span>Hide zero value TX</span>
-                <input type="checkbox" id="hideZero">
-            </div>
+      <div id="hideSpecificAddressCheckboxWrapper" class="hide">
+        <img src="img/delete.png" alt="del" /><!--
+          <input type="checkbox" id="hideSpecificAddressCheckbox">
+        -->
+      </div>
 
-            <div id="endlessModeWrapper">
-                <span>Endless mode</span>
-                <input type="checkbox" id="endlessMode">
-            </div>
+      <table id="toplist"></table>
 
-            <div id="hideSpecificAddressCheckboxWrapper" class="hide">
-              <img src="img/delete.png" alt="del"><!--<input type="checkbox" id="hideSpecificAddressCheckbox">-->
-            </div>
+      <div id="toplist-menu">
+        <div id="toplist-more" class="toplist noselect">[ show more</div>
+        <div id="toplist-all" class="toplist noselect">| show all |</div>
+        <div id="toplist-reset" class="toplist noselect">reset ]</div>
+      </div>
+    </div>
 
+    <div id="inputs">
+      <input
+        id="address_input"
+        type="text"
+        name="address"
+        value=""
+        placeholder="Enter address to track"
+      />
+      <button id="address_button" type="button">Set</button>
+      <button id="address_button_reset" type="button">Reset</button>
+    </div>
+    <div id="status"></div>
+    <!--
+      <div id="metrics_wrapper">
+          <div id="metric_confrate_wrapper">
+              <span>TPS: </span>
+              <span id="metric_totalTPS"></span>
 
-            <table id="toplist"></table>
+              <span>CTPS: </span>
+              <span id="metric_totalCTPS"></span>
 
-            <div id="toplist-menu">
-                <div id="toplist-more" class="toplist noselect">
-                    [ show more
-                </div>
-                <div id="toplist-all" class="toplist noselect">
-                    | show all |
-                </div>
-                <div id="toplist-reset" class="toplist noselect">
-                    reset ]
-                </div>
-            </div>
+              <span>Confirmation rate: </span>
+              <span id="metric_totalConfRate"></span>
 
-        </div>
+              <span>Confirmation time: </span>
+              <span id="metric_totalConfirmationTime"></span>
+          </div>
 
-        <div id="inputs">
-            <input id="address_input" type="text" name="address" value="" placeholder="Enter address to track">
-            <button id="address_button" type="button">Set</button>
-            <button id="address_button_reset" type="button">Reset</button>
-        </div>
-        <div id="status"></div>
-<!--
-
-        <div id="metrics_wrapper">
-            <div id="metric_confrate_wrapper">
-                <span>TPS: </span>
-                <span id="metric_totalTPS"></span>
-
-                <span>CTPS: </span>
-                <span id="metric_totalCTPS"></span>
-
-                <span>Confirmation rate: </span>
-                <span id="metric_totalConfRate"></span>
-
-                <span>Confirmation time: </span>
-                <span id="metric_totalConfirmationTime"></span>
-            </div>
-
-        </div>
+      </div>
     -->
 
-        <canvas id="canvas" width="950" height="100"></canvas>
-        <div id="loading">Loading...</div>
-        <div id="tooltip">
-        </div>
-        <div id="donation-address">
-          <img src="img/heart.png" id="heart" alt="heart">
-          HWUYSMQM99PBOKXGZOLQNEWVUFKAONUZHYFEWLMCMMBKVDAGGFMIIYIIFGUWNKIDNMWAGALEWSOXLE9JWVBLVYOBIY
-        </div>
-        <script src="js/lodash.min.js" type="text/javascript"></script>
-        <script async defer src="https://buttons.github.io/buttons.js"></script>
-        <script src="js/tanglemonitor.min.js" type="text/javascript"></script>
-        <script src="js/socket.io.min.js" type="text/javascript"></script>
-    </body>
-
+    <canvas id="canvas" width="950" height="100"></canvas>
+    <div id="loading">Loading...</div>
+    <div id="tooltip"></div>
+    <div id="donation-address">
+      <img src="img/heart.png" id="heart" alt="heart" />
+      HWUYSMQM99PBOKXGZOLQNEWVUFKAONUZHYFEWLMCMMBKVDAGGFMIIYIIFGUWNKIDNMWAGALEWSOXLE9JWVBLVYOBIY
+    </div>
+    <script src="js/lokijs.min.js" type="text/javascript"></script>
+    <script src="js/lodash.min.js" type="text/javascript"></script>
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <script src="js/tanglemonitor.min.js" type="text/javascript"></script>
+    <script src="js/socket.io.min.js" type="text/javascript"></script>
+  </body>
 </html>

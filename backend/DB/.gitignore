@@ -1,0 +1,4 @@
+# Ignore everything in this directory - Placeholder for LokiJS DB files
+*
+# Except this file
+!.gitignore

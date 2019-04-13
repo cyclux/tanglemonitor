@@ -33,13 +33,14 @@ module.exports = {
         tag: tag,
         confirmed: false,
         reattached: false,
-        //timestamp: txTimestamp,
         receivedAt: receivedAt,
-        //receivedAtms: receivedAtms,
         ctime: 1111111111111,
         value: value,
         milestone: 'f'
       };
+
+      // Check if it may be more appropriate to send on WS once it is successfully inserted in DB
+      WebSocket.emit('newTX', reassembledTX);
 
       // Add new TX to DB
       DB.insertOne(
@@ -52,8 +53,6 @@ module.exports = {
           });
         }
       );
-
-      WebSocket.emit('newTX', reassembledTX);
     }
   },
 

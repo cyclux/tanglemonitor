@@ -24,6 +24,8 @@ let zmqNodes;
     the node should be considered "out-of-sync" (user defined via config) */
 let nodeSyncDeltaThreshold;
 
+// Receive messages from main process
+// Primarily to initialize the ZMQ thread for now
 process.on('message', msg => {
   if (msg && msg.init && msg.init) {
     const settings = msg.init;
