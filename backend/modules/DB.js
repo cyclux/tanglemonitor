@@ -405,37 +405,83 @@ module.exports = {
     }
   },
 
-  find: (params, callback) => {
-    const lokiFind = () => {
-      let result = collection[params.collection]
-        .chain()
-        .find(params.item)
-        .data({ removeMeta: true });
+  find: params => {
+    const lokiFind = callback => {
+      let result = [];
+      let err = false;
+      try {
+        result = collection[params.collection]
+          .chain()
+          .find(params.item)
+          .data({ removeMeta: true });
 
-      if (params.settings.limit) result = _.takeRight(result, params.settings.limit);
-      if (callback) callback(false, result);
+        if (params.settings.limit) result = _.takeRight(result, params.settings.limit);
+      } catch (e) {
+        err = 'Error on lokiJS find() call: ' + e;
+      } finally {
+        if (callback) callback(err, result);
+      }
     };
 
-    const mongoDBFind = () => {
+    const mongoDBFind = callback => {
       collection[params.collection].find(params.item, params.settings).toArray((err, res) => {
         if (err) console.log(Time.Stamp() + err);
         if (callback) callback(err, res);
       });
     };
-    if (collection[params.collection]) {
-      switch (config.DB.driver) {
-        case 'standalone':
-          lokiFind();
-          break;
-        case 'MongoDB':
-          mongoDBFind();
-          break;
 
-        default:
-          lokiFind();
+    return new Promise((resolve, reject) => {
+      if (collection[params.collection]) {
+        switch (config.DB.driver) {
+          case 'standalone':
+            lokiFind((err, result) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(result);
+              }
+            });
+            break;
+          case 'MongoDB':
+            mongoDBFind((err, result) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(result);
+              }
+            });
+            break;
+
+          default:
+            lokiFind((err, result) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(result);
+              }
+            });
+        }
+      } else {
+        reject(Time.Stamp() + 'DB not ready yet [call: find]. Retrying to access...');
       }
-    } else {
-      console.log(Time.Stamp() + 'DB not ready yet [call: find]. Retrying to access...');
-    }
+    });
+
+    /*
+if (collection[params.collection]) {
+  switch (config.DB.driver) {
+    case 'standalone':
+      lokiFind();
+      break;
+    case 'MongoDB':
+      mongoDBFind();
+      break;
+
+    default:
+      lokiFind();
+  }
+} else {
+  console.log(Time.Stamp() + 'DB not ready yet [call: find]. Retrying to access...');
+}
+*/
   }
 };

@@ -161,91 +161,104 @@ module.exports = {
         }
       };
 
-      request(requestOptions, (error, response, data) => {
-        let syncDelta = 0;
-        iterCount++;
-
+      // If it's a test node without IRI API omit sync test and connect anyway
+      if (zmqNode.testNode) {
         const isConnectedZmqNode = checkIsConnectedZmqNode(zmqNode);
-
-        // Check and track actual connection state for each node
-        if (isConnectedZmqNode) zmqNodesAmountCounter++;
-
-        // On last iteration match counted connections with global state
-        if (iterCount === zmqNodes.length && !options.initialCall) {
-          zmqNodesAmountConnected = zmqNodesAmountCounter;
-          if (config.logging.showZmqNodeStatus) {
-            console.log(Time.Stamp() + `Current ZMQ node connections: ${zmqNodesAmountConnected}`);
-          }
+        if (!isConnectedZmqNode) {
+          module.exports.connect(
+            zmqNode,
+            settings
+          );
         }
+      } else {
+        request(requestOptions, (error, response, data) => {
+          let syncDelta = 0;
+          iterCount++;
 
-        if (data && data.latestMilestoneIndex) {
-          syncDelta =
-            parseInt(data.latestMilestoneIndex, 10) -
-            parseInt(data.latestSolidSubtangleMilestoneIndex, 10);
-          if (config.logging.showZmqNodeStatus && !options.initialCall) {
-            console.log(
-              Time.Stamp() +
-                `${zmqNode.host} [syncDelta: ${syncDelta} | LMI/LSSMI ${
-                  data.latestMilestoneIndex
-                } ${data.latestSolidSubtangleMilestoneIndex}] State: ${
-                  isConnectedZmqNode ? 'connected' : 'disconnected'
-                }`
-            );
+          const isConnectedZmqNode = checkIsConnectedZmqNode(zmqNode);
+
+          // Check and track actual connection state for each node
+          if (isConnectedZmqNode) zmqNodesAmountCounter++;
+
+          // On last iteration match counted connections with global state
+          if (iterCount === zmqNodes.length && !options.initialCall) {
+            zmqNodesAmountConnected = zmqNodesAmountCounter;
+            if (config.logging.showZmqNodeStatus) {
+              console.log(
+                Time.Stamp() + `Current ZMQ node connections: ${zmqNodesAmountConnected}`
+              );
+            }
           }
 
-          if (
-            (!isConnectedZmqNode &&
-              syncDelta < nodeSyncDeltaThreshold &&
-              zmqNodesAmountConnected < maxAmountZmqConnections &&
-              zmqNodesAmountCounter < maxAmountZmqConnections) ||
-            (!zmqSockets[zmqNode.host] &&
-              syncDelta < nodeSyncDeltaThreshold &&
-              zmqNodesAmountConnected < maxAmountZmqConnections &&
-              zmqNodesAmountCounter < maxAmountZmqConnections)
-          ) {
-            console.log(
-              Time.Stamp() +
-                `Opening connection to ${zmqNode.host} [syncDelta: ${syncDelta} | LMI/LSSMI ${
-                  data.latestMilestoneIndex
-                } ${data.latestSolidSubtangleMilestoneIndex}]`
-            );
+          if (data && data.latestMilestoneIndex) {
+            syncDelta =
+              parseInt(data.latestMilestoneIndex, 10) -
+              parseInt(data.latestSolidSubtangleMilestoneIndex, 10);
+            if (config.logging.showZmqNodeStatus && !options.initialCall) {
+              console.log(
+                Time.Stamp() +
+                  `${zmqNode.host} [syncDelta: ${syncDelta} | LMI/LSSMI ${
+                    data.latestMilestoneIndex
+                  } ${data.latestSolidSubtangleMilestoneIndex}] State: ${
+                    isConnectedZmqNode ? 'connected' : 'disconnected'
+                  }`
+              );
+            }
 
-            module.exports.connect(
-              zmqNode,
-              settings
-            );
-          } else if (isConnectedZmqNode && syncDelta >= nodeSyncDeltaThreshold) {
-            console.log(
-              Time.Stamp() +
-                `Node out of sync: ${zmqNode.host} [syncDelta ${syncDelta} | LMI/LSSMI ${
-                  data.latestMilestoneIndex
-                } ${data.latestSolidSubtangleMilestoneIndex}]. Closing ZMQ connection...`
-            );
-            zmqSockets[zmqNode.host].emit('close');
-            zmqSockets[zmqNode.host].close();
-            // Workaround as close event is not fired (by zeromq library)
-          }
-        } else {
-          if (config.logging.showZmqNodeStatus) {
-            console.log(
-              Time.Stamp() +
-                `Error fetching node info via API from ${zmqNode.host} | State: ${
-                  isConnectedZmqNode ? 'connected' : 'disconnected'
-                }`
-            );
-          }
+            if (
+              (!isConnectedZmqNode &&
+                syncDelta < nodeSyncDeltaThreshold &&
+                zmqNodesAmountConnected < maxAmountZmqConnections &&
+                zmqNodesAmountCounter < maxAmountZmqConnections) ||
+              (!zmqSockets[zmqNode.host] &&
+                syncDelta < nodeSyncDeltaThreshold &&
+                zmqNodesAmountConnected < maxAmountZmqConnections &&
+                zmqNodesAmountCounter < maxAmountZmqConnections)
+            ) {
+              console.log(
+                Time.Stamp() +
+                  `Opening connection to ${zmqNode.host} [syncDelta: ${syncDelta} | LMI/LSSMI ${
+                    data.latestMilestoneIndex
+                  } ${data.latestSolidSubtangleMilestoneIndex}]`
+              );
 
-          // No API response from this node. If the ZMQ connection was already established, disconnect
-          if (isConnectedZmqNode) {
-            console.log(
-              Time.Stamp() + `No API response from ${zmqNode.host}. Closing connection...`
-            );
-            zmqSockets[zmqNode.host].emit('close');
-            zmqSockets[zmqNode.host].close();
-            // Workaround as close event is not fired (by zeromq library)
+              module.exports.connect(
+                zmqNode,
+                settings
+              );
+            } else if (isConnectedZmqNode && syncDelta >= nodeSyncDeltaThreshold) {
+              console.log(
+                Time.Stamp() +
+                  `Node out of sync: ${zmqNode.host} [syncDelta ${syncDelta} | LMI/LSSMI ${
+                    data.latestMilestoneIndex
+                  } ${data.latestSolidSubtangleMilestoneIndex}]. Closing ZMQ connection...`
+              );
+              zmqSockets[zmqNode.host].emit('close');
+              zmqSockets[zmqNode.host].close();
+              // Workaround as close event is not fired (by zeromq library)
+            }
+          } else {
+            if (config.logging.showZmqNodeStatus) {
+              console.log(
+                Time.Stamp() +
+                  `Error fetching node info via API from ${zmqNode.host} | State: ${
+                    isConnectedZmqNode ? 'connected' : 'disconnected'
+                  }`
+              );
+            }
+
+            // No API response from this node. If the ZMQ connection was already established, disconnect
+            if (isConnectedZmqNode) {
+              console.log(
+                Time.Stamp() + `No API response from ${zmqNode.host}. Closing connection...`
+              );
+              zmqSockets[zmqNode.host].emit('close');
+              zmqSockets[zmqNode.host].close();
+              // Workaround as close event is not fired (by zeromq library)
+            }
           }
-        }
-      });
+        });
+      }
     });
 
     if (options.loop) {

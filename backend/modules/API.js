@@ -69,20 +69,22 @@ module.exports = {
         txAmount = config.apiMaxTransactions;
       }
 
-      DB.find(
-        {
-          collection: settings.collectionTxHistory,
-          item: {},
-          settings: {
-            projection: { _id: 0 },
-            limit: txAmount,
-            sort: { _id: -1 }
-          }
-        },
-        (err, txHistory) => {
+      DB.find({
+        collection: settings.collectionTxHistory,
+        item: {},
+        settings: {
+          projection: { _id: 0 },
+          limit: txAmount,
+          sort: { _id: -1 }
+        }
+      }).then((txHistory, err) => {
+        if (err) {
+          res.json({ err });
+        } else {
           res.json({ txHistory });
         }
-      );
+      });
+
       /*
       Maybe find solution to stream TX data
 
