@@ -77,13 +77,14 @@ module.exports = {
           limit: txAmount,
           sort: { _id: -1 }
         }
-      }).then((txHistory, err) => {
-        if (err) {
-          res.json({ err });
-        } else {
+      })
+        .then(txHistory => {
           res.json({ txHistory });
-        }
-      });
+        })
+        .catch(err => {
+          console.log(Time.Stamp() + err);
+          res.json('DB not available currently.');
+        });
 
       /*
       Maybe find solution to stream TX data
@@ -99,114 +100,72 @@ module.exports = {
     });
 
     router.get('/v1/getConfirmedTransactions', (req, res) => {
-      DB.find(
-        {
-          collection: settings.collectionTxHistory,
-          item: { confirmed: true },
-          settings: {
-            projection: { _id: 0 },
-            sort: { _id: -1 }
-          }
-        },
-        (err, confirmedTransactions) => {
-          res.json({ confirmedTransactions });
+      DB.find({
+        collection: settings.collectionTxHistory,
+        item: { confirmed: true },
+        settings: {
+          projection: { _id: 0 },
+          sort: { _id: -1 }
         }
-      );
+      })
+        .then(confirmedTransactions => {
+          res.json({ confirmedTransactions });
+        })
+        .catch(err => {
+          console.log(err);
+        });
     });
 
     router.get('/v1/getUnconfirmedTransactions', (req, res) => {
-      DB.find(
-        {
-          collection: settings.collectionTxHistory,
-          item: { confirmed: false },
-          settings: {
-            projection: { _id: 0 },
-            sort: { _id: -1 }
-          }
-        },
-        (err, unconfirmedTransactions) => {
-          res.json({ unconfirmedTransactions });
+      DB.find({
+        collection: settings.collectionTxHistory,
+        item: { confirmed: false },
+        settings: {
+          projection: { _id: 0 },
+          sort: { _id: -1 }
         }
-      );
+      })
+        .then(unconfirmedTransactions => {
+          res.json({ unconfirmedTransactions });
+        })
+        .catch(err => {
+          console.log(err);
+        });
     });
 
     router.get('/v1/getTransactionsToRequest', (req, res) => {
       /* TODO: deprecated - Slow request > 100ms */
-      DB.find(
-        {
-          collection: settings.collectionTxHistory,
-          item: { confirmed: false },
-          settings: {
-            projection: { _id: 0 },
-            limit: config.maxTransactions,
-            sort: { _id: -1 }
-          }
-        },
-        (err, getTransactionsToRequest) => {
-          res.json({ getTransactionsToRequest });
+      DB.find({
+        collection: settings.collectionTxHistory,
+        item: { confirmed: false },
+        settings: {
+          projection: { _id: 0 },
+          limit: config.maxTransactions,
+          sort: { _id: -1 }
         }
-      );
+      })
+        .then(getTransactionsToRequest => {
+          res.json({ getTransactionsToRequest });
+        })
+        .catch(err => {
+          console.log(err);
+        });
     });
 
     router.get('/v1/resetReattach', (req, res) => {
       const t = escape(req.query.token);
       if (t === apiToken) {
-        DB.updateMany(
-          {
-            collection: settings.collectionTxHistory,
-            item: {},
-            settings: { $set: { reattached: false } }
-          },
-          (err, result) => {
-            const answer = result ? result : err;
-            res.json({ answer });
-          }
-        );
+        DB.updateMany({
+          collection: settings.collectionTxHistory,
+          item: {},
+          settings: { $set: { reattached: false } }
+        })
+          .then(result => {})
+          .catch(err => {
+            res.json({ err });
+          });
       } else {
         res.json({ request_error: 'Restricted request!' });
-      }
-    });
-
-    router.get('/v1/distinct', (req, res) => {
-      const thebundle = req.query.bundle;
-      DB.distinct(
-        {
-          collection: settings.collectionTxHistory,
-          item: 'value',
-          settings: { bundle: thebundle }
-        },
-        (err, result) => {
-          const answer = result ? result : err;
-          res.json({ answer });
-        }
-      );
-    });
-
-    router.get('/v1/getTransactions', (req, res) => {
-      let txRequested;
-      try {
-        txRequested = JSON.parse(req.query.hashes);
-      } catch (error) {
-        res.json({ Request_error: 'No TX hashes given (Array)' });
-      }
-
-      if (Array.isArray(txRequested) && txRequested.length > 0) {
-        txRequested.forEach(txHash => {
-          DB.find(
-            {
-              collection: settings.collectionTxHistory,
-              item: { hash: txHash },
-              settings: {
-                projection: { _id: 0 }
-              }
-            },
-            (err, Transactions) => {
-              res.json({ Transactions });
-            }
-          );
-        });
-      } else {
-        res.json({ Request_error: 'No TX hashes given (Array)' });
       }
     });
 

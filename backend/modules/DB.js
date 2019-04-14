@@ -166,6 +166,105 @@ const initMongoDB = (options, callback) => {
   );
 };
 
+// Collection of DB calls
+const lokiFind = (params, callback) => {
+  let result = [];
+  let err = false;
+  try {
+    result = collection[params.collection]
+      .chain()
+      .find(params.item)
+      .data({ removeMeta: true });
+
+    if (params.settings.limit) result = _.takeRight(result, params.settings.limit);
+  } catch (e) {
+    err = 'Error on lokiJS find() call: ' + e;
+  } finally {
+    if (callback) callback(err, result);
+  }
+};
+
+const mongoDBFind = (params, callback) => {
+  collection[params.collection].find(params.item, params.settings).toArray((err, res) => {
+    if (err) console.log(Time.Stamp() + err);
+    if (callback) callback(err, res);
+  });
+};
+
+const lokiInsertOne = (params, callback) => {
+  let error = false;
+  try {
+    collection[params.collection].insert(params.item);
+  } catch (e) {
+    error = true;
+    //console.log(Time.Stamp(), e);
+  } finally {
+    // TODO, check real callback
+    if (callback) callback(error, error ? null : { ops: [params.item] });
+  }
+};
+
+const mongoDBinsertOne = (params, callback) => {
+  collection[params.collection].insertOne(params.item, { w: 1 }, (err, res) => {
+    if (callback) callback(err, res);
+  });
+};
+
+const lokiUpdateMany = (params, callback) => {
+  let error = false;
+  try {
+    const txToUpdate = collection[params.collection].find(params.item);
+    if (txToUpdate.length > 0) {
+      txToUpdate.map(entry => {
+        entry = _.merge(entry, params.settings.$set);
+      });
+      collection[params.collection].update(txToUpdate);
+    }
+  } catch (e) {
+    error = true;
+    console.log(Time.Stamp(), e);
+  } finally {
+    if (callback) callback(error, error ? null : params.item);
+  }
+};
+
+const mongoDBupdateMany = (params, callback) => {
+  collection[params.collection].updateMany(params.item, params.settings, (err, res) => {
+    if (err) console.log(Time.Stamp() + err);
+    if (callback) callback(err, res);
+  });
+};
+
+const lokiDistinct = (params, callback) => {
+  let error = false;
+  let result = [];
+  try {
+    result = collection[params.collection].find(params.settings);
+  } catch (e) {
+    error = true;
+    console.log(Time.Stamp(), e);
+  } finally {
+    if (!error) {
+      if (result.length > 0) {
+        result = result.reduce((acc, tx) => {
+          acc.push(tx[params.item]);
+          return acc;
+        }, []);
+
+        result = _.uniq(result);
+      }
+    }
+    if (callback) callback(error, result);
+  }
+};
+
+const mongoDBDistinct = (params, callback) => {
+  collection[params.collection].distinct(params.item, params.settings, (err, res) => {
+    if (err) console.log(Time.Stamp() + err);
+    if (callback) callback(err, res);
+  });
+};
+
 module.exports = {
   init: (settings, callback) => {
     collectionHistory = settings.collectionTxHistory;
@@ -233,42 +332,42 @@ module.exports = {
   },
 
   insertOne: (params, callback) => {
-    const lokiInsertOne = () => {
-      let error = false;
-      try {
-        collection[params.collection].insert(params.item);
-      } catch (e) {
-        error = true;
-        //console.log(Time.Stamp(), e);
-      } finally {
-        // TODO, check real callback
-        if (callback) callback(error, error ? null : { ops: [params.item] });
+    return new Promise((resolve, reject) => {
+      if (collection[params.collection]) {
+        switch (config.DB.driver) {
+          case 'standalone':
+            lokiInsertOne(params, (err, result) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(result);
+              }
+            });
+
+            break;
+          case 'MongoDB':
+            mongoDBinsertOne(params, (err, result) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(result);
+              }
+            });
+            break;
+
+          default:
+            lokiInsertOne(params, (err, result) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(result);
+              }
+            });
+        }
+      } else {
+        reject(Time.Stamp() + 'DB not ready yet [call: insertOne]. Retrying to access...');
       }
-    };
-
-    const mongoDBinsertOne = () => {
-      collection[params.collection].insertOne(params.item, { w: 1 }, (err, res) => {
-        //if (err) console.log(Time.Stamp() + err);
-        if (callback) callback(err, res);
-      });
-    };
-
-    if (collection[params.collection]) {
-      switch (config.DB.driver) {
-        case 'standalone':
-          lokiInsertOne();
-
-          break;
-        case 'MongoDB':
-          mongoDBinsertOne();
-          break;
-
-        default:
-          lokiInsertOne();
-      }
-    } else {
-      console.log(Time.Stamp() + 'DB not ready yet [call: insertOne]. Retrying to access...');
-    }
+    });
   },
 
   update: (params, callback) => {
@@ -314,127 +413,11 @@ module.exports = {
   },
 
   updateMany: (params, callback) => {
-    if (collection[params.collection]) {
-      const lokiUpdateMany = () => {
-        let error = false;
-        let result = [];
-        try {
-          result = collection[params.collection].find(params.item);
-          if (result.length > 0) {
-            result.map(entry => {
-              entry = _.merge(entry, params.settings.$set);
-              collection[params.collection].update(entry);
-            });
-          }
-        } catch (e) {
-          error = true;
-          console.log(Time.Stamp(), e);
-        } finally {
-          if (callback) callback(error, error ? null : params.item);
-        }
-      };
-
-      const mongoDBupdateMany = () => {
-        collection[params.collection].updateMany(params.item, params.settings, (err, res) => {
-          if (err) console.log(Time.Stamp() + err);
-          if (callback) callback(err, res);
-        });
-      };
-
-      switch (config.DB.driver) {
-        case 'standalone':
-          lokiUpdateMany();
-          break;
-        case 'MongoDB':
-          mongoDBupdateMany();
-          break;
-
-        default:
-          lokiUpdateMany();
-      }
-    } else {
-      console.log(Time.Stamp() + 'DB not ready yet [call: updateMany]. Retrying to access...');
-    }
-  },
-
-  distinct: (params, callback) => {
-    if (collection[params.collection]) {
-      const lokiDistinct = () => {
-        let error = false;
-        let result = [];
-        try {
-          result = collection[params.collection].find(params.settings);
-        } catch (e) {
-          error = true;
-          console.log(Time.Stamp(), e);
-        } finally {
-          if (!error) {
-            if (result.length > 0) {
-              result = result.reduce((acc, tx) => {
-                acc.push(tx[params.item]);
-                return acc;
-              }, []);
-
-              result = _.uniq(result);
-            }
-          }
-          if (callback) callback(error, result);
-        }
-      };
-
-      const mongoDBDistinct = () => {
-        collection[params.collection].distinct(params.item, params.settings, (err, res) => {
-          if (err) console.log(Time.Stamp() + err);
-          if (callback) callback(err, res);
-        });
-      };
-
-      switch (config.DB.driver) {
-        case 'standalone':
-          lokiDistinct();
-          break;
-        case 'MongoDB':
-          mongoDBDistinct();
-          break;
-
-        default:
-          lokiDistinct();
-      }
-    } else {
-      console.log(Time.Stamp() + 'DB not ready yet [call: distinct]. Retrying to access...');
-    }
-  },
-
-  find: params => {
-    const lokiFind = callback => {
-      let result = [];
-      let err = false;
-      try {
-        result = collection[params.collection]
-          .chain()
-          .find(params.item)
-          .data({ removeMeta: true });
-
-        if (params.settings.limit) result = _.takeRight(result, params.settings.limit);
-      } catch (e) {
-        err = 'Error on lokiJS find() call: ' + e;
-      } finally {
-        if (callback) callback(err, result);
-      }
-    };
-
-    const mongoDBFind = callback => {
-      collection[params.collection].find(params.item, params.settings).toArray((err, res) => {
-        if (err) console.log(Time.Stamp() + err);
-        if (callback) callback(err, res);
-      });
-    };
-
     return new Promise((resolve, reject) => {
       if (collection[params.collection]) {
         switch (config.DB.driver) {
           case 'standalone':
-            lokiFind((err, result) => {
+            lokiUpdateMany(params, (err, result) => {
               if (err) {
                 reject(err);
               } else {
@@ -443,7 +426,7 @@ module.exports = {
             });
             break;
           case 'MongoDB':
-            mongoDBFind((err, result) => {
+            mongoDBupdateMany(params, (err, result) => {
               if (err) {
                 reject(err);
               } else {
@@ -453,7 +436,83 @@ module.exports = {
             break;
 
           default:
-            lokiFind((err, result) => {
+            lokiUpdateMany(params, (err, result) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(result);
+              }
+            });
+        }
+      } else {
+        reject(Time.Stamp() + 'DB not ready yet [call: updateMany]. Retrying to access...');
+      }
+    });
+  },
+
+  distinct: (params, callback) => {
+    return new Promise((resolve, reject) => {
+      if (collection[params.collection]) {
+        switch (config.DB.driver) {
+          case 'standalone':
+            lokiDistinct(params, (err, result) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(result);
+              }
+            });
+            break;
+          case 'MongoDB':
+            mongoDBDistinct(params, (err, result) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(result);
+              }
+            });
+            break;
+
+          default:
+            lokiDistinct(params, (err, result) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(result);
+              }
+            });
+        }
+      } else {
+        reject(Time.Stamp() + 'DB not ready yet [call: distinct]. Retrying to access...');
+      }
+    });
+  },
+
+  find: params => {
+    return new Promise((resolve, reject) => {
+      if (collection[params.collection]) {
+        switch (config.DB.driver) {
+          case 'standalone':
+            lokiFind(params, (err, result) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(result);
+              }
+            });
+            break;
+          case 'MongoDB':
+            mongoDBFind(params, (err, result) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(result);
+              }
+            });
+            break;
+
+          default:
+            lokiFind(params, (err, result) => {
               if (err) {
                 reject(err);
               } else {
@@ -465,23 +524,5 @@ module.exports = {
         reject(Time.Stamp() + 'DB not ready yet [call: find]. Retrying to access...');
       }
     });
-
-    /*
-if (collection[params.collection]) {
-  switch (config.DB.driver) {
-    case 'standalone':
-      lokiFind();
-      break;
-    case 'MongoDB':
-      mongoDBFind();
-      break;
-
-    default:
-      lokiFind();
-  }
-} else {
-  console.log(Time.Stamp() + 'DB not ready yet [call: find]. Retrying to access...');
-}
-*/
   }
 };

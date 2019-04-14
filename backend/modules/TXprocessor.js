@@ -43,30 +43,27 @@ module.exports = {
       WebSocket.emit('newTX', reassembledTX);
 
       // Add new TX to DB
-      DB.insertOne(
-        { collection: params.settings.collectionTxHistory, item: reassembledTX },
-        (err, res) => {
+      DB.insertOne({ collection: params.settings.collectionTxHistory, item: reassembledTX })
+        .then(() => {
           module.exports.checkFormerReattachment({
             txHash: reassembledTX.hash,
             bundleHash: reassembledTX.bundle,
             settings: params.settings
           });
-        }
-      );
+        })
+        .catch(() => {});
     }
   },
 
   checkReattachment: (params, tx, receivedAt) => {
-    DB.distinct(
-      {
-        collection: params.settings.collectionTxHistory,
-        item: 'value',
-        settings: { bundle: tx.bundle }
-      },
-      (err, res) => {
-        //const answer = result ? result : err;
+    DB.distinct({
+      collection: params.settings.collectionTxHistory,
+      item: 'value',
+      settings: { bundle: tx.bundle }
+    })
+      .then(res => {
         // Check if bundle includes value
-        if (!err && res.length > 1) {
+        if (res.length > 1) {
           // Include bundle hash to confirmed bundles list
           // TODO: call this from DB conf collection
           if (!confirmedBundles.includes(tx.bundle)) confirmedBundles.unshift(tx.bundle);
@@ -75,22 +72,21 @@ module.exports = {
           /* Maybe performance optimization? https://docs.mongodb.com/manual/tutorial/perform-findAndModify-linearizable-reads/  */
           const range = _.range(receivedAt - 15, receivedAt + 16, 1);
 
-          DB.find(
-            {
-              collection: params.settings.collectionTxHistory,
-              item: {
-                $and: [
-                  { bundle: tx.bundle },
-                  { hash: { $ne: tx.hash } },
-                  { address: { $eq: tx.address } },
-                  { confirmed: false },
-                  { reattached: false },
-                  { receivedAt: { $nin: range } }
-                ]
-              },
-              settings: {}
+          DB.find({
+            collection: params.settings.collectionTxHistory,
+            item: {
+              $and: [
+                { bundle: tx.bundle },
+                { hash: { $ne: tx.hash } },
+                { address: { $eq: tx.address } },
+                { confirmed: false },
+                { reattached: false },
+                { receivedAt: { $nin: range } }
+              ]
             },
-            (err, reattaches) => {
+            settings: {}
+          })
+            .then(reattaches => {
               if (reattaches.length > 0) {
                 // TODO: send list of reattches instead to loop and send them seperately: front-end needs to be adapted
                 let reattachList = [];
@@ -100,28 +96,19 @@ module.exports = {
                   const websocketUpdate = { hash: reattachTX.hash };
 
                   WebSocket.emit('updateReattach', websocketUpdate);
-                  //console.log(Time.Stamp() + 'Hash broadcast: ' + reattachTX.hash);
                 });
 
-                DB.updateMany(
-                  {
-                    collection: params.settings.collectionTxHistory,
-                    item: { hash: { $in: reattachList } },
-                    settings: { $set: { reattached: true, confirmed: false } }
-                  },
-                  (err, res) => {
-                    if (res !== null) {
-                      //console.log(Time.Stamp() + 'updateMany: ' + res);
-                      //console.log(`${Time.Stamp()} tx.hash: ${tx.hash} | res.value.hash: ${Object.keys(res)} | | ${tx.bundle}`);
-                    }
-                  }
-                );
+                DB.updateMany({
+                  collection: params.settings.collectionTxHistory,
+                  item: { hash: { $in: reattachList } },
+                  settings: { $set: { reattached: true, confirmed: false } }
+                }).catch(err => {});
               }
-            }
-          );
+            })
+            .catch(err => {});
         }
-      }
-    );
+      })
+      .catch(err => {});
   },
 
   Confirmation: params => {

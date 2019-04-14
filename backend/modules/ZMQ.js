@@ -161,7 +161,7 @@ module.exports = {
         }
       };
 
-      // If it's a test node without IRI API omit sync test and connect anyway
+      // If it's a test (ZMQ) node without IRI API omit sync test and connect anyway
       if (zmqNode.testNode) {
         const isConnectedZmqNode = checkIsConnectedZmqNode(zmqNode);
         if (!isConnectedZmqNode) {
