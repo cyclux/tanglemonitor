@@ -1,9 +1,7 @@
-/*eslint no-console: ["error", { allow: ["log", "error"] }] */
+/* eslint no-console: ["error", { allow: ["log", "error"] }] */
 /* eslint security/detect-object-injection: 0 */ // Safe, as we do not pass user input to the objects
 
 const _ = require('lodash');
-const IOTA = require('../iota.lib.js/lib/iota');
-//const config = require('../.config');
 const Time = require('../modules/Time');
 const WebSocket = require('../modules/WebSocket');
 const DB = require('../modules/DB');
@@ -17,11 +15,11 @@ module.exports = {
       params.newTX = params.newTX = { transaction: params.newTX };
 
       const receivedAt = parseInt(params.newTX['transaction']['receivedAt'], 10);
-      //const txTimestamp = parseInt(params.newTX['transaction']['timestamp'], 10);
-      //const receivedAtms = params.newTX['transaction']['receivedAtms'];
 
       const hash = params.newTX['transaction']['hash'];
       const bundle = params.newTX['transaction']['bundle'];
+      const branch = params.newTX['transaction']['branch'];
+      const trunk = params.newTX['transaction']['trunk'];
       const tag = params.newTX['transaction']['tag'];
       const address = params.newTX['transaction']['address'];
       const value = params.newTX['transaction']['value'];
@@ -29,6 +27,8 @@ module.exports = {
       const reassembledTX = {
         hash: hash,
         bundle: bundle,
+        branch: branch,
+        trunk: trunk,
         address: address,
         tag: tag,
         confirmed: false,
@@ -171,25 +171,16 @@ module.exports = {
   Milestone: (params, callback) => {
     const confirmationTime = Date.now();
 
-    const iotajs = new IOTA({
-      host: params.settings.iotajs.url,
-      port: params.settings.iotajs.port
-    });
-
     if (params.newMile.milestone !== 't') {
-      iotajs.api.getTransactionsObjects([params.newMile.hash], (e, txObjects) => {
-        if (e) {
-          if (
-            e.message !== 'Request Error: One of the tips absents' &&
-            e.message !== 'Request Error: The subtangle is not solid' &&
-            e.message !== 'Request Error: iri not ready'
-          ) {
-            console.error(Time.Stamp() + 'Error getTransactionsObjects: ', e.message);
-          }
-        } else {
-          const milestoneTrunk = txObjects[0].trunkTransaction;
+      DB.find({
+        collection: params.settings.collectionTxHistory,
+        item: { hash: params.newMile.hash },
+        settings: {}
+      }).then(milestone => {
+        if (milestone && milestone.length > 0) {
+          console.log('milestone', milestone[0]);
           module.exports.Milestone({
-            newMile: { hash: milestoneTrunk, milestone: 't', ctime: confirmationTime },
+            newMile: { hash: milestone[0].trunk, milestone: 't', ctime: confirmationTime },
             settings: params.settings
           });
         }

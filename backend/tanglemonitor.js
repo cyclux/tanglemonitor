@@ -8,7 +8,7 @@ pm2 start tanglemonitor.js -f -- --net devnet
 */
 
 // For DEBUGGING event loop
-const blocked = require('blocked-at');
+//const blocked = require('blocked-at');
 
 const commandLineArgs = require('command-line-args');
 const { fork } = require('child_process');
@@ -83,7 +83,9 @@ DB.init(settings, statusDB => {
   }
 
   //DEBUG: check if event loop is blocked
+  /*
   blocked((time, stack) => {
     console.log(`Blocked for ${time}ms:`, stack);
   });
+  */
 });
