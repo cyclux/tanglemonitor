@@ -178,7 +178,6 @@ module.exports = {
         settings: {}
       }).then(milestone => {
         if (milestone && milestone.length > 0) {
-          console.log('milestone', milestone[0]);
           module.exports.Milestone({
             newMile: { hash: milestone[0].trunk, milestone: 't', ctime: confirmationTime },
             settings: params.settings
