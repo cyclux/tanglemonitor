@@ -477,6 +477,7 @@ c.addEventListener(
     document.body.style.cursor = 'auto';
     txOfMousePosition = {};
     selectedAddress = selectedAddressBuffer;
+    drawGraph({ loop: false });
   },
   false
 );
@@ -671,17 +672,18 @@ const drawGraph = params => {
 
   // Get all current TX in DB and update global txList
   // Optionally filter according to user settings
-  txList = txHistory.find({
-    $and: [
-      filterForValueTX ? { value: { $ne: 0 } } : {},
-      filterForSpecificAddresses.length > 0 ? { address: { $nin: filterForSpecificAddresses } } : {}
-    ]
-  });
-
-  // Only order txList on regular loop draws, not on force draws (not worth the cost)
-  if (params.loop) {
-    txList = _.orderBy(txList, ['receivedAt'], ['asc']);
-  }
+  txList = txHistory
+    .chain()
+    .find({
+      $and: [
+        filterForValueTX ? { value: { $ne: 0 } } : {},
+        filterForSpecificAddresses.length > 0
+          ? { address: { $nin: filterForSpecificAddresses } }
+          : {}
+      ]
+    })
+    .simplesort('receivedAt') //  { useJavascriptSorting: true }
+    .data();
 
   // Create header metrics and legend labels
   ctx.font = `${fontSizeHeader} ${fontFace}`;
@@ -1113,7 +1115,7 @@ const InitialHistoryPoll = firstLoad => {
 
       txHistory = db.addCollection('txHistory', {
         unique: ['hash'],
-        indices: ['address', 'bundle']
+        indices: ['address', 'bundle', 'receivedAt']
       });
 
       txHistory.insert(fetchedListJSON.txHistory);
