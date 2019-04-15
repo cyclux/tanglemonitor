@@ -4,7 +4,7 @@
 const zmq = require('zeromq');
 const request = require('request');
 
-const config = require('../.config');
+const config = require('../config');
 const Time = require('../modules/Time');
 
 /*  Store ZMQ Socket objects */

@@ -43,7 +43,7 @@ module.exports = {
       WebSocket.emit('newTX', reassembledTX);
 
       // Add new TX to DB
-      DB.insertOne({ collection: params.settings.collectionTxHistory, item: reassembledTX })
+      DB.insertOne({ collection: `txHistory-${params.settings.netName}`, item: reassembledTX })
         .then(() => {
           module.exports.checkFormerReattachment({
             txHash: reassembledTX.hash,
@@ -57,7 +57,7 @@ module.exports = {
 
   checkReattachment: (params, tx, receivedAt) => {
     DB.distinct({
-      collection: params.settings.collectionTxHistory,
+      collection: `txHistory-${params.settings.netName}`,
       item: 'value',
       settings: { bundle: tx.bundle }
     })
@@ -73,7 +73,7 @@ module.exports = {
           const range = _.range(receivedAt - 15, receivedAt + 16, 1);
 
           DB.find({
-            collection: params.settings.collectionTxHistory,
+            collection: `txHistory-${params.settings.netName}`,
             item: {
               $and: [
                 { bundle: tx.bundle },
@@ -99,7 +99,7 @@ module.exports = {
                 });
 
                 DB.updateMany({
-                  collection: params.settings.collectionTxHistory,
+                  collection: `txHistory-${params.settings.netName}`,
                   item: { hash: { $in: reattachList } },
                   settings: { $set: { reattached: true, confirmed: false } }
                 }).catch(err => {});
@@ -123,7 +123,7 @@ module.exports = {
         let receivedAt = 0;
         DB.update(
           {
-            collection: params.settings.collectionTxHistory,
+            collection: `txHistory-${params.settings.netName}`,
             item: { hash: tx.hash },
             settings: { $set: { confirmed: true, ctime: tx.ctime } }
           },
@@ -156,7 +156,7 @@ module.exports = {
 
       DB.update(
         {
-          collection: params.settings.collectionTxHistory,
+          collection: `txHistory-${params.settings.netName}`,
           item: { hash: params.txHash },
           settings: { $set: { reattached: true, confirmed: false } }
         },
@@ -172,8 +172,9 @@ module.exports = {
     const confirmationTime = Date.now();
 
     if (params.newMile.milestone !== 't') {
+      // TODO, switch to .by()
       DB.find({
-        collection: params.settings.collectionTxHistory,
+        collection: `txHistory-${params.settings.netName}`,
         item: { hash: params.newMile.hash },
         settings: {}
       }).then(milestone => {
@@ -187,7 +188,7 @@ module.exports = {
     }
 
     DB.update({
-      collection: params.settings.collectionTxHistory,
+      collection: `txHistory-${params.settings.netName}`,
       item: { hash: params.newMile.hash },
       settings: {
         $set: {

@@ -8,7 +8,7 @@ const https = require('https');
 const express = require('express');
 const helmet = require('helmet');
 
-const config = require('../.config');
+const config = require('../config');
 const DB = require('../modules/DB');
 const Time = require('../modules/Time');
 
@@ -70,7 +70,7 @@ module.exports = {
       }
 
       DB.find({
-        collection: settings.collectionTxHistory,
+        collection: `txHistory-${settings.netName}`,
         item: {},
         settings: {
           projection: { _id: 0 },
@@ -101,7 +101,7 @@ module.exports = {
 
     router.get('/v1/getConfirmedTransactions', (req, res) => {
       DB.find({
-        collection: settings.collectionTxHistory,
+        collection: `txHistory-${settings.netName}`,
         item: { confirmed: true },
         settings: {
           projection: { _id: 0 },
@@ -118,7 +118,7 @@ module.exports = {
 
     router.get('/v1/getUnconfirmedTransactions', (req, res) => {
       DB.find({
-        collection: settings.collectionTxHistory,
+        collection: `txHistory-${settings.netName}`,
         item: { confirmed: false },
         settings: {
           projection: { _id: 0 },
@@ -136,7 +136,7 @@ module.exports = {
     router.get('/v1/getTransactionsToRequest', (req, res) => {
       /* TODO: deprecated - Slow request > 100ms */
       DB.find({
-        collection: settings.collectionTxHistory,
+        collection: `txHistory-${settings.netName}`,
         item: { confirmed: false },
         settings: {
           projection: { _id: 0 },
@@ -156,7 +156,7 @@ module.exports = {
       const t = escape(req.query.token);
       if (t === apiToken) {
         DB.updateMany({
-          collection: settings.collectionTxHistory,
+          collection: `txHistory-${settings.netName}`,
           item: {},
           settings: { $set: { reattached: false } }
         })

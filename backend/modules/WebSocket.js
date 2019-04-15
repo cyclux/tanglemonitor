@@ -5,7 +5,7 @@ const express = require('express');
 const http = require('http');
 const https = require('https');
 
-const config = require('../.config');
+const config = require('../config');
 const Time = require('../modules/Time');
 
 let socketIO;

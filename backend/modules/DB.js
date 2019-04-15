@@ -5,7 +5,7 @@ const MongoClient = require('mongodb').MongoClient;
 const _ = require('lodash');
 const loki = require('lokijs');
 const lfsa = require('lokijs/src/loki-fs-structured-adapter.js');
-const config = require('../.config');
+const config = require('../config');
 const Time = require('../modules/Time');
 
 let collection = {};
@@ -267,10 +267,10 @@ const mongoDBDistinct = (params, callback) => {
 
 module.exports = {
   init: (settings, callback) => {
-    collectionHistory = settings.collectionTxHistory;
-    collectionTxNew = settings.collectionTxNew;
-    collectionConfNew = settings.collectionConfNew;
-    collectionMileNew = settings.collectionMileNew;
+    collectionHistory = `txHistory-${settings.netName}`;
+    collectionTxNew = `ZMQNewTX-${settings.netName}`;
+    collectionConfNew = `ZMQNewConf-${settings.netName}`;
+    collectionMileNew = `ZMQNewMile-${settings.netName}`;
 
     switch (config.DB.driver) {
       case 'standalone':

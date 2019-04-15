@@ -7,6 +7,11 @@ node tanglemonitor.js --net devnet
 pm2 start tanglemonitor.js -f -- --net devnet
 */
 
+/*
+TODO:
+Give option to delete DB collections
+*/
+
 // For DEBUGGING event loop
 //const blocked = require('blocked-at');
 
@@ -30,23 +35,13 @@ const cliParams = commandLineArgs(cliDefinitions);
 // Set net according to CLI parameter - default to mainnet
 const netEnvironment = cliParams && cliParams.net ? cliParams.net : 'mainnet';
 
-// Set Port / URL according to net environment
-let settings;
-switch (netEnvironment) {
-  case 'mainnet':
-    settings = config.env.mainnet;
-    break;
-  case 'devnet':
-    settings = config.env.devnet;
-    break;
-  case 'spamnet':
-    settings = config.env.spamnet;
-    break;
-  default:
-    console.log(
-      Time.Stamp() + `Settings for ${netEnvironment} not found! Defaulting to MAINNET...`
-    );
-    settings = config.env.mainnet;
+// Define (net environment) settings according to user config
+let settings = config.environments.find(nets => nets.netName === netEnvironment);
+if (!settings) {
+  settings = console.log(
+    `Settings for '${netEnvironment}' not found! Please set '--net' flag according to the declaration specified in '.config'`
+  );
+  process.exit(1);
 }
 
 console.log(Time.Stamp() + `Starting tanglemonitor with ${netEnvironment} settings...`);
