@@ -19,7 +19,7 @@ const commandLineArgs = require('command-line-args');
 const { fork } = require('child_process');
 // Doku https://github.com/75lb/command-line-args/wiki
 // https://github.com/75lb/command-line-usage
-const config = require('./.config');
+const config = require('./config');
 
 const DB = require('./modules/DB');
 const API = require('./modules/API');
@@ -81,6 +81,6 @@ DB.init(settings, statusDB => {
   /*
   blocked((time, stack) => {
     console.log(`Blocked for ${time}ms:`, stack);
-  });
+  }, {threshold: 50, trimFalsePositives: true});
   */
 });

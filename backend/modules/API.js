@@ -23,16 +23,13 @@ const credentials = {
 // Setting up API server
 const api = express();
 
-const apiServer = http.createServer(api);
-const apiServer_ssl = https.createServer(credentials, api);
-
-const domain = config.domain;
-
 module.exports = {
   init: (settings, callback) => {
-    domain !== 'localhost'
-      ? apiServer_ssl.listen(settings.apiServer_ssl)
-      : apiServer.listen(settings.apiServer);
+    // Init API server
+    const apiServer = settings.apiServer.ssl
+      ? https.createServer(credentials, api)
+      : http.createServer(api);
+    apiServer.listen(settings.apiServer.port);
 
     // Setting up API
     api.settings['x-powered-by'] = false;
@@ -44,11 +41,10 @@ module.exports = {
     api.use(compression());
 
     api.use((req, res, next) => {
-      const domainString =
-        domain !== 'localhost'
-          ? `https://${settings.subdomain !== '' ? settings.subdomain + '.' : ''}${config.domain}`
-          : `http://${settings.subdomain !== '' ? settings.subdomain + '.' : ''}localhost` +
-            `${config.webServer.standalone ? ':' + config.webServer.port : ''}`;
+      const domainString = `http${settings.apiServer.ssl ? 's' : ''}://${
+        settings.subdomain !== '' ? settings.subdomain + '.' : ''
+      }${config.domain}${config.webServer.standalone ? ':' + config.webServer.port : ''}`;
+
       res.header('Access-Control-Allow-Origin', domainString);
       next();
     });

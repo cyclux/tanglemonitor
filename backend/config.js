@@ -30,12 +30,8 @@ module.exports = {
     {
       netName: 'mainnet',
       subdomain: '',
-      apiServer_ssl: 4433,
-      apiServer: 8080,
-      socketioServer_ssl: 4434,
-      socketioServer: 8081,
-      newTransactions_ssl: 4435,
-      newTransactions: 8082,
+      apiServer: { port: 4433, ssl: false },
+      socketioServer: { port: 4434, ssl: false },
       maxAmountZmqConnections: 3,
       nodeSyncDeltaThreshold: 10,
       zmqNodes: [
@@ -48,12 +44,8 @@ module.exports = {
     {
       netName: 'devnet',
       subdomain: 'testnet',
-      apiServer_ssl: 4437,
-      apiServer: 8081,
-      socketioServer_ssl: 4438,
-      socketioServer: 8082,
-      newTransactions_ssl: 4436,
-      newTransactions: 8083,
+      apiServer: { port: 4437, ssl: false },
+      socketioServer: { port: 4438, ssl: false },
       maxAmountZmqConnections: 3,
       nodeSyncDeltaThreshold: 10,
       zmqNodes: [{ host: 'nodes.devnet.iota.org', port: 5556, api: 443, ssl: true }]
@@ -62,12 +54,8 @@ module.exports = {
     {
       netName: 'spamnet',
       subdomain: 'spamnet',
-      apiServer_ssl: 4439,
-      apiServer: 8080,
-      socketioServer_ssl: 4440,
-      socketioServer: 8081,
-      newTransactions_ssl: 4441,
-      newTransactions: 8083,
+      apiServer: { port: 4439, ssl: false },
+      socketioServer: { port: 4440, ssl: false },
       maxAmountZmqConnections: 3,
       nodeSyncDeltaThreshold: 10,
       zmqNodes: [{ host: 'nodes.spamnet.iota.org', port: 5556, api: 80, ssl: false }]

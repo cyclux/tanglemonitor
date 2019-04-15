@@ -4,8 +4,7 @@
 
 // Set environment according to current deployment
 const host = window.location.hostname;
-let envState = 'prod';
-if (host === 'localhost') envState = 'dev';
+const hostProtocol = window.location.protocol;
 
 // Initialize DB
 let db = new loki('txHistory');
@@ -1097,12 +1096,9 @@ const CalcMetricsSummary = () => {
 
 // Fetch recent TX history from local or remote backend
 const InitialHistoryPoll = firstLoad => {
-  let pollingURL = '';
-  envState === 'prod'
-    ? (pollingURL = `https://tanglemonitor.com:4433/api/v1/getRecentTransactions?amount=${txAmountToPoll}`)
-    : (pollingURL = `http://localhost:8080/api/v1/getRecentTransactions?amount=${txAmountToPoll}`);
+  const apiUrl = `${hostProtocol}//${host}:4433/api/v1/getRecentTransactions?amount=${txAmountToPoll}`;
 
-  fetch(pollingURL, { cache: 'no-cache' })
+  fetch(apiUrl, { cache: 'no-cache' })
     .then(fetchedList => fetchedList.json())
     .then(fetchedListJSON => {
       document.getElementById('loading').style.display = 'none';
@@ -1148,16 +1144,12 @@ const InitialHistoryPoll = firstLoad => {
 const InitWebSocket = () => {
   if (!websocketActive) {
     websocketActive = true;
-    let socketURL = '';
-    envState === 'prod'
-      ? (socketURL = 'https://tanglemonitor.com:4434')
-      : (socketURL = 'http://localhost:8081');
-    let sslState = true;
-    envState === 'prod' ? (sslState = true) : (sslState = false);
+
+    const webSocketUrl = `${hostProtocol}//${host}:4434`;
 
     const socket = io.connect(
-      socketURL,
-      { secure: sslState, reconnection: false }
+      webSocketUrl,
+      { secure: hostProtocol === 'https:' ? true : false, reconnection: false }
     );
 
     socket.on('connect', () => {
