@@ -1106,7 +1106,7 @@ const InitialHistoryPoll = firstLoad => {
       document.getElementById('loadingTX').classList.remove('inline_block');
 
       // Store fetched TX history in local DB
-      txList = fetchedListJSON.txHistory;
+      txList = fetchedListJSON.txHistory ? fetchedListJSON.txHistory : [];
       if (txHistory) db.removeCollection('txHistory');
 
       txHistory = db.addCollection('txHistory', {
@@ -1114,7 +1114,7 @@ const InitialHistoryPoll = firstLoad => {
         indices: ['address', 'bundle', 'receivedAt']
       });
 
-      txHistory.insert(fetchedListJSON.txHistory);
+      txHistory.insert(txList);
 
       if (firstLoad) {
         // Initialize graph render loop

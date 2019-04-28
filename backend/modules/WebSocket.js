@@ -36,7 +36,7 @@ module.exports = {
     expressWS.use((req, res, next) => {
       const domainString = `http${settings.socketioServer.ssl ? 's' : ''}://${
         settings.subdomain !== '' ? settings.subdomain + '.' : ''
-      }${config.domain}${config.webServer.standalone ? ':' + config.webServer.port : ''}`;
+      }${config.webServer.domain}${config.webServer.standalone ? ':' + config.webServer.port : ''}`;
       console.log('domainString', domainString);
       res.header('Access-Control-Allow-Origin', domainString);
       res.header('Access-Control-Allow-Credentials', true);

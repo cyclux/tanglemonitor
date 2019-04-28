@@ -48,6 +48,9 @@ const lokiDBCollectionsGen = params => {
   }
 };
 
+/*
+MongoDB equivalent needs to be implemented first to fully enable:
+
 const showDBinfo = () => {
   setTimeout(() => {
     const now = Date.now();
@@ -59,6 +62,7 @@ const showDBinfo = () => {
     showDBinfo();
   }, 60 * 1000);
 };
+*/
 
 const lokiDBInitialize = () => {
   lokiDBCollectionsGen({
@@ -89,20 +93,27 @@ const lokiDBInitialize = () => {
     uniqueCollections: ['hash']
   });
 
-  showDBinfo();
+  //showDBinfo();
 };
 
-const nowInit = Date.now();
+//const nowInit = Date.now();
 
 const initLokiJS = (options, callback) => {
   const adapter = new lfsa();
+
+  const persistence = config.DB.storageDuration > 0 ? true : false;
   lokiDB = new loki('DB/lokiDB', {
     adapter: adapter,
-    autoload: config.DB.persistent ? true : false,
+    autoload: persistence,
     autoloadCallback: lokiDBInitialize,
-    autosave: config.DB.persistent ? true : false,
+    autosave: persistence,
     autosaveInterval: 1 * 60 * 1000
   });
+
+  // autoloadCallback does not call lokiDBInitialize if persistence if false, so here we call it anyway
+  if (!persistence) {
+    lokiDBInitialize();
+  }
 
   callback(Time.Stamp() + 'Standalone DB [LokiJS] initialized...');
 };

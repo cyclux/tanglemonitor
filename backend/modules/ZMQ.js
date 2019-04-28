@@ -20,6 +20,8 @@ let zmqNodesAmountConnected = 0;
 let maxAmountZmqConnections;
 /* Store pool of ZMQ nodes (user defined via config) */
 let zmqNodes;
+/* Store the amount of ZMQ nodes specified by the user */
+let zmqNodesAmount = 0;
 /*  Threshold which determines at which delta between LMI and LSSMI
     the node should be considered "out-of-sync" (user defined via config) */
 let nodeSyncDeltaThreshold;
@@ -107,7 +109,8 @@ const processZmqMsg = (zmqMsg, settings) => {
     }
 
     // Only process new TX if they were already received by another node recently
-    if (syncingCheckBuffer.includes(zmqTX.newTX.hash)) {
+    // Or if there is only one ZMQ node specified by the user
+    if (syncingCheckBuffer.includes(zmqTX.newTX.hash) || zmqNodesAmount === 1) {
       process.send({ type: 'cmd', call: 'newTX', zmqTX: zmqTX, settings: settings });
     } else {
       syncingCheckBuffer.unshift(zmqTX.newTX.hash);
@@ -124,6 +127,7 @@ const processZmqMsg = (zmqMsg, settings) => {
 module.exports = {
   init: (settings, callback) => {
     zmqNodes = settings.zmqNodes;
+    zmqNodesAmount = settings.zmqNodes.length;
     maxAmountZmqConnections = settings.maxAmountZmqConnections;
     nodeSyncDeltaThreshold = settings.nodeSyncDeltaThreshold;
 
@@ -162,7 +166,7 @@ module.exports = {
       };
 
       // If it's a test (ZMQ) node without IRI API omit sync test and connect anyway
-      if (zmqNode.testNode) {
+      if (!zmqNode.syncCheck) {
         const isConnectedZmqNode = checkIsConnectedZmqNode(zmqNode);
         if (!isConnectedZmqNode) {
           module.exports.connect(
@@ -181,7 +185,7 @@ module.exports = {
           if (isConnectedZmqNode) zmqNodesAmountCounter++;
 
           // On last iteration match counted connections with global state
-          if (iterCount === zmqNodes.length && !options.initialCall) {
+          if (iterCount === zmqNodesAmount && !options.initialCall) {
             zmqNodesAmountConnected = zmqNodesAmountCounter;
             if (config.logging.showZmqNodeStatus) {
               console.log(
