@@ -12,8 +12,6 @@ TODO:
 Give option to delete DB collections
 */
 
-// For DEBUGGING event loop
-//const blocked = require('blocked-at');
 
 const commandLineArgs = require('command-line-args');
 const { fork } = require('child_process');
@@ -77,10 +75,4 @@ DB.init(settings, statusDB => {
     );
   }
 
-  //DEBUG: check if event loop is blocked
-  /*
-  blocked((time, stack) => {
-    console.log(`Blocked for ${time}ms:`, stack);
-  }, {threshold: 50, trimFalsePositives: true});
-  */
 });
