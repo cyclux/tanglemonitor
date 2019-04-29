@@ -67,7 +67,9 @@ const showDBinfo = () => {
 const lokiDBInitialize = () => {
   lokiDBCollectionsGen({
     collectionName: collectionHistory,
-    collectionTtlAge: 2 * 60 * 60 * 1000,
+    collectionTtlAge: config.DB.storageDuration
+      ? config.DB.storageDuration * 60 * 1000
+      : 120 * 60 * 1000,
     ttlInterval: 60 * 1000,
     uniqueCollections: ['hash']
   });

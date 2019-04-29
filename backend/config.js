@@ -37,7 +37,7 @@ module.exports = {
     /* Amount of minutes of Tangle tx history, which will be stored. If set to 0 all history of the transactions will be lost on restart.
     Non-persistence usually only makes sense in combination with 'standalone' DB driver.
     Default: 120 */
-    storageDuration: 0, // minutes
+    storageDuration: 120, // minutes
 
     /* Configuration only relevant if driver is set to 'MongoDB' */
     MongoDB: {
@@ -93,7 +93,7 @@ module.exports = {
       Maximum simultaneous connections to ZMQ nodes is set with the option 'maxAmountZmqConnections'
       port = ZMQ port, the ssl option refers to the API port, for info on syncCheck see comment of 'nodeSyncDeltaThreshold' */
       zmqNodes: [
-        { host: 'localhost', port: 5556, api: 14265, ssl: false, syncCheck: true  },
+        { host: 'localhost', port: 5556, api: 14265, ssl: false, syncCheck: true },
         { host: 'tanglebeat.com', port: 5556, api: 14265, ssl: false, syncCheck: false },
         { host: 'node06.iotatoken.nl', port: 5556, api: 14265, ssl: false, syncCheck: true },
         { host: 'trinity.iota-tangle.io', port: 5556, api: 14265, ssl: true, syncCheck: true }
